@@ -1,0 +1,565 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|Win32">
+      <Configuration>Profile</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|x64">
+      <Configuration>Profile</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{21B9A470-85FC-4BC2-A8EC-E18420955274}</ProjectGuid>
+    <RootNamespace>scalapack_c</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.25431.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>../$(Configuration)/$(Platform)\</OutDir>
+    <IntDir>../tmp/$(ProjectName)/$(Configuration)/$(Platform)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>../$(Configuration)/$(Platform)\</OutDir>
+    <IntDir>../tmp/$(ProjectName)/$(Configuration)/$(Platform)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>../$(Configuration)/$(Platform)\</OutDir>
+    <IntDir>../tmp/$(ProjectName)/$(Configuration)/$(Platform)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>../$(Configuration)/$(Platform)\</OutDir>
+    <IntDir>../tmp/$(ProjectName)/$(Configuration)/$(Platform)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <OutDir>../$(Configuration)/$(Platform)\</OutDir>
+    <IntDir>../tmp/$(ProjectName)/$(Configuration)/$(Platform)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <OutDir>../$(Configuration)/$(Platform)\</OutDir>
+    <IntDir>../tmp/$(ProjectName)/$(Configuration)/$(Platform)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PreBuildEvent>
+      <Command>time /t</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\mpich2x86\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;UpCase;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <PrecompiledHeader />
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <PreLinkEvent>
+      <Command>time /t</Command>
+    </PreLinkEvent>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+    </Lib>
+    <PostBuildEvent>
+      <Command>time /t</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PreBuildEvent>
+      <Command>time /t</Command>
+    </PreBuildEvent>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\mpich2x64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;UpCase;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <SmallerTypeCheck>true</SmallerTypeCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <PreLinkEvent>
+      <Command>time /t</Command>
+    </PreLinkEvent>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+      <AdditionalLibraryDirectories>..\..\..\MPICH2x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+    <PostBuildEvent>
+      <Command>time /t</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PreBuildEvent>
+      <Command>time /t</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <AdditionalIncludeDirectories>..\..\..\mpich2x86\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;UpCase;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <PrecompiledHeader />
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <PreLinkEvent>
+      <Command>time /t</Command>
+    </PreLinkEvent>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+    </Lib>
+    <PostBuildEvent>
+      <Command>time /t</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PreBuildEvent>
+      <Command>time /t</Command>
+    </PreBuildEvent>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>..\..\..\mpich2x64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;UpCase;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <PrecompiledHeader />
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat />
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <PreLinkEvent>
+      <Command>time /t</Command>
+    </PreLinkEvent>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+    </Lib>
+    <PostBuildEvent>
+      <Command>time /t</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <PreBuildEvent>
+      <Command>time /t</Command>
+    </PreBuildEvent>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>C:\Program Files\MPICH\SDK\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;UpCase;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <PrecompiledHeader />
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <PreLinkEvent>
+      <Command>time /t</Command>
+    </PreLinkEvent>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+    </Lib>
+    <PostBuildEvent>
+      <Command>time /t</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <PreBuildEvent>
+      <Command>time /t</Command>
+    </PreBuildEvent>
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>C:\fft\bin\mpich2x64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;UpCase;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <PrecompiledHeader />
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <PreLinkEvent>
+      <Command>time /t</Command>
+    </PreLinkEvent>
+    <Lib>
+      <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
+    </Lib>
+    <PostBuildEvent>
+      <Command>time /t</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcagemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcahemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcamax_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcatrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcaxpy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pccopy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcdotc_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcdotu_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgeadd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgemm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgerc_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgeru_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pchemm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pchemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcher2k_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcher2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcherk_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcher_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcscal_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsscal_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcswap_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsymm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsyr2k_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsyrk_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctradd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctranc_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctranu_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrmm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrsm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrsv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdagemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdamax_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdasum_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdasymv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdatrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdaxpy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdcopy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pddot_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdgeadd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdgemm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdgemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdger_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdnrm2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdscal_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdswap_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsymm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsymv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyr2k_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyr2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyrk_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyr_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtradd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtran_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrmm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrsm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrsv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdzasum_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdznrm2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\picopy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psagemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psamax_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psasum_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psasymv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psatrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psaxpy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pscasum_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pscnrm2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pscopy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psdot_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psgeadd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psgemm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psgemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psger_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psnrm2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psscal_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psswap_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssymm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssymv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyr2k_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyr2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyrk_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyr_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstradd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstran_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrmm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrsm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrsv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cabort.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cainfog2l.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CargFtoC.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cbinfo.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cchkmat.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cchkvec.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cconjg.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cctypeset.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cdescribe.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cdescset.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cdtypeset.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cfirstnb.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cg2lrem.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CGatherV.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cgcd.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cgetbuf.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cindxg2p.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cinfog2l.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInOutV.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInOutV2.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInV.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInV2.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Citypeset.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Clastnb.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Clcm.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cmalloc.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cnnxtroc.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cnpreroc.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cnumroc.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_COutV.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpaxpby.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpaxpbyDN.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpaxpbyND.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpaxpbyNN.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpdot11.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpdotND.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpdotNN.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpgeadd.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpgemmAB.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpgemmAC.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpgemmBC.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplacnjg.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplapad.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplapd2.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplaprnt.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplasca2.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplascal.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpswapND.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpswapNN.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsym.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsymmAB.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsymmBC.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr2.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr2kA.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr2kAC.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsyrkA.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsyrkAC.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptradd.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptran.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptrm.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrmmAB.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrmmB.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptrsm.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmAB.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmAB0.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmAB1.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmB.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptrsv.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CScatterV.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cspan.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cstypeset.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctop.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzahemv.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzasymv.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzatrmv.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzhemm.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzhemv.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzher.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzher2.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzher2k.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzherk.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsymm.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsymv.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyr.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyr2.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyr2k.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyrk.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctztrmm.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctztrmv.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMcontig.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMinit.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMloc.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMnpq.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMpack.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMswp.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMupdate.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cwarn.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cztypeset.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_freebuf_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_topget_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_topset_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzagemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzahemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzamax_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzatrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzaxpy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzcopy_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzdotc_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzdotu_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzdscal_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgeadd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgemm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgerc_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgeru_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzhemm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzhemv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzher2k_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzher2_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzherk_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzher_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzscal_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzswap_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzsymm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzsyr2k_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzsyrk_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztradd_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztranc_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztranu_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrmm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrmv_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrsm_.c" />
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrsv_.c">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
+      <PreprocessSuppressLineNumbers Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessSuppressLineNumbers>
+      <PreprocessKeepComments Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessKeepComments>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsC</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\getpbbuf.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pbchkvect.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pcrot.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pdlaiect.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pslaiect.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pzaxpy.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pzdotc.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pzdotu.c" />
+    <ClCompile Include="..\..\..\scalapack\SRC\pzrot.c" />
+    <ClCompile Include="..\..\..\scalapack\TOOLS\reshape.c" />
+    <ClCompile Include="..\..\..\scalapack\TOOLS\SL_gridreshape.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\compiler.h" />
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBblacs.h" />
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBblas.h" />
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\pblas.h" />
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBpblas.h" />
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBtools.h" />
+    <ClInclude Include="..\..\..\scalapack\SRC\compiler.h" />
+    <ClInclude Include="..\..\..\scalapack\SRC\pblas.h" />
+    <ClInclude Include="..\..\..\scalapack\SRC\pxsyevx.h" />
+    <ClInclude Include="..\..\..\scalapack\SRC\tools.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

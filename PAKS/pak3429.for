@@ -1,0 +1,571 @@
+C=======================================================================
+C
+C    PLASTICNOST - VELIKE DEFORMACIJE  (5. II 1996.)
+C
+C    SUBROUTINE D3M29
+C               TI329
+C               MEL329
+C               CEP329
+C
+C=======================================================================
+      SUBROUTINE D3M29(TAU,DEF,IRAC,LPOCG,LPOC1)
+      USE PLAST3D
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PROGRAM ZA ODREDIVANJE LOKACIJA VELICINA KOJE SE CUVAJU
+C     NA NIVOU INTEGRACIONE TACKE
+C
+      include 'paka.inc'
+      
+      COMMON /REPERM/ MREPER(4)
+      COMMON /DUPLAP/ IDVA
+C
+      LFUN=MREPER(1)
+      LNTA=MREPER(2)
+      LTEM=MREPER(3)
+      MATE=MREPER(4)
+C
+      LTAUT =LPOCG
+      LDEFT =LTAUT + 6
+      LDEFPT=LDEFT + 6
+      LTEQT =LDEFPT+ 6
+      LSLT  =LTEQT + 1
+      LDQPT =LSLT  + 1
+C
+      LTAU  =LPOC1
+      LDEF  =LTAU + 6
+      LDEFP =LDEF + 6
+      LTEQ  =LDEFP+ 6
+      LSL   =LTEQ + 1
+      LDQP  =LSL  + 1
+C
+      CALL TI329(TAU,DEF,PLAST(LDEFPT),PLAST(LTEQT),
+     1           PLAST(LSLT),PLAST(LDQPT),
+     1           PLAS1(LTAU),PLAS1(LDEF),PLAS1(LDEFP),
+     1           PLAS1(LTEQ) ,PLAS1(LSL) ,PLAS1(LDQP),
+     1           A(LFUN),MATE,IRAC)
+C
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE TI329( TAU ,DEF ,DEFPT,TEQT,SLT,DEFQPT,
+     1                  TAU1,DEF1,DEFP ,TEQ ,SL ,DEFQP ,
+     1                  FUN ,MATE,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     POTPROGRAM ZA INTEGRACIJU KONSTITUTIVNIH RELACIJA ZA
+C     ANAND-OV MODEL PLASTICNOSTI ZA VELIKE DEFORMACIJE
+C
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /TAUD3/ TAUD(6),DEFDPR(6),DEFDS(6),DDEFP(6),
+     1                DETAU(6),DDEF(6)
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /SRPSKI/ ISRPS
+      COMMON /MATIZO/ E,V
+      COMMON /VELIKE/ LCOR0,LGM0,JG,NGR,NGS,NGT,NGS4
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /ITERBR/ ITER
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+      COMMON /VELIKD/ DETG,QP(3,3),IGLPR
+      DIMENSION DEFPT(*),TAU(*),DEF(*),TAU1(*),DEF1(*),
+     1          DEFP(*),SEHET(6),SHET(6),POM(3,3)
+      DIMENSION FUN(10,*)
+      DATA ITMAX/200/,EPSIL/1.0D-5/
+C
+CE    AUXILIARY CONSTANTS
+C
+      E     =FUN(1,MAT)
+      V   =FUN(2,MAT)
+      AB    =FUN(3,MAT)
+      AKSI  =FUN(4,MAT)
+      AM    =FUN(5,MAT)
+      SL0   =FUN(6,MAT)
+      H0    =FUN(7,MAT)
+      AL    =FUN(8,MAT)
+      SLHET =FUN(9,MAT)
+      AN    =FUN(10,MAT)
+C
+      G2    =E/(1.+V)
+      AE    =1./G2
+      CM    =E/(1.-2.*V)
+      TEQLIM=E*3.D-4
+      PO    =.5D0
+      ONE   =1.D0
+      TRIPO =1.5D0
+      TRI   =3.D0
+      ZERO  =0.D0
+      DT3MI =TRIPO*G2*DT
+C
+C     ISOTROPIC ELASTICITY MATRIX
+C
+      CALL MEL329
+      IF (IRAC.EQ.2) GO TO 700
+      IF (ITER.EQ.0) GO TO 700
+C
+CE    TRANSFORM ENGENEER. SHEAR STRAIN INTO TENSORIAL
+C
+      DO 10 I=4,6
+   10   DEFPT(I)=PO*DEFPT(I)
+C
+CE    MEAN STRAIN,MEAN STRESS AND ESEKUNDUM
+C
+      EMT = (DEF(1)+DEF(2)+DEF(3))/TRI
+C?
+CR      TAUM=CM*EMT
+CR      DO 20 I=1,3
+CR   20   DEFDS(I)=DEF(I)-EMT
+CR      DO 25 I=4,6
+CR   25   DEFDS(I)=PO*DEF(I)
+CR      IF (IATYP.LT.4) THEN
+CR        DO 26 I=1,6
+CR   26     DEFDS(I)=DEFDS(I)-DEFPT(I)
+CR      END IF
+C
+      IF(IATYP.LT.4)THEN
+        DO 20 I=1,3
+   20   DEFDS(I)=DEF(I)-EMT-DEFPT(I)
+        DO 25 I=4,6
+   25   DEFDS(I)=0.5*DEF(I)-DEFPT(I)
+      ELSEIF(IATYP.EQ.4) THEN
+        DO 21 I=1,3
+   21   DEFDS(I)=DEF(I)-EMT
+        DO 26 I=4,6
+   26   DEFDS(I)=0.5*DEF(I)
+      ELSEIF(IATYP.EQ.5) THEN
+        CALL JEDNA1(DEFDS,DEF,6)
+      ENDIF
+C
+CE    ELASTIC DEVIATORIC STRESS SOLUTION  (TAUD)
+C
+      DO 40 I=1,6
+   40   SEHET(I)=G2*DEFDS(I)
+      TEQSEH=DSQRT(TRIPO*TENDOT(SEHET))
+C
+CE    DEFORMATION RESISTANCE INITIALIZATION
+C
+      IF (SLT.LT.1.D-6) SLT=SL0
+      IF (TEQT.LT.1.D-6) TEQT=1.D-6
+C
+CE    NEWTON-RAPHSON SOLUTION SCHEME FOR SYSTEM OF TWO NONLINEAR EQUATIONS
+C
+C     TEQ - EFFECTIVE STRESS
+C     SL  - DEFORMATION RESISTANCE
+C
+C
+CE    1) INITIAL VALUES ESTIMATION FOR TEQ AND SL
+C
+      A1 = ONE+DT3MI*FDOTT(TEQT,SLT)
+      A2 = DT3MI*FDOTS(TEQT,SLT)
+      A3 = TEQSEH-TEQT-DT3MI*FFUN(TEQT,SLT)
+      B1 = DT*GDOTT(TEQT,SLT)
+      B2 = ONE-DT*GDOTS(TEQT,SLT)
+      B3 = DT*GFUN(TEQT,SLT)
+C
+      DET0 = A1*B2+A2*B1
+      DET1 = A3*B2-A2*B3
+      DET2 = A3*B1+A1*B3
+C
+      TEQ = TEQT+DET1/DET0
+      IF (TEQ.LT.1.D-6) TEQ=1.D-6
+      IF (TEQ.GT.TEQLIM) TEQ=TEQLIM
+      SL  = SLT+DET2/DET0
+C
+CE    2) SL LOOP (ITERATION KI)
+C
+      KI = 0
+  250 KI = KI+1
+      IF(KI.GT.ITMAX) THEN
+        IF (ISRPS.EQ.0) WRITE(IZLAZ,2015)
+        IF (ISRPS.EQ.1) WRITE(IZLAZ,6015)
+        WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+        STOP
+      END IF
+C
+CE    3) BOUNDARIES INITIALIZATION FOR TEQ
+C
+      DPDOT =TEQSEH/DT3MI
+      TEQLOW=ZERO
+      TEQUPP=DMIN1(TEQSEH,FINV(DPDOT,SL))
+C
+CE    4) TEQ LOOP (ITERATION II)
+C
+      II = 0
+  260 II = II+1
+      IF(II.GT.ITMAX) THEN
+        IF (ISRPS.EQ.0) WRITE(IZLAZ,2016)
+        IF (ISRPS.EQ.1) WRITE(IZLAZ,6016)
+        WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+        STOP
+      END IF
+C
+CE    5) TEQ-ERROR ESTIMATION
+C
+      ERRT = TEQ-TEQSEH+DT3MI*FFUN(TEQ,SL)
+C
+CE    6) CHECK CONVERGENCE FOR TEQ-ITERATION
+C
+      IF (DABS(ERRT)/TEQSEH.LE.EPSIL) THEN
+        DTQDS=-DT3MI*FDOTS(TEQ,SL)/(ONE+DT3MI*FDOTT(TEQ,SL))
+      ELSE
+C
+CE    7) NEWTON-RAPHSON'S CORRECTION
+C
+        DTQNR=-ERRT/(ONE+DT3MI*FDOTT(TEQ,SL))
+C
+CE    8) MAXIMUM ALLOWABLE CORRECTION
+C
+        IF (DTQNR.LT.ZERO) THEN
+          TEQUPP=TEQ
+          DTQMAX=PO*(TEQLOW-TEQUPP)
+        ELSE
+          TEQLOW=TEQ
+          DTQMAX=PO*(TEQUPP-TEQLOW)
+        END IF
+C
+CE    9) TEQ CORRECTION
+C
+        IF (DABS(DTQNR).GT.DABS(DTQMAX)) THEN
+          DTEQ=DTQMAX
+        ELSE
+          DTEQ=DTQNR
+        END IF
+C
+CE   10) ESTIMATE FOR THE NEXT II ITERATION
+C
+        TEQ=TEQ+DTEQ
+        IF (TEQ.LT.1.D-6) TEQ=1.D-6
+        GO TO 260
+      END IF
+C
+CE   11) SL-ERROR ESTIMATION
+C
+      ERRS = SL-SLT-DT*GFUN(TEQ,SL)
+C
+CE   12) CHECK CONVERGENCE FOR SL-ITERATION
+C
+      IF (DABS(ERRS)/SLT.GT.EPSIL) THEN
+C
+CE   13) SL CORRECTION
+C
+        DSL=-ERRS/(ONE-DT*(GDOTS(TEQ,SL)+GDOTT(TEQ,SL)*DTQDS))
+C
+CE   14) ESTIMATE FOR THE NEXT KI ITERATION
+C
+        SL=SL+DSL
+        TEQ=TEQ+DTQDS*DSL
+        GO TO 250
+      END IF
+C
+CE    "RADIAL-RETURN" FACTOR CALCULATION
+C
+      ETA=TEQ/TEQSEH
+C
+CE    UPDATE THE STRESS AND INELASTIC STRAIN
+C
+      DQPDOT=FFUN(TEQ,SL)
+      DEFQP=DEFQPT+DT*DQPDOT
+C     WRITE(IZLAZ,'('' DQPDOT = '',D15.5)')DQPDOT
+C
+      DO 270 I=1,6
+        TAUD(I)=ETA*SEHET(I)
+C        IF (I.LE.3) TAU(I)=TAU(I)+TAUM
+        DEFP(I)=DEFPT(I)+DT*TRIPO*DQPDOT*SEHET(I)/TEQSEH
+CR  270   IF (I.GT.3) DDEFP(I)=2*DDEFP(I)
+  270   IF (I.GT.3) DEFP(I)=2*DEFP(I)
+C
+CE     E L A S T I C  -  P L A S T I C   M A T R I X   CEP
+C
+      IF (ISKNP.NE.2) CALL CEP329(SEHET,TEQ,G2,DT3MI,TEQSEH,DQPDOT,SL)
+C
+CE  UPDATE FROM PREVIOUS STEP
+C
+C
+      IF(IATYP.LT.4)THEN
+        TAUM=CM*EMT
+      ELSEIF(IATYP.EQ.4) THEN
+C SREDNJI NAPON
+        TAMM=CM*EMT
+        TAUM=CM*(DETG-1.D0)/3.D0
+C            WRITE(3,*) 'TAUM,TAUMM,DETG1',TAUM,TAMM,DETG
+C            CALL WRR(TAUD,6,'TAUD')
+C NORMIRANA ELASTICNA DEFORMACIJA
+        DO 210 I=1,3
+  210   DEF(I)=TAUD(I)*AE+EMT
+        DO 220 I=4,6
+  220   DEF(I)=TAUD(I)*AE*2.D0
+      ELSEIF(IATYP.EQ.5) THEN
+C SREDNJI NAPON
+        EMTL=DLOG(DETG)/3.D0
+        TAUM=CM*EMTL
+C            WRITE(3,*) 'TAUM,DETG1,EMTL,EMT',TAUM,DETG,EMTL,EMT
+C            CALL WRR(TAUD,6,'TAUD')
+C NORMIRANA ELASTICNA DEFORMACIJA
+        DO 230 I=1,3
+  230   DEF(I)=TAUD(I)*AE
+C  230   DEF(I)=TAUD(I)*AE+EMTL
+C       DO 240 I=4,6
+C 240   DEF(I)=TAUD(I)*AE*2.D0
+      ENDIF
+      DO 200 I=1,3
+  200 TAU(I)=TAUD(I)+TAUM
+      DO 205 I=4,6
+      TAU(I)=TAUD(I)
+  205 DEFP(I)=2.*DEFP(I)
+C
+CE  UPDATE FROM PREVIOUS STEP
+C
+      CALL JEDNA1(SHET,DEF,6)
+C      IF(IATYP.EQ.5) THEN
+      IF(IGLPR.EQ.1) THEN
+C        CALL WRR(QP,9,'QP06')
+C        CALL WRR(TAU,6,'TAU3')
+        CALL DIJAD(POM,QP,QP,TAU(1),TAU(2),TAU(3))
+C        CALL WRR(POM,9,'POMN')
+        TAU(1)=POM(1,1)
+        TAU(2)=POM(2,2)
+        TAU(3)=POM(3,3)
+        TAU(4)=POM(1,2)
+        TAU(5)=POM(2,3)
+        TAU(6)=POM(3,1)
+        CALL DIJAD(POM,QP,QP,DEF(1),DEF(2),DEF(3))
+C        CALL WRR(POM,9,'POMB')
+        DEF(1)=POM(1,1)
+        DEF(2)=POM(2,2)
+        DEF(3)=POM(3,3)
+        DEF(4)=POM(1,2)
+        DEF(5)=POM(2,3)
+        DEF(6)=POM(3,1)
+      ENDIF
+      DO 291 I=1,6
+        DEF1(I)=DEF(I)
+  291   TAU1(I)=TAU(I)
+      IF(IATYP.EQ.4)THEN
+C KORIGOVANJE NORMIRANOG ELASTICNOG DEFORMACIONOG TENZORA NA KRAJU KORAKA
+        DO 300 I=1,3
+  300   DEF(I)=2.D0*DEF(I)+1.D0
+        POM(1,1)=DEF(1)
+        POM(2,2)=DEF(2)
+        POM(3,3)=DEF(3)
+        POM(1,2)=DEF(4)
+        POM(2,3)=DEF(5)
+        POM(3,1)=DEF(6)
+        POM(2,1)=POM(1,2)
+        POM(3,2)=POM(2,3)
+        POM(1,3)=POM(3,1)
+        CALL DETER3(POM,DETB)
+C        WRITE(3,*) 'DETB',DETB
+      ELSEIF(IATYP.EQ.5) THEN
+        DO 310 I=1,3
+  310   DEF(I)=DEXP(2.D0*SHET(I))
+C        CALL WRR(DEF,6,'DEF3')
+        CALL DIJAD(POM,QP,QP,DEF(1),DEF(2),DEF(3))
+C        CALL WRR(POM,9,'POMB')
+        DEF(1)=POM(1,1)
+        DEF(2)=POM(2,2)
+        DEF(3)=POM(3,3)
+        DEF(4)=POM(1,2)
+        DEF(5)=POM(2,3)
+        DEF(6)=POM(3,1)
+        CALL DETER3(POM,DETB)
+C        WRITE(3,*) 'DETB',DETB
+      ENDIF
+  700 DO 290 I=1,6
+        DEF1(I)=DEF(I)
+  290   TAU1(I)=TAU(I)
+      RETURN
+C-----------------------------------------------------------------------
+ 2001 FORMAT( ' ELEMENT =',I6,'  IR =',I2,'  IS =',I2,'  IT =',I2)
+ 2015 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ SL-ITERACIJA U TI350')
+ 2016 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ TEQ-ITERACIJA U TI350')
+C-----------------------------------------------------------------------
+ 6015 FORMAT(/' MAXIMUM NUMBER OF SL-ITERATION IS REACHED IN TI350')
+ 6016 FORMAT(/' MAXIMUM NUMBER OF TEQ-ITERATION IS REACHED IN TI350')
+C-----------------------------------------------------------------------
+       END
+C======================================================================
+      SUBROUTINE MEL329
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE     FORM ( ELAST ) MATRIX
+C
+      COMMON /MATIZO/ E,V
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+C
+CE     NULL ( ELAST )
+C
+      DO 15 I=1,6
+        DO 15 J=I,6
+   15     ELAST(I,J)=0.0D0
+C
+      ELAST(1,1)=E*(1.-V)/(1.+V)/(1.-2.*V)
+      ELAST(2,2)=ELAST(1,1)
+      ELAST(3,3)=ELAST(1,1)
+      ELAST(1,2)=ELAST(1,1)*V/(1.-V)
+      ELAST(1,3)=ELAST(1,2)
+      ELAST(2,3)=ELAST(1,2)
+      ELAST(4,4)=ELAST(1,1)*(1.-2.*V)/(1.-V)/2.
+      ELAST(5,5)=ELAST(4,4)
+      ELAST(6,6)=ELAST(4,4)
+      DO 50 I=1,6
+        DO 50 J=I,6
+   50     ELAST(J,I)=ELAST(I,J)
+      RETURN
+      END
+C=======================================================================
+      FUNCTION FFUN(TEQ,SL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE    EQIVALENT PLASTIC STRAIN RATE
+C
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+C
+      FFUN = AB*(DSINH(AKSI*TEQ/SL))**(1.D0/AM)
+      IF (FFUN.LT.1.D-6) FFUN=1.D-6
+      RETURN
+      END
+C=======================================================================
+      FUNCTION GFUN(TEQ,SL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE    DEFORMATION RESISTANCE
+C
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+C
+      F = FFUN(TEQ,SL)
+      SLAST = SLHET*(F/AB)**AN
+      IF (SL.LE.SLAST) THEN
+        GFUN = F*H0*(1.D0-SL/SLAST)**AL
+      ELSE
+        GFUN = -F*H0*(SL/SLAST-1.D0)**AL
+      END IF
+      RETURN
+      END
+C=======================================================================
+      FUNCTION FDOTT(TEQ,SL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE    delta(F)/delta(TEQ)
+C
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+C
+      ARG = AKSI*TEQ/SL
+      FDOTT = AB*AKSI/AM/SL*DCOSH(ARG)*DSINH(ARG)**(1.D0/AM-1.D0)
+      RETURN
+      END
+C=======================================================================
+      FUNCTION FDOTS(TEQ,SL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE    delta(F)/delta(SL)
+C
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+C
+      ARG = AKSI*TEQ/SL
+      FDOTS = -AB*ARG/AM/SL*DCOSH(ARG)*DSINH(ARG)**(1.D0/AM-1.D0)
+      RETURN
+      END
+C=======================================================================
+      FUNCTION GDOTT(TEQ,SL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE    delta(G)/delta(TEQ)
+C
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+C
+      F = FFUN(TEQ,SL)
+      DFDTQ = FDOTT(TEQ,SL)
+      SLAST = SLHET*(F/AB)**AN
+      DSADTQ = SLHET*AN/AB*DFDTQ*(F/AB)**(AN-1.D0)
+      DHDTQ = AL*H0*SL*DSADTQ/SLAST/SLAST
+      IF (SL.LE.SLAST) THEN
+        BASIS = 1.D0-SL/SLAST
+        H = H0*BASIS**AL
+      ELSE
+        BASIS = SL/SLAST-1.D0
+        H = -H0*BASIS**AL
+      END IF
+      DHDTQ = DHDTQ*BASIS**(AL-1.D0)
+      GDOTT=F*DHDTQ+H*DFDTQ
+      RETURN
+      END
+C=======================================================================
+      FUNCTION GDOTS(TEQ,SL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE    delta(G)/delta(SL)
+C
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+C
+      F = FFUN(TEQ,SL)
+      DFDSL = FDOTS(TEQ,SL)
+      SLAST = SLHET*(F/AB)**AN
+      DSADSL = SLHET*AN/AB*DFDSL*(F/AB)**(AN-1.D0)
+      DHDSL = AL*H0*(SL*DSADSL-SLAST)/SLAST/SLAST
+      IF (SL.LE.SLAST) THEN
+        BASIS = 1.D0-SL/SLAST
+        H = H0*BASIS**AL
+      ELSE
+        BASIS = SL/SLAST-1.D0
+        H = -H0*BASIS**AL
+      END IF
+      DHDSL = DHDSL*BASIS**(AL-1.D0)
+      GDOTS=F*DHDSL+H*DFDSL
+      RETURN
+      END
+C=======================================================================
+      FUNCTION FINV(DPDOT,SL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE    INVERSION OF FFUN
+C
+      COMMON /ANAND / AB,AKSI,AM,SL0,H0,AL,SLHET,AN
+C
+      ARG = (DPDOT/AB)**AM
+      FINV = SL/AKSI*DLOG(DSINH(ARG)+DCOSH(ARG))
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE CEP329(SEHET,TEQ,G2,DT3MI,TEQSEH,DQPDOT,SL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE CEP ( ELAST )
+CE     ELASTO-PLASTIC  CEP MATRIX
+C
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      DIMENSION SEHET(*),CP(6,6)
+C
+      TRIPO =1.5D0
+      ONE   =1.D0
+      PO    =0.5D0
+      DVT   =ONE/TRIPO
+      ONT   =-PO*DVT
+      DT6MI2=DT3MI*G2
+C
+      CALL CLEAR(CP,36)
+      DO 20 I=1,3
+        DO 10 J=1,3
+10        CP(I,J)=ONT
+        CP(I,I)=CP(I,I)+ONE
+        I3=I+3
+20      CP(I3,I3)=PO
+C
+      A1 = ONE+DT3MI*FDOTT(TEQ,SL)
+      A2 = DT3MI*FDOTS(TEQ,SL)
+      B1 = DT*GDOTT(TEQ,SL)
+      B2 = ONE-DT*GDOTS(TEQ,SL)
+      CLIT=B2/(A1*B2+A2*B1)
+C
+      F1=DQPDOT/TEQSEH
+      F2=TRIPO*((ONE-CLIT)/DT3MI-F1)/TEQSEH/TEQSEH
+C
+      DO 25 I=1,6
+        DO 25 J=I,6
+          ELAST(I,J)=ELAST(I,J)-DT6MI2*(F1*CP(I,J)+F2*SEHET(I)*SEHET(J))
+25        IF (I.NE.J) ELAST(I,J)=ELAST(J,I)
+C
+      RETURN
+      END

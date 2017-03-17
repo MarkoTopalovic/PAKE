@@ -1,0 +1,611 @@
+C=======================================================================
+C
+C   PLASTICNOST 2/D ELEMENT: STENE-CST-JOINT
+C
+      SUBROUTINE D2M25(TAU,DEF,IRAC,LPOCG,LPOC1)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+      include 'paka.inc'
+      
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /REPERM/ MREPER(4)
+      COMMON /DUPLAP/ IDVA
+      COMMON /CDEBUG/ IDEBUG
+      IF(IDEBUG.GT.0) PRINT *, ' D2M25'
+C
+      LFUN=MREPER(1)
+      LNTA=MREPER(2)
+      MATE=MREPER(4)
+C  REPERI
+      LTAUT =LPOCG
+      LDEFT =LTAUT  + 4*IDVA
+      LDEFPT=LDEFT  + 4*IDVA
+      LALFT =LDEFPT + 4*IDVA
+      LEVPT =LALFT  + 1*IDVA
+      LOCRT =LEVPT  + 1*IDVA
+C
+      LTAU1 =LPOC1
+      LDEF1 =LTAU1  + 4*IDVA
+      LDEFP1=LDEF1  + 4*IDVA
+      LALF1 =LDEFP1 + 4*IDVA
+      LEVP1 =LALF1  + 1*IDVA
+      LOCR1 =LEVP1  + 1*IDVA
+C
+      CALL TAU225(
+     1       A(LTAUT),A(LDEFT),A(LDEFPT),A(LALFT),A(LEVPT),A(LOCRT),
+     1       A(LTAU1),A(LDEF1),A(LDEFP1),A(LALF1),A(LEVP1),A(LOCR1),
+     1       A(LFUN),A(LNTA),MATE,TAU,DEF,IRAC,IBTC)
+C
+      RETURN
+      END
+C========================================================================
+      SUBROUTINE TAU225(TAUT,DEFT,DEFPT,ALFT,EVPT,OCRT,
+     1                  TAU1,DEF1,DEFP1,ALF1,EVP1,OCR1,
+     1                  FUN,NTA,MATE,TAU,DEF,IRAC,IBTC)
+C
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     INTEGRACIJA KONSTITUTIVNIH RELACIJA ZA STENA-CST MATERIJAL
+C
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /TAUD3/ TAUD(6),DEFDPR(6),DEFDS(6),DDEFP(6),
+     1                DETAU(6),DDEF(6)
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /CEPMAT/ INDCEP
+      COMMON /ITERBR/ ITER
+      COMMON /CDEBUG/ IDEBUG
+      COMMON /TRACEV/ TRACE(200),TRAC0(200),TRAC1(200)
+C
+      DIMENSION TAUT(*),DEFT(*),DEFPT(*),TAU(*),DEF(*),TAU1(*),DEF1(*),
+     1          DEFP1(*),FUN(30,*),NTA(*),FN(4),FNOLD(4),XLD(3,3)
+      DIMENSION DDDEFP(4),DDEFP1(4),DFTAU(4),DEFG(4),TAUG(4),
+     1          ELASTG(4,4),TE(4,4),PARAM(10)
+      EQUIVALENCE (E,AKN),(ANI,AKS)
+      DATA TOLFY/1.D-8/,ITMAX/200/,EPSIL/1.D-5/
+      IF(IDEBUG.EQ.1) PRINT *, 'TAU225'
+C
+C  INICIJALIZACIJA
+C
+      MATT=MAT
+      MST =MATT
+      NNSL=1
+	CALL MATC25(E,ANI,B,IEL,GAMA,BETA,EN,ALAM,AKA,ALF0,AE0,
+     &              FIV,FIH,DVOL,JOINT,R0,RU,AK,R,ALK, FUN(1,MATT),
+     &              TAUT,EALT,ALFT,DEFT,KOR,
+     &              IHARD,PARAM)
+C.. INICIJALIZACIJA
+      IF(JOINT.EQ.1)THEN
+        CALL CLEAR(DFTAU,4)
+        CALL CLEAR(FN,4)
+        CALL CLEAR(TAU,4)
+        CALL CLEAR(TAUD,4)
+        IF(DABS(FIV).GT.1.D-6.OR.DABS(FIH).GT.1.D-6) THEN
+C.. ORIJENTACIJA PRSLINE
+          XLD(1,1)=DSIN(FIV)
+          XLD(1,2)=DCOS(FIV)
+          XLD(1,3)=0.D0
+          XLD(2,3)=-DSIN(FIH)
+          XLD(3,3)=-DCOS(FIH)
+          XLD(2,1)=-XLD(3,3)*XLD(1,2)
+          XLD(2,2)= XLD(3,3)*XLD(1,1)
+          XLD(3,1)= XLD(2,3)*XLD(1,2)
+          XLD(3,2)=-XLD(2,3)*XLD(1,1)
+C        call wrr(XLD,9,'xld ')
+          CALL TRANSE(TE,XLD)
+          CALL JEDNA1(DEFG,DEF,4)
+          CALL CLEAR(DEF,4)
+          CALL MNOZI1(DEF,TE,DEFG,4,4)
+C          CALL MNOZ21(DEF,TE,DEFG,4,4,6)
+        ENDIF
+      ENDIF
+C      WRITE(3,'((A),/3(G10.4,1X),I5)')
+C     & 'FIV,FIH,DVOL,JOINT',FIV,FIH,DVOL,JOINT
+C      WRITE(3,'((A),/7(G10.4,1X))')'GAMA,BETA,EN,ALAM,AKA,ALF0,AEE0',
+C     *           GAMA,BETA,EN,ALAM,AKA,ALF0,AE0
+      ALK  = ALAM-AKA 
+C
+      RAZE=0.D0
+C
+      DDD= -1.D-5
+c      DDD= 1.D-5
+      DDEVP=DDD
+C
+C  DEVIJATOR NAPONA I INVARIJANTE U TRENUTKU T
+      IF(JOINT.EQ.0)THEN
+        TAUMT =(TAUT(1)+TAUT(2)+TAUT(4))/3.
+        EVT   =DEFT(1)+DEFT(2)+DEFT(4)
+        EVTDT =DEF(1)+DEF(2)+DEF(4)
+      ELSE
+        TAUMT =TAUT(2)
+        EVT   =DEFT(2)
+        EVTDT =DEF(2)
+      ENDIF        
+C
+      IF(KOR.EQ.1)THEN
+        TAUMT=-ALF0/3./GAMA
+        ALFT =-ALF0
+      ENDIF
+C  DEFORMACIJE
+      ET    =(1.D0+AE0)*DEXP(EVT)-1.D0
+      ETDT  =(1.D0+AE0)*DEXP(EVTDT)-1.D0
+      EALT  =-(1.+ET)/ALK
+      EALTDT=-(1.+ETDT)/ALK
+C
+      IF(IEL.EQ.1) E=3.D0*(1.D0+ET)*DABS(TAUMT)/AKA*(1.D0+2.D0*ANI)
+C
+      IF(JOINT.EQ.0)THEN
+        CALL MEL2EL(ELAST,E,ANI)
+      ELSE
+        CALL MEL2JO(ELAST,AKN,AKS,DVOL)
+      ENDIF
+C      WRITE(3,'((A)/4(G10.4,1X))')'ELAST',((ELAST(I,J),J=1,4),I=1,4)
+      IF(IRAC.EQ.2)GO TO 110
+C
+C  PROVERA ELASTICNOG RESENJA 
+C
+        ELAST(3,3)=2.*ELAST(3,3)
+C
+        DEFDS(1)=DEF(1)-DEFPT(1)
+        DEFDS(2)=DEF(2)-DEFPT(2)
+        DEFDS(4)=DEF(4)-DEFPT(4)
+        DEFPT(3)=0.5*DEFPT(3)
+        DEFDS(3)=0.5*DEF(3)-DEFPT(3)
+C      CALL WRR(DEFDS,4,'DEFS')
+C  NAPON, DEVIJATOR NAPONA I INVARIJANTE ZA ELASTICNO RESENJE
+        CALL CLEAR(TAU,4)
+      IF(JOINT.EQ.0)THEN
+C        CALL MNOZI1(TAU,ELAST,DEFDS,4,4)
+        CALL MNOZ21(TAU,ELAST,DEFDS,4,4,6)
+        CALL DEV2D(TAUD, TAU, TAUM, AIN1, AIN2)
+        CALL DEVIA2(TAUD, AIN2D, AIN3D)
+      ELSE
+        TAU(2)=ELAST(2,2)*DEFDS(2)
+        TAU(3)=ELAST(3,3)*DEFDS(3)
+        TAUD(3)=TAU(3)
+        AIN1 =-TAU(2)
+        AIN2D=TAU(3)*TAU(3)
+        AIN3D=0.D0
+      ENDIF
+c      CALL WRR(TAU,4,'TAU ')
+c      CALL WRR(DEF,6,'DEF ')
+c      CALL WRR(TAUD,6,'TAUD')
+c      write(3,*)'TAUM,TAUMT,AIN1',TAUM,TAUMT,AIN1
+C
+      DEVP=0.D0
+      FFOLD=0.D0
+C
+      CALL DESAI2(FYE,FN,DFTAU,TAUD,DEVP,B,EN,GAMA,BETA,
+     &            ALF1,ALFT,EALT,AIN1,AIN2D,AIN3D,ALFC,DFEP,JOINT)
+      FNXYZ=FN(1)+FN(2)+FN(4)
+C
+C... OCR
+C
+      OCR1=1.0D3
+C      WRITE(3,*)'ALFT,ALFC  ',ALFT,ALFC
+      IF(DABS(AIN1).GT.1.0D-5) THEN
+       IF(DABS(ALFC).GT.1.D-8) OCR1=ALFT/ALFC
+      ENDIF
+C
+c      write(3,*)'FYE/3,AIN2D,AIN1',FYE/3.,AIN2D,AIN1
+c      write(3,*)'FF camcly',FYE/(-GAMA*9)/3.
+      IF(FYE.LT.TOLFY) GO TO 500
+      IPL1=1
+      OCR1  =1.D0
+C
+C  BISEKCIJE
+C
+c     DDD= -1.D-8
+      DDD= 1.D-8
+C.. SOFTENING
+      RAZE=AIN1 - (-2.*GAMA/ALF1/EN)**(1./(EN-2.))
+c      RAZE=AIN1 - (2.*GAMA/ALF1/EN)**(1./(EN-2.))
+c       write(3,*)'RAZE',RAZE
+      IF(RAZE.LT.0.D0)DDD=-DDD
+      IB = 0
+      IT = 0
+      AF = 2.D0
+      FM   = 0.D0
+      FP   = FYE
+      DEPBM= 0.D0
+      DEPBP= 0.D0
+      DEVP  = 0.D0
+      DEPQ  = 0.D0
+      DEVPOL= 0.D0
+      DEPQOL= 0.D0
+      FFOLD= FYE
+      CALL CLEAR(DDEFP,4)
+  100 IT=IT+1
+C
+      IF(IT.GT.ITMAX) THEN
+        WRITE(IZLAZ,2000)
+        CALL WRR(TRACE,200,'FF  ')
+        CALL WRR(TRAC0,200,'DDEP')
+        CALL WRR(TRAC1,200,'DEPQ')
+        STOP
+      ENDIF
+      DEVP1=DEVP
+      DEPQ1=DEPQ
+      CALL JEDNA1(DDEFP1,DDEFP,4)
+C
+      IND=0
+CC      DEVP=DEVP1+DDD
+      DEPQ=DEPQ1+DDD
+  810 IND=IND+1
+C     
+      CALL JEDNA1(FNOLD,FN,4)
+CCC.. GLAVNI PARAMETAR ZAPRMINSKA PLASTICNA DEFORMACIJA
+      FNXYZ=FN(1)+FN(2)+FN(4)
+C.. PRIR_PLAST_DEFORMAC(DDEFP)=EFEKTIVNA_PL(DEPQ)*NORMALA(FN)
+C.. SUBINKREMENTIRANJE
+CC      DDEPQ=(DEVP-DEVPOL)/FNXYZ
+      DDEPQ=DEPQ-DEPQOL
+      CALL JEDNAK(DDDEFP,FN,DDEPQ,4)
+      DDDEVP=DDDEFP(1)+DDDEFP(2)+DDDEFP(4)
+      DEVP  =DEVPOL+DDDEVP
+      CALL ZBIR2B(DDEFP,DDEFP,DDDEFP,4)
+C      CALL WRR(FN,4,'FN  ')
+C      CALL WRR(DDDEFP,4,'DDDF')
+C      WRITE(3,'((A)/3(G10.4,1X))')'DDEPQ,DEPQ,DEPQOL',DDEPQ,DEPQ,DEPQOL
+C      WRITE(3,'((A)/3(G10.4,1X))')'DEVP,DEVPOL,DDEVP',DEVP,DEVPOL,DDDEVP
+C.. NAPON, DEVIJATOR NAPONA I INVARIJANTE U BISEKCIJI
+C      CALL WRR(DEFDS,4,'DEFS')
+C      CALL WRR(DDEFP,4,'DDEP')
+      CALL ODUZ2B(DDEF,DEFDS,DDEFP,4)
+      IF(JOINT.EQ.0)THEN
+        CALL CLEAR(TAU,4)
+C        CALL MNOZI1(TAU,ELAST,DDEF,4,4)
+        CALL MNOZ21(TAU,ELAST,DDEF,4,4,6)
+        CALL DEV2D(TAUD, TAU, TAUM, AIN1, AIN2)
+        CALL DEVIA2(TAUD, AIN2D, AIN3D)
+      ELSE
+        TAU(2)=ELAST(2,2)*DDEF(2)
+        TAU(3)=ELAST(3,3)*DDEF(3)
+        TAUD(3)=TAU(3)
+        AIN1 =-TAU(2)
+        AIN2D=TAU(3)*TAU(3)
+      ENDIF
+C      CALL WRR(TAU,4,'TAU ')
+C      CALL WRR(TAUD,4,'TAUD')
+C
+      CALL DESAI2(FF,FN,DFTAU,TAUD,DEVP,B,EN,GAMA,BETA,
+     &            ALF1,ALFT,EALTDT,AIN1,AIN2D,AIN3D,ALFC,DFEP,JOINT)
+C      WRITE(3,'((A)/2(G10.4,1X))')'FF,DDD',FF,DEPQ-DEPQ1
+      IF(IND.EQ.1)THEN
+        FFOLD =FF
+C
+C        TRACE(IT)=FF
+C      
+        DEVP=DEVP1
+        DEPQ=DEPQ1
+        CALL JEDNA1(DDEFP,DDEFP1,4)
+        CALL JEDNA1(FN,FNOLD,4)
+        GOTO 810
+      ELSEIF(IND.EQ.2)THEN
+        DFF   =FFOLD-FF
+        FFP   =DFF/DDD
+        IF(DABS(FFP).GT.0.D0) DDEPQ =-0.5*FF/FFP
+C
+            TRACE(IT)=FF
+            TRAC0(IT)=DDEPQ
+            TRAC1(IT)=DEPQ
+C      
+      ENDIF
+C
+C      WRITE(3,'((A)/2(G10.4,1X))')'FFOLD,FF',FFOLD,FF
+C      WRITE(3,'((A)/2(G10.4,1X))')'DEVPOL,DEPQOL',DEVPOL,DEPQOL
+      DEVPOL=DEVP
+      DEPQOL=DEPQ
+CC      DEVP=DEVP+DDEVP
+      DEPQ=DEPQ+DDEPQ
+      FFOLD =FF
+C      WRITE(3,'((A)/I5,3X,3(G10.4,1X))')
+C     &'** IT,DEPQ,DDEPQ,FF',IT,DEPQ,DDEPQ,FF
+CC      TDEL=DABS((DEVP-DEVP1)/DEVP)
+      TDEL=DABS((DEPQ-DEPQ1)/DEPQ)
+C      WRITE(3,'((A)/2(G10.4,1X))')'TDEL',TDEL
+CCC      IF (TDEL.GT.EPSIL) GO TO 100
+CCC      IF (TDEL.GT.EPSIL.AND.DABS(FF).GT.1.D-8) GO TO 100
+      IF (TDEL.GT.EPSIL.AND.DABS(DDEPQ).GT.1.D-8) GO TO 100
+c      IF (TDEL.GT.EPSIL.AND.DABS(DDEPQ).GT.1.D-14) GO TO 100
+C      IF (TDEL.GT.EPSIL.AND.DABS(DDEPQ).GT.1.D-5) GO TO 100
+C
+C  PLASTICNE DEFORMACIJE
+C
+      EVP1=EVPT+DEVP
+      CALL ZBIR2B(DEFP1,DEFPT,DDEFP,4)
+      DEFP1(3)=2.*DEFP1(3)
+C
+C  NAPONI
+C
+C      CALL WRR(DDEF,4,'DDEF')
+      IF(JOINT.EQ.0)THEN
+        CALL CLEAR(TAU,4)
+C        CALL MNOZI1(TAU,ELAST,DDEF,4,4)
+        CALL MNOZ21(TAU,ELAST,DDEF,4,4,6)
+      ELSE
+        TAU(2)=ELAST(2,2)*DDEF(2)
+        TAU(3)=ELAST(3,3)*DDEF(3)
+      ENDIF
+C
+C  ELASTOPLASTICNA MATRICA
+C
+  500 CONTINUE
+      ELAST(3,3)=.5*ELAST(3,3)
+      IF(ITER.EQ.0) GO TO 110
+      DFEP=DFEP*FNXYZ
+      IF(ISKNP.NE.2.AND.INDCEP.EQ.0) CALL CEP225(ELAST,DFTAU,DFEP)
+C      WRITE(3,'((A)/6(G10.4,1X))')'CEP ',((ELAST(I,J),J=1,6),I=1,6)
+C
+C  KORIGOVANJE VELICINA IZ PRETHODNOG KORAKA
+C
+  110 CONTINUE
+      IF(JOINT.EQ.1)THEN
+C... TRANSFORM INTO GLOBAL AXES DIRECTION
+        IF(DABS(FIV).GT.1.D-6.OR.DABS(FIH).GT.1.D-6) THEN
+C          CALL TRAET2(ELASTG,ELAST,TE)
+          CALL JEDNA1(ELAST,ELASTG,16)
+          CALL CLEAR(TAUG,4)
+C          CALL MNOZI2(TAUG,TE,TAU,4,4)
+          CALL MNOZ22(TAUG,TE,TAU,4,4,6)
+          CALL JEDNA1(TAU,TAUG,4)
+          CALL JEDNA1(DEF,DEFG,4)
+        ENDIF
+      ENDIF
+C      WRITE(3,'((A)/4(G10.4,1X))')'CEP ',((ELAST(I,J),J=1,4),I=1,4)
+      CALL JEDNA1(DEF1,DEF,4)
+      CALL JEDNA1(TAU1,TAU,4)
+      RETURN
+ 2000 FORMAT(' ','DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TAU225')
+      END
+C=======================================================================
+      SUBROUTINE DEVIA2(D,AIN2D,AIN3D) 
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C.. DEVIJATOR ZA 2-D
+      DIMENSION D(*)
+      AIN2D=0.5*(D(1)*D(1)+D(2)*D(2)+D(4)*D(4))+D(3)*D(3)
+      AIN3D=D(1)*D(2)*D(4)-D(4)*D(3)*D(3)
+C      WRITE(3,'((A),2(G10.4,1X))') ' AIN2D,AIN3D ',AIN2D,AIN3D
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE DEV2D(D,A,AM,AIN1,AIN2)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C.. DEVIJATOR ZA 2-D
+      DIMENSION D(*), A(*)
+      AIN1= -A(1)-A(2)-A(4)
+c      AIN1= A(1)+A(2)+A(4)
+      AM  = AIN1/3.D0
+      D(1)=A(1)+AM
+      D(2)=A(2)+AM
+      D(4)=A(4)+AM
+c      D(1)=A(1)-AM
+c      D(2)=A(2)-AM
+c      D(4)=A(4)-AM
+      D(3)=A(3)
+      DO 10 I=1,4
+10    IF(DABS(D(I)).LT.1.D-10) D(I)=0.D0
+C
+      AIN2=-A(1)*A(2)-A(2)*A(4)-A(4)*A(1)+A(3)*A(3)
+C      WRITE(3,'((A),2(G10.4,1X))')' AIN1,AIN2 ',AIN1,AIN2
+C      WRITE(3,'((A),6(G10.4,1X))')' D ',(D(I),I=1,4)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE DERIN2(DI,D,AIN2D)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C.. IZVOD TRECE INVARIJANTE DEVIJATORA ZA 3-D
+      DIMENSION DI(*),D(*)
+      AA=AIN2D/3.
+      DI(1)=D(2)*D(4) + AA
+      DI(2)=D(1)*D(4) + AA
+      DI(3)=D(1)*D(2)-D(3)*D(3) + AA
+      DI(4)=-2.*D(4)*D(3)
+C      WRITE(3,'((A),6(G10.4,1X))')' DI ',(DI(I),I=1,4)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE DERF2(DF,D,DI,C1,C2,C3)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C.. IZVOD POTENCIJALA F PO NAPONU
+      DIMENSION DF(*),DI(*),D(*)
+      DF(1)=C1+C2*D(1)+C3*DI(1)
+      DF(2)=C1+C2*D(2)+C3*DI(2)
+      DF(4)=C1+C2*D(4)+C3*DI(4)
+      DF(3)=C2*D(3)+C3*DI(3)
+C      WRITE(3,'((A),6(G10.4,1X))') ' DF ',(DF(I),I=1,4)
+      RETURN
+      END
+C=======================================================================
+C... NIJE AKTUELNO U OVOJ VERZIJI !
+      SUBROUTINE TAUUR2(TAUR,TAU,AR)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C.. NAPON SA OSTECENJIMA
+      DIMENSION TAUR(*),TAU(*)
+      AR3IN1=AR*(TAU(1)+TAU(2)+TAU(4))/3.
+      AR1=1.-AR
+      TAUR(1)=AR1*TAU(1)+AR3IN1
+      TAUR(2)=AR1*TAU(2)+AR3IN1
+      TAUR(4)=AR1*TAU(4)+AR3IN1
+      TAUR(3)=AR1*TAU(3)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE CEP225(ELAST,DFTAU,DFKSI)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C.. ELASTICNO-PLASTICNA MATRICA (DESAI)
+      DIMENSION ELAST(6,*),DFTAU(*),DUM(4),SMIC(4)
+C      DIMENSION ELAST(4,*),DFTAU(*),DUM(4)
+C
+      H=0.D0
+      DDOTPAK=0.D0
+      DO 20 I=1,4
+       DD=0.D0
+       SMIC(I)=1.D0
+       DO 10 J=1,4
+10     DD=DD+ELAST(I,J)*DFTAU(J)
+       DUM(I)=DD
+       DDOTPAK=DDOTPAK+DFTAU(I)*DFTAU(I)
+       H=H+DD*DFTAU(I)
+20    CONTINUE
+      H=H-DFKSI*DSQRT(DDOTPAK)
+CC      H=H-DFKSI*(DFTAU(1)+DFTAU(2)+DFTAU(4))
+      SMIC(3)=2.D0
+      DO 30 I=1,4
+      DO 30 J=1,4
+30    ELAST(I,J)=ELAST(I,J)-DUM(I)*DUM(J)/H
+C30    ELAST(I,J)=ELAST(I,J)-SMIC(I)*DUM(I)*DUM(J)/H
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE DESAI2(FF,FN,DFTAU,TAUD,DEVP,B,EN,GAMA,BETA,
+     &                  ALF1,ALFT,EAL,AIN1,AIN2D,AIN3D,ALFC,DFEP,JOINT)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C  DESAI-CST: POVRS TECENJA, OJACANJE I NORMALA NA POVRS TECENJA
+      DIMENSION TAUD(*),FN(*),DFTAU(*),DAIN3D(4)
+      DATA SMALL/1.D-20/
+C
+      AIN1B =AIN1-B
+      IF(AIN1B.LT.SMALL) AIN1B=SMALL
+      ALF1=ALFT*DEXP(EAL*DEVP)
+      IF(AIN3D.LT.SMALL) AIN3D=0.D0
+      AIN33 =(AIN3D**(1./3.))
+      SQIN2D=DSQRT(AIN2D)
+      IF(SQIN2D.LT.SMALL) SQIN2D=SMALL
+      SR    =AIN33/SQIN2D
+C      AA0   =ALF/(ALF0**(EN-2.))
+      AA0   =-ALF1
+      AIN1BN=(AIN1B)**EN
+      AAINB =-AA0*AIN1BN
+      GAIN1 = GAMA*AIN1B*AIN1B
+      FB    =AAINB + GAIN1
+      FS    =1./DSQRT(1.-BETA*SR)
+      FS3   =FS*FS*FS
+C.. ALFC
+      ALFC=(AIN2D/FB-GAIN1)/AIN1BN
+C.. PARCIJALNI IZVOD ZA CEP
+      DFEP=-EAL*AIN1BN*FS*ALF1
+C  POVRS TECENJA
+      FF    =AIN2D-FB*FS
+      FF    =FF*3.D0
+C
+      C1=(-2.*GAMA*AIN1B+AA0*EN*(AIN1B**(EN-1.)))*FS
+C*** PROVERI ZASTO JE OBRNUT ZNAK
+      C1=-C1
+      IF(JOINT.EQ.0)THEN
+        C2=1.D0
+        IF(AIN2D.GT.0.D0) C2=1.+0.25*BETA*AIN33/(AIN2D**1.5)*FB*FS3 
+        C3=0.D0
+        IF(AIN3D.GT.0.D0)THEN
+          C3=-(BETA/SQIN2D/AIN33/AIN33*FB*FS3)/6.
+C..     IZVOD 3. INVARIJANTE DEVIJATORA PO NAPONIMA
+          CALL DERIN2(DAIN3D,TAUD,AIN2D)
+        ELSE
+          CALL CLEAR(DAIN3D,4)
+        ENDIF
+C..     IZVOD POTENCIJALA F PO NAPONU
+        CALL DERF2(DFTAU,TAUD,DAIN3D,C1,C2,C3)
+      ELSE
+        DFTAU(2)=C1
+        DFTAU(3)=2.*TAUD(3)
+      ENDIF
+C.. NORMALA FN (NORMALIZOVAN GRADIJENT)
+      ADF=1./DSQRT(RNORM2(DFTAU,4))
+      CALL JEDNAK(FN,DFTAU,ADF,4)      
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE MEL2JO(ELAST,AKN,AKS,DVOL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE 2D MATRICE ELAST ZA PRSLINU
+CE     3D ELAST MATRIX FOR JOINT
+C
+      COMMON /CDEBUG/ IDEBUG
+      DIMENSION ELAST(6,*)
+C      DIMENSION ELAST(4,*)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEL3JO '
+      CALL CLEAR(ELAST,36)
+C      CALL CLEAR(ELAST,16)
+      ELAST(2,2)=AKN*DVOL
+      ELAST(3,3)=AKS*DVOL
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE MEL2EL(ELAST,E,V)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     MATRICA ELAST
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /CDEBUG/ IDEBUG
+      DIMENSION ELAST(6,*)
+C      DIMENSION ELAST(4,*)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEL2EL '
+      CALL CLEAR(ELAST,36)
+C      CALL CLEAR(ELAST,16)
+CE     PLANE STRAIN
+        ELAST(1,1)=E*(1.D0-V)/(1.D0+V)/(1.D0-2.D0*V)
+        ELAST(2,2)=ELAST(1,1)
+        ELAST(1,2)=ELAST(1,1)*V/(1.D0-V)
+C        ELAST(3,3)=ELAST(1,1)*(1.D0-2.D0*V)/(1.D0-V)
+        ELAST(3,3)=ELAST(1,1)*(1.D0-2.D0*V)/(1.D0-V)/2.D0
+CCCCC        IF(IETYP.NE.1) GO TO 40
+        ELAST(4,4)=ELAST(1,1)
+        ELAST(1,4)=ELAST(1,2)
+        ELAST(2,4)=ELAST(1,2)
+C      ENDIF
+CCCCC40    CONTINUE
+      DO 50 I=1,4
+      DO 50 J=I,4
+   50 ELAST(J,I)=ELAST(I,J)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE MNOZ21(A,B,C,II,JJ,KK)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+CE.      TO MULTIPLY MATRIX AND VECTOR 
+CE.       A(II)    - VECTOR
+CE.       B(KK,JJ) - MATRIX
+CE.       C(JJ)    - VECTOR
+C .       A = A + B * C
+C ......................................................................
+C
+      COMMON /CDEBUG/ IDEBUG
+      DIMENSION A(*),B(KK,*),C(*)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MNOZ21'
+      DO 10 I=1,II
+      DO 10 J=1,JJ
+   10 A(I)=A(I)+B(I,J)*C(J)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE MNOZ22(A,B,C,II,JJ,KK)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+CE.      MULTIPLY TRANSPONSE MATRIX AND VECTOR 
+CE.       A(II)    - VECTOR
+CE.       B(KK,II) - MATRIX
+CE.       C(JJ)    - VECTOR
+C .       A = A + BT * C
+C ......................................................................
+C
+      COMMON /CDEBUG/ IDEBUG
+      DIMENSION A(*),B(KK,*),C(*)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MNOZ22'
+      DO 10 I=1,II
+      DO 10 J=1,JJ
+   10 A(I)=A(I)+B(J,I)*C(J)
+      RETURN
+      END
+

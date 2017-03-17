@@ -1,0 +1,894 @@
+C=======================================================================
+C
+CS       STAMPANJE NAPONA ZA TANKOZIDNE GREDNE ELMENTE
+CE       NODAL FORCES PRINTING
+C
+C   SUBROUTINE K09NAP
+C              STANPR
+C              STANGR
+C              STAN01
+C              STAN03
+C              STAN05
+C              STAG01
+C
+C=======================================================================
+      SUBROUTINE KTPGNA 
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C    GLAVNI PROGRAM ZA POZIVANJE PROGRAMA ZA STAMPANJE NAPONA
+C
+      include 'paka.inc'
+      
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMA6/ MXAU,LAU,LLMEL,LNEL,LNMAT,LCTR,LMGLV,LLUV,LINDPR,
+     1                LELKG,LNAPGV,LPRR,LNTIPG
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /POSTPR/ LNDTPR,LNDTGR,NBLPR,NBLGR,INDPR,INDGR
+      COMMON /ZAPISI/ LSTAZA(5)
+      COMMON /DUPLAP/ IDVA
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+C
+      LAU=LMAX
+CS    UCITAVANJE PODATAKA O ELEMENTIMA I NAPONA SA DISKA 8
+CE    READ DATA ABOUT NODAL FORCES FROM FILE 8
+      CALL READE6(A(LAU),1)
+CS    PODPROGRAM ZA STAMPANJE NAPONA
+CE    SUBROUTINE FOR STRESS PRINTING
+      IF(INDPR.EQ.0.OR.INDPR.EQ.2) CALL STATG1(A(LAU))
+      IF(INDGR.EQ.0.OR.INDGR.EQ.2) CALL STANG6(A(LAU))
+      IF(IATYP.EQ.0) RETURN
+C....  ZAPIS SILA I POMERANJA ZA NELINEARNOST
+      NPROS=NE*25+2
+      LMA8=LSTAZA(3)-1
+      CALL WRITDD(A(LPLAS1),NPROS,IELEM,LMA8,LDUZI)
+      LMA8=LSTAZA(5)-1
+      CALL WRITDD(A(LPLAS1),NPROS,IELEM,LMA8,LDUZI)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE STATG1(AU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      include 'paka.inc'
+      
+      COMMON /ELEMA6/ MXAU,LAU,LLMEL,LNEL,LNMAT,LCTR,LMGLV,LLUV,LINDPR,
+     1                LELKG,LNAPGV,LPRR,LNTIPG
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /DUPLAP/ IDVA
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      DIMENSION AU(*)
+      REAL AU
+C
+      LUT1=LPLAS1+2*IDVA
+      LFT1=LUT1+NE*12*IDVA
+      IF(IATYP.EQ.0)LFT1=LSIGMA
+      CALL STATG2(A(LFT1),AU(LNEL),A(LCVEL),AU(LPRR),AU(LNAPGV),
+     1            AU(LCEL),ICVEL,A(LNCVP),NCVPR,A(LAU))
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE STATG2(F,NEL,NCVEL,PR,NAPGV,MCVEL,ICVEL,NCVP,NCVPR,AU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      CHARACTER*2 GDE
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PGREDC/ NPUN,NPRBR,MAXPRR,NPRES,ICV1,ICV2,MATG,
+     1                NKARD,MG,NVR,NWRITE,NAPG,INDOF
+      COMMON /COMPRF/ YC,ZC,YI,ZI,ALFB,TK,CAPAY,CAPAZ,AREA,POVR,YM,ZM,
+     1                DDELT,YP,SWO(1),OM(1),DELTAP(3),TAUTK(3),OY,OZ,
+     2                NT,NELM,NTIP,NKAR,IND,INDRPR(3),KR1,NEXTR,NPRPR
+      COMMON /BEAMAX/ FZATM,FSMICM,FTORM,FSAVM,NEB1KOR,NPB1KOR,NEB2KOR,
+     1                NPB2KOR,NEB4KOR,NPB4KOR,NEB5KOR,NPB5KOR,
+     1                NMB1KOR,NMB2KOR,NMB4KOR,NMB5KOR,IMAGREDA 
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /SRPSKI/ ISRPS
+C
+      DIMENSION AU(*)
+      REAL AU
+      DIMENSION F(12,*),NCVEL(*),NEL(NE,*),PR(*),NAPGV(*),MCVEL(*),
+     +          NCVP(*)
+C
+      IMAGREDA=1
+      SEFE=0.
+      IC1=1
+      IC2=1
+      IPRV=0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2040) NLM
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6040) NLM
+         GO TO 20
+         ENDIF
+         NAP=NAPGV(NLM)
+         IF(NAP.EQ.-1) GO TO 20
+         ICV1=NEL(NLM,1)
+         ICV2=NEL(NLM,2)
+         IF(NCVPR.GT.0) THEN
+            IC1=NCVP(ICV1)
+            IC2=NCVP(ICV2)
+         ENDIF
+         IF(IPRV.EQ.0.AND.(IC1.EQ.1.OR.IC2.EQ.1)) THEN
+            IPRV=1
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) NGE
+         ENDIF
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         IF(ICVEL.NE.0) THEN
+            ICV1=NCVEL(ICV1)
+            ICV2=NCVEL(ICV2)
+         ENDIF
+         IF(IC1.EQ.1.OR.IC2.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2010) NMM
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6010) NMM
+         ENDIF
+         IF(IC1.EQ.1) WRITE(IZLAZ,1000) ICV1,(F(I,NLM),I=1,6)
+         IF(IC2.EQ.1) WRITE(IZLAZ,1000) ICV2,(F(I,NLM),I=7,12)
+c
+         fsmic2=dsqrt(f(2,NLM)*f(2,NLM)+f(3,NLM)*f(3,NLM))
+         fsav5=dsqrt(f(5,NLM)*f(5,NLM)+f(6,NLM)*f(6,NLM))
+         if(dabs(f(1,NLM)).gt.dabs(fzatm)) then
+            fzatm=f(1,NLM)
+            neb1kor=nmm
+            npb1kor=icv1
+            nmb1kor=kor
+         endif
+         if(dabs(f(4,NLM)).gt.dabs(ftorm)) then
+            ftorm=f(4,NLM)
+            neb4kor=nmm
+            npb4kor=icv1
+            nmb4kor=kor
+         endif
+         if(fsmic2.gt.fsmicm) then
+            fsmicm=fsmic2
+            neb2kor=nmm
+            npb2kor=icv1
+            nmb2kor=kor
+         endif
+         if(fsav5.gt.fsavm) then
+            fsavm=fsav5
+            neb5kor=nmm
+            npb5kor=icv1
+            nmb5kor=kor
+         endif
+c
+         fsmic2=dsqrt(f(8,NLM)*f(8,NLM)+f(9,NLM)*f(9,NLM))
+         fsav5=dsqrt(f(11,NLM)*f(11,NLM)+f(12,NLM)*f(12,NLM))
+         if(dabs(f(7,NLM)).gt.dabs(fzatm)) then
+            fzatm=f(7,NLM)
+            neb1kor=nmm
+            npb1kor=icv2
+            nmb1kor=kor
+         endif
+         if(dabs(f(10,NLM)).gt.dabs(ftorm)) then
+            ftorm=f(10,NLM)
+            neb4kor=nmm
+            npb4kor=icv2
+            nmb4kor=kor
+         endif
+         if(fsmic2.gt.fsmicm) then
+            fsmicm=fsmic2
+            neb2kor=nmm
+            npb2kor=icv2
+            nmb2kor=kor
+         endif
+         if(fsav5.gt.fsavm) then
+            fsavm=fsav5
+            neb5kor=nmm
+            npb5kor=icv2
+            nmb5kor=kor
+         endif
+C
+         IF(NT.GE.2) THEN
+            CALL NTGE1(F(1,NLM),PR,NAPGV(NLM),NLM)
+         ELSE
+            CALL NTGE0(F(1,NLM),NAPGV(NLM),NAPG,YI,ZI,TK,YM,ZM,
+     &                 CAPAY,CAPAZ,POVR,NMM,ICV1,ICV2,NNLM,NNG,SEFE,GDE)
+         ENDIF
+C
+   20 CONTINUE
+C      IF(NT.LT.2) THEN
+C      IF(ISRPS.EQ.0)
+C     1WRITE(IZLAZ,2030) NNLM,NNG,GDE,SEFE
+C      IF(ISRPS.EQ.1)
+C     1WRITE(IZLAZ,6030) NNLM,NNG,GDE,SEFE
+C      ENDIF
+      RETURN
+ 1000 FORMAT(I5,1X,6(1PE12.4))
+ 2000 FORMAT(///1X,'S I L E   I   N A P O N I   U   C V O R O V I M A    
+     1G R E D E   G R U P E',I5)
+ 2010 FORMAT(/' E L E M E N T',I6/' CVOR ',17X,' SILE ',30X,'MOMENTI')
+ 2040 FORMAT(/' NESTAO JE ELEMENT -',I5)
+C 2010 FORMAT(/' E L E M E N T',I6/' CVOR ',17X,' SILE ',30X,'MOMENTI'
+C     &       /'(YM-TACKA) SIGMA       TAU     EFF.',17X,
+C     &        '(ZM-TACKA) SIGMA       TAU     EFF.')
+C 2030 FORMAT(//' MAKSIMALNI EFEKTIVNI NAPON:'/' ELEMENT =',I6,' CVOR =',
+C     1I5,'  TACKA = ',A2,'  MAX.EFE.NAP. =',1PE11.3//)
+ 6000 FORMAT(///1X,'B E A M   N O D A L   F O R C E S   /   S T R E S S   
+     +  F O R   G R O U P',I5)
+ 6010 FORMAT(/' E L E M E N T',I6/' NODES',17X,'FORCES',30X,'MOMENTS')
+ 6040 FORMAT(/' DEATH ELEMENT -',I5)
+C 6030 FORMAT(//' MAXIMUM EFFECTIVE STRESS:'/' ELEMENT =',I6,'  NODE =',
+C     1I5,'  POINT = ',A2,'  MAX.EFF.STR. =',1PE11.3//)
+      END
+C
+C=======================================================================
+C
+      SUBROUTINE NTGE0(F,NAP,NAPG,YI,ZI,TK,YM,ZM,CAPAY,CAPAZ,
+     &                 POVR,NLM,NGR,NGS,NNLM,NNG,SEFE,GDE)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      CHARACTER*2 GDE
+C
+C  NAPONA TANKOZIDNE GREDE. ZADATE KARAKTERISTIKE PRESEKA
+C
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      DIMENSION F(*)
+CZ      IF(NAPG.NE.1.AND.NAPG.NE.2.AND.NAP.EQ.0) RETURN
+      IF(NAPG.NE.1.AND.NAPG.NE.2.AND.NAP.LE.0) RETURN
+      WRITE(IZLAZ,2010)
+      S1=-F(1)/POVR
+      FTY = -F(3)/POVR*CAPAY
+      FTZ = -F(2)/POVR*CAPAZ
+      EMMY=  F(6)/ZI
+      EMMZ= -F(5)/YI
+      TTY = -F(4)*YM/TK
+      TTZ = -F(4)*ZM/TK
+      SSY = EMMY*YM
+      SSZ = EMMZ*ZM
+          SXX1Y=S1+SSY
+          SXX1Z=S1+SSZ
+C          TAUY=DABS(TTY)+DABS(FTY)+DABS(FTZ)
+C          TAUZ=DABS(TTZ)+DABS(FTY)+DABS(FTZ)
+          TAUY=FTY
+          TAUZ=FTZ
+          SEKVY=DSQRT(SXX1Y*SXX1Y+3.*TAUY*TAUY)
+          SEKVZ=DSQRT(SXX1Z*SXX1Z+3.*TAUZ*TAUZ)
+C          WRITE(IZLAZ,1000)SXX1Y,TAUY,SEKVY,SXX1Z,TAUZ,SEKVZ
+          WRITE(IZLAZ,1010)SXX1Y,SXX1Z,TAUY,TAUZ
+C            IF(SEKVY.GT.SEFE) THEN
+C               NNLM=NLM
+C               NNG=NGR
+C               SEFE=SEKVY
+C               GDE='YM'
+C            ENDIF
+C            IF(SEKVZ.GT.SEFE) THEN
+C               NNLM=NLM
+C               NNG=NGR
+C               SEFE=SEKVZ
+C               GDE='ZM'
+C            ENDIF
+      S1= F(7)/POVR
+      FTY =  F(9)/POVR*CAPAY
+      FTZ =  F(8)/POVR*CAPAZ
+      EMMY=  F(12)/ZI
+      EMMZ= -F(11)/YI
+      TTY =  F(10)*YM/TK
+      TTZ =  F(10)*ZM/TK
+      SSY = EMMY*YM
+      SSZ = EMMZ*ZM
+          SXX1Y=S1+SSY
+          SXX1Z=S1+SSZ
+C          TAUY=DABS(TTY)+DABS(FTY)+DABS(FTZ)
+C          TAUZ=DABS(TTZ)+DABS(FTY)+DABS(FTZ)
+          TAUY=FTY
+          TAUZ=FTZ
+          SEKVY=DSQRT(SXX1Y*SXX1Y+3.*TAUY*TAUY)
+          SEKVZ=DSQRT(SXX1Z*SXX1Z+3.*TAUZ*TAUZ)
+C          WRITE(IZLAZ,1000)SXX1Y,TAUY,SEKVY,SXX1Z,TAUZ,SEKVZ
+          WRITE(IZLAZ,1010)SXX1Y,SXX1Z,TAUY,TAUZ
+C            IF(SEKVY.GT.SEFE) THEN
+C               NNLM=NLM
+C               NNG=NGS
+C               SEFE=SEKVY
+C               GDE='YM'
+C            ENDIF
+C            IF(SEKVZ.GT.SEFE) THEN
+C               NNLM=NLM
+C               NNG=NGS
+C               SEFE=SEKVZ
+C               GDE='ZM'
+C            ENDIF
+C 1000 FORMAT(6(1PE12.4))
+ 1010 FORMAT(6(1PE12.4))
+ 2010 FORMAT('  SIGMA-(YM)  SIGMA-(ZM)        TAUY        TAUZ')
+      RETURN
+      END
+C
+C=======================================================================
+C
+      SUBROUTINE NTGE1(F,PR,NAPGV,NLM)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C  PODPROGRAM KOJI SADRZI OSNOVNU PETLJU PO ELEMENTIMA ZA ODREDJIVANJE
+C  NAPONA TANKOZIDNE GREDE
+C
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+C
+      COMMON /PGREDG/ ELCON(3),EE,PNE,G
+      COMMON /PGREDC/ NPUN,NPRBR,MAXPRR,NPRES,ICV1,ICV2,MATG,
+     1                NKARD,MG,NVR,NWRITE,NAPG,INDOF
+      COMMON /COMPRF/ YC,ZC,YI,ZI,ALFB,TK,CAPAY,CAPAZ,AREA,POVR,YM,ZM,
+     1                DDELT,YP,SWO(1),OM(1),DELTAP(3),TAUTK(3),OY,OZ,
+     2                NT,NELM,NTIP,NKAR,IND,INDRPR(3),KR1,NEXTR,NPRPR
+      COMMON /NAPONG/ SKG(12,12),U(12),TR(3,3),LM(12),NAP
+      COMMON /PAKDFL/ IND16,IR16,IND40,IND49,IND69,IND99
+      COMMON /RAPRES/ MCOR,MELM,MCORK,MNNKAR,MNBROJ,MSTEX,MSZ,MSY,MEL,
+     1                MCSI,MEXC,MSEX,MINDI,MDV,MELV,MKT,MPRRMX
+C
+      DIMENSION F(*),PR(*)
+C
+      MCOR = 1
+C      IF(NAPG.EQ.1) WRITE(3,2010)
+C 2010 FORMAT(/10X,'STAMPAJU SE NAPONI U SVIM SEGMENTIMA I SVIM TACKAMA'
+C     1 ,' PRESEKA')
+C      IF(NAPG.EQ.2) WRITE(3,2011)
+C 2011 FORMAT(/10X,'STAMPAJU SE NAPONI U TACKI MAX. MIZESOVOG EKVIVALE'
+C     1 ,'NTNOG NAPONA')
+C      IF(NAPG.EQ.3) WRITE(3,2012)
+C 2012 FORMAT(/10X,'STAMPAJU SE NAPONI SAMO U NEKIM ELMENTIMA')
+C
+C  OSNOVNA P E T L J A   PO  E L E M E N T I M A
+C
+      IF(NAPG.EQ.1.OR.NAPG.EQ.2) GO TO 10
+      NAP = NAPGV
+CZ      IF(NAP.EQ.0) RETURN
+      IF(NAP.LE.0) RETURN
+C
+   10 CONTINUE
+C
+      IF(NPRES.GT.1) GO TO 4
+      IF(NLM.GT.1) GO TO 3
+      GO TO 108
+    4 IF(NLM.EQ.1) GO TO 108
+      IF(IND16.EQ.IRS) GO TO 3
+C
+C  REPERI U VEKTORU PR I POZIVANJE DISKPR ZA CITANJE PODATAKA O PRESEKU
+C
+C     MNELP = MSEX + 6 * NELM
+  108 MELM = MCOR + 3*NT
+      MCORK = MELM + NELM * 4
+CE     CLOSED SECTION
+      MNNKAR = MCORK + NKAR * 3
+      MNBROJ = MNNKAR + NKAR
+      MEL = MNBROJ + NELM * NKAR
+C
+CCC      MEL = MNBROJ + NELM*4
+      MSZ = MEL + NELM
+      MCSI = MSZ + 7*NELM
+      IF(NKAR.EQ.2) MCSI = MCSI + NELM
+      MSEX = MCSI + 4*NELM
+      MSTEX = MSEX + 6*NELM
+      MEXC = MSTEX + 6*NELM
+      MAXPR = MEXC + 6*NELM
+C
+C  KASNIJE POMERITI LABELU 100 NA IF(MAXPR.LE.MAXPRR...
+C
+      IRS = IND16
+      NWRITE = 2
+      IND16 = 1
+C
+C  POZIVANJE PROGRAMA ZA RACUNANJE NAPONA U PRESESKU PO SLUC.OPTERECENJA
+C
+    3 CALL NAPTPG (F,PR(MCOR),PR(MELM),PR(MSTEX),PR(MSZ),PR(MEL),
+     1             PR(MCSI),PR(MEXC),PR(MSEX))
+C
+      RETURN
+      END
+C======================================================================
+C
+      SUBROUTINE NAPTPG (F,COR,ELM,STEX,SZ,EL,CSI,EXC,SEX)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C  PROGRAM ZA ODREDJIVANJE SILA U CVOROVIMA I NAPONA U PRESEKU ELEMENATA
+C  T A N K O Z I D N E   P R A V E   G R E D E
+C
+C  GREDE SU SA 6 STEPENI SLOBODE PO CVORU.
+C
+C  ZA 7 STEPENI SLOBODE - TREBA VIDETI PROGRAM OMTORZ, SUBROUT. STRESG
+C  ZA SEIZMICKE SILE - TREBA VIDETI PROGRAM GREDE-SAP, SUBROUT. STRESG
+C
+C     DSQRT(X)=DDSQRT(X)
+C     DABS(X)=DDABS(X)
+C
+C
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+C
+      COMMON /PGREDG/ ELCON(3),EE,PNE,G
+      COMMON /PGREDC/ NPUN,NPRBR,MAXPRR,NPRES,ICV1,ICV2,MATG,
+     1                NKARD,MG,NVR,NWRITE,NAPG,INDOF
+      COMMON /COMPRF/ YC,ZC,YI,ZI,ALFB,TK,CAPAY,CAPAZ,AREA,POVR,YM,ZM,
+     1                DDELT,YP,SWO(1),OM(1),DELTAP(3),TAUTK(3),OY,OZ,
+     2                NT,NELM,NTIP,NKAR,IND,INDRPR(3),KR1,NEXTR,NPRPR
+      COMMON /NAPONG/ SKG(12,12),U(12),TR(3,3),LM(12),NAP
+C
+      DIMENSION COR(NT,*),ELM(NELM,*),STEX(2,NELM,*),SZ(NELM,*),
+     1 EL(*),CSI(NELM,*),EXC(2,NELM,*),SEX(NELM,*),F(12),TAUTR(3)
+C
+C**   DEFINICIJE PROMENLJIVIH
+C     U(12)=VEKTOR POMERANJA ELEMENTA U LOKALNOM KOORDINATNOM SISTEMU
+C     F(12)=VEKTOR SILA ELEMENTA U LOKALNOM KOORDINATNOM SISTEMU
+C
+C  PETLJA PO  S L U C A J E V I M A   O P T E R E C E NJ A
+C
+      NLD = 1
+      DO 100 LBA=1,NLD
+C      IF(NAPG.GE.2.AND.LBA.EQ.1.AND.NLM.EQ.1) WRITE(3,2018)
+C 2018 FORMAT(28X,'NORMALNI NAPONI / TANGENCIJALNI NAPONI'/
+C     1 15X,'AKS-SILA',9X,'MOM1',9X,'MOM2 SIGMA-UKUPAN   MIZESOV NAPON'/
+C     3 16X,'TORZIJA',7X,'FTRAN1',7X,'FTRAN2',7X,'TAU-UKUPAN'/)
+C
+C     NAPONI U PO SEGMENTIMA - RACUNAJU SE NAPONI U CVORNIM TACKAMA
+C     SVAKOG SEGMENTA
+C
+   11 FORMAT(/' ','CVOR ',I5//3X,'1. NAPONI U TACKAMA SEGMENATA',
+     1 /' ','SEGM. TACKA',15X,
+     1 'NORMALNI NAPONI / TANGENCIJALNI NAPONI'/
+     1 15X,'AKS-SILA',9X,'MOM1',9X,'MOM2 SIGMA-UKUPAN   MIZESOV NAPON'/
+     3 16X,'TORZIJA',7X,'FTRAN1',7X,'FTRAN2',3X,'TAU-UKUPAN'/)
+C
+      KK=0
+C
+      DO 12 II=1,2
+      SGMX = 0.
+      GO TO (13,17),II
+   13 IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1)) WRITE(3,11)ICV1
+      ICVS = ICV1
+      S1=-F(1)/POVR
+      FTY = -F(3)/ZI
+      FTZ = -F(2)/YI
+      EMMY = -F(5)/ZI
+      EMMZ = F(6)/YI
+C
+      GO TO 49
+   17 IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1)) WRITE(3,11)ICV2
+      ICVS = ICV2
+      S1=F(7)/POVR
+      FTY = F(9)/ZI
+      FTZ = F(8)/YI
+      EMMY = F(11)/ZI
+      EMMZ = -F(12)/YI
+C
+   49 IF(NKAR.LT.2) GO TO 51
+C
+C  NAPONI TORZIJE U TACKI RACVANJA DVOSTRUKO POVEZANOG PRESEKA
+C
+      GO TO (44,45),II
+   44 DO 46 I = 1,3
+   46 TAUTR(I) = -TAUTK(I)*F(4)
+      GO TO 16
+   45 DO 47 I = 1,3
+   47 TAUTR(I) = TAUTK(I)*F(10)
+C
+   16 DO 48 I = 1,3
+   48 TAUTR(I) = TAUTR(I)*DELTAP(I)
+C
+C  NAPONI PO SEGMENTIMA - U CVOROVIMA SEGMENATA
+C
+   51 DO 18 K=1,NELM
+C
+C  SMICUCI NAPONI USLED TORZIJE
+C
+      IF(NTIP.EQ.2) GO TO 50
+C
+C  OTVORENI PRESEK
+C
+      DMAX = ELM(K,4)/TK
+C
+      GO TO (41,42),II
+   41 TT = -F(4)*DMAX
+      GO TO 40
+   42 TT = F(10)*DMAX
+C
+      GO TO 40
+C
+C  ZATVORENI PRESEK
+C
+   50 IF(NKAR.EQ.2) GO TO 170
+C
+C  JEDNOSTRUKO POVEZAN PRESEK
+C
+      DMIN = AREA*ELM(K,4)
+      GO TO (61,62),II
+   61 TT = -F(4)/DMIN
+      GO TO 55
+   62 TT = F(10)/DMIN
+   55 IF(SZ(K,7).LT.0.) TT = -TT
+      GO TO 40
+C
+C  DVOSTRUKO POVEZAN PRESEK
+C
+  170 I = SZ(K,8)
+      TT = TAUTR(I)/ELM(K,4)
+      IF(SZ(K,7).LT.0.) TT = -TT
+C
+C  NAPONI SMICANJA OD TRANSV. SILA I NORMALNI NAPONI U CVOROVIMA SEGMEN.
+C
+   40 I1 = ELM(K,2)
+      I2 = ELM(K,3)
+      MT = I1
+C
+      DO 18 ICV = 1,2
+      TZ = 0.
+      TY = 0.
+      IF(ICV.EQ.2) GO TO 72
+      IF(DABS(SZ(K,2)).LT.1.0D-20.OR.DABS(CSI(K,2)).LT.1.0D-20) GO TO 71
+      TZ = FTZ*SZ(K,2)/CSI(K,2)
+   71 IF(DABS(SZ(K,1)).LT.1.0D-20.OR.DABS(CSI(K,1)).LT.1.0D-20) GO TO 75
+      TY = FTY*SZ(K,1)/CSI(K,1)
+      GO TO 75
+C
+   72 MT = I2
+      IF(DABS(SZ(K,4)).LT.1.0D-20.OR.DABS(CSI(K,4)).LT.1.0D-20) GO TO 73
+      TZ = FTZ*SZ(K,4)/CSI(K,4)
+   73 IF(DABS(SZ(K,3)).LT.1.0D-20.OR.DABS(CSI(K,3)).LT.1.0D-20) GO TO 75
+      TY = FTY*SZ(K,3)/CSI(K,3)
+C
+   75 IF(SZ(K,5).LT.0.) TZ = -TZ
+      IF(SZ(K,6).LT.0.) TY = -TY
+C
+C  SLAGANJE SMICUCIH NAPONA
+C
+      IF(NTIP.EQ.2)GO TO 76
+C
+C  OTVORENI PRESEK- ODREDJUJE SE MAX. SMICUCI NAPON
+C
+      TAU = DABS(TT) + DABS(TZ + TY)
+      GO TO 90
+C
+C  ZATVORENI PRESEK
+C
+   76 TAU = TT + TZ + TY
+C
+C  NORMALNI NAPONI
+C
+   90 SSY = EMMY*COR(MT,3)
+      SSZ = EMMZ*COR(MT,2)
+C
+      SX=S1+SSY+SSZ
+      SEKV=DSQRT(SX*SX+3.*TAU*TAU)
+      IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1)) GO TO 173
+      IF(SEKV.LE.SGMX) GO TO 173
+C
+C  ZAMENA NAPONA VECIM VREDNOSTIMA RADI STAMPE MAKSIMALNIH
+C
+      KS = K
+      MTS = MT
+      S1S = S1
+      SSYS = SSY
+      SSZS = SSZ
+      SXS = SX
+      TTS = TT
+      TZS = TZ
+      TYS = TY
+      TAUS = TAU
+      SGMX = SEKV
+      GO TO 18
+C
+  173 IF(NAPG.EQ.2.OR.(NAPG.EQ.3.AND.NAP.EQ.2)) GO TO 18
+C
+      IF(ICV.EQ.1) WRITE(3,2007) K,MT,S1,SSY,SSZ,SX,TT,TZ,TY,TAU,SEKV
+      IF(ICV.EQ.2) WRITE(3,2008) MT,S1,SSY,SSZ,SX,TT,TZ,TY,TAU,SEKV
+ 2007 FORMAT(2I5,4(1PE13.4)/10X,4(1PE13.4),3X,1PE13.4)
+ 2008 FORMAT(I10,4(1PE13.4)/10X,4(1PE13.4),3X,1PE13.4)
+   18 CONTINUE
+C
+C  NAPONI U TACKAMA EKSTREMUMA SMICUCIH NAPONA
+C
+      IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1)) WRITE(3,2015)
+ 2015 FORMAT(/3X,'2. NAPONI U TACKAMA MAX. SMICUCEG NAPONA SEGMENATA ',
+     1' (PRESECI SA GLAV.OSAMA)')
+C
+      IF(NEXTR.EQ.0) GO TO 166
+C
+      IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1)) WRITE(3,23)
+   23 FORMAT(/' ','SEGMENT')
+C
+      DO 25 K=1,NELM
+      DMIN = ELM(K,4)
+      IF(NTIP.EQ.1) DMIN = DMIN/TK
+      IF(NKAR.EQ.1) DMIN = DMIN*AREA
+      DO 25 L=1,2
+      JJ=2*L+1
+      IF(DABS(SEX(K,JJ)).LT.1.0D-20) GO TO 25
+      I1=ELM(K,2)
+      I2=ELM(K,3)
+      GO TO (24,26),L
+   24 Z=COR(I1,2)+(COR(I2,2)-COR(I1,2))*SEX(K,4)/EL(K)
+      Y=0.
+      GO TO 27
+   26 Y=COR(I1,3)+(COR(I2,3)-COR(I1,3))*SEX(K,6)/EL(K)
+      Z=0.
+C
+   27 IF(NTIP.EQ.2) GO TO 120
+C
+C  OTVORENI PRESEK
+C
+      IF(EXC(2,K,L+1).LT.DDELT) GO TO 104
+      TZ=F(2+KK)*STEX(2,K,L+1)/(YI*EXC(2,K,L+1))
+      GO TO 105
+  104 TZ=0.
+  105 IF(EXC(1,K,L+1).LT.DDELT) GO TO 106
+      TY=F(3+KK)*STEX(1,K,L+1)/(ZI*EXC(1,K,L+1))
+      GO TO 103
+  106 TY=0.
+C
+  103 IF(SZ(K,5).LT.0.) TZ = -TZ
+      IF(SZ(K,6).LT.0.) TY = -TY
+C
+      IF(L.EQ.2) GO TO 109
+      GO TO (107,108),II
+  107 TT = -F(4)*DMIN
+      GO TO 91
+  108 TT = F(10)*DMIN
+   91 IF(SZ(K,7).LT.0.) TT = -TT
+C
+  109 TAU= DABS(TT) + DABS(TY+TZ)
+C
+      GO TO 160
+C
+C  ZATVORENI PRESEK
+C
+  120 IF(EXC(2,K,L+1).LT.DDELT) GO TO 124
+      GO TO (121,122),II
+  121 TZ = -F(2)*STEX(2,K,L+1)/(YI*EXC(2,K,L+1))
+      GO TO 125
+  122 TZ = F(8)*STEX(2,K,L+1)/(YI*EXC(2,K,L+1))
+      GO TO 125
+  124 TZ = 0.
+  125 IF(EXC(1,K,L+1).LT.DDELT) GO TO 128
+      GO TO (126,127),II
+  126 TY = -F(3)*STEX(1,K,L+1)/(ZI*EXC(1,K,L+1))
+      GO TO 130
+  127 TY = F(9)*STEX(1,K,L+1)/(ZI*EXC(1,K,L+1))
+      GO TO 130
+  128 TY = 0.
+C
+  130 IF(SZ(K,5).LT.0.) TZ = -TZ
+      IF(SZ(K,6).LT.0.) TY = -TY
+C     IF(L.EQ.2) GO TO 135
+      IF(NKAR.EQ.2) GO TO 140
+C
+C  JEDNOSTUKO POVEZAN PRESEK
+C
+      GO TO (131,132),II
+  131 TT = -F(4)/DMIN
+      GO TO 137
+  132 TT = F(10)/DMIN
+      GO TO 137
+C
+C  DVOSTRUKO POVEZAN PRESEK
+C
+  140 I = SZ(K,8)
+      TT = TAUTR(I)/DMIN
+C
+  137 IF(SZ(K,7).LT.0.) TT = -TT
+C
+      TAU = TT + TZ + TY
+C
+C 160 GO TO (28,29),II
+C
+  160 SSY = EMMY*Y
+      SSZ = EMMZ*Z
+C
+C     GO TO 30
+C  29 SSY=F(11)*Y/ZI
+C     SSZ=-F(12)*Z/YI
+C
+      SX=S1+SSY+SSZ
+      SEKV=DSQRT(SX*SX+3.*TAU*TAU)
+      IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1)) GO TO 181
+      IF(SEKV.LE.SGMX) GO TO 25
+C
+C  ZAMENA NAPONA VECIM VREDNOSTIMA RADI STAMPE MAKSIMALNIH
+C
+      KS = K
+      MTS = 0
+      S1S = S1
+      SSYS = SSY
+      SSZS = SSZ
+      SXS = SX
+      TTS = TT
+      TZS = TZ
+      TYS = TY
+      TAUS = TAU
+      SGMX = SEKV
+      GO TO 25
+C
+  181 WRITE(3,2009)K,S1,SSY,SSZ,SX,TT,TZ,TY,TAU,SEKV
+ 2009 FORMAT(I5,5X,4(1PE13.4)/10X,4(1PE13.4),3X,1PE13.4)
+C
+   25 CONTINUE
+C
+      GO TO 167
+C
+  166 IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1)) WRITE(3,2010)
+ 2010 FORMAT(//' ','2. NEMA EKSTREMUMA SMICUCEG NAPONA U PRESEKU (AKO',
+     1' POSTOJE - ONDA SU U CVORNIM TACKAMA PRESEKA)')
+C
+  167 KK = 6
+C
+      IF(NAPG.EQ.1.OR.(NAPG.EQ.3.AND.NAP.EQ.1))GO TO 12
+      IF(MTS.GT.0) WRITE(3,2021) ICVS,KS,MTS
+ 2021 FORMAT(/' ','CVOR BR. =',I5,3X,'SEGMENT BR. =',I3,3X,'TACKA BR.='
+     1 ,I3)
+      IF(MTS.EQ.0) WRITE(3,2022) ICVS,KS
+ 2022 FORMAT(/' ','CVOR BR. =',I5,3X,'SEGMENT BR. =',I3,3X,'PRESEK SEG',
+     1 'MENTA SA GLAVNOM OSOM')
+      WRITE(3,2023)S1S,SSYS,SSZS,SXS,TTS,TZS,TYS,TAUS,SGMX
+ 2023 FORMAT(10X,4(1PE13.4)/10X,4(1PE13.4),3X,1PE13.4)
+
+C
+   12 CONTINUE
+C
+  100 CONTINUE
+C
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE STANG6(AU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+CE.       PRINTOUT FOR GRAPHICS THIN WALLED BEAMS
+C ......................................................................
+C
+      include 'paka.inc'
+      
+      COMMON /ELEMA6/ MXAU,LAU,LLMEL,LNEL,LNMAT,LCTR,LMGLV,LLUV,LINDPR,
+     1                LELKG,LNAPGV,LPRR,LNTIPG
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /DUPLAP/ IDVA
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      DIMENSION AU(*)
+      REAL AU
+C
+      LUT1=LPLAS1+2*IDVA
+      LFT1=LUT1+NE*12*IDVA
+      IF(IATYP.EQ.0)LFT1=LSIGMA
+      CALL STAG61(A(LFT1),AU(LCEL),ICVEL,
+     +            AU(LNEL),A(LCVEL),A(LNCVP),NCVPR,AU(LNAPGV),A(LAU))
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE STAG61(F,MCVEL,ICVEL,NEL,NCVEL,NCVP,NCVPR,NAPGV,AU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+CE.       PRINTOUT FOR GRAPHICS THIN WALLED BEAMS
+C ......................................................................
+C
+      CHARACTER*250 NASLOV
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /NASLOV/ NASLOV
+      COMMON /SUMELE/ ISUMEL,ISUMGR
+      COMMON /SRPSKI/ ISRPS
+      DIMENSION AU(*)
+      REAL AU
+      DIMENSION MCVEL(*),F(12,*),NCVEL(*),NEL(NE,*),NCVP(*),NAPGV(*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' STAG61'
+C     STRUKTURNA ANALIZA = 1
+      IMOTY=1
+C     STACIONARAN = 1; NESTACIONARAN = 4   
+      IANTY=1
+      IFAT1=1
+      IFAT2=1
+      FATY8=0.0D0
+      IF(NDT.GT.1) THEN 
+        IANTY=4
+        IFAT1=2
+        FATY8=VREME
+      ENDIF
+C     SIMETRICAN TENZOR = 4
+      IDACH=4
+C     NAPONI = 2
+C     FORCE = 4
+      ISDTY=4
+C     PRECIZNOST JEDNOSTRUKA = 2; DVOSTRUKA = 4 
+      IDATY=2
+C     BROJ PODATAKA = 6
+      NDVPN=6
+      IEXP=1
+      NNODS=NCVE
+      NVPN=6
+      IND1=-1
+      INA1=57
+      IC1=1
+      IC2=1
+      IPRV=0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 20
+         NAP=NAPGV(NLM)
+         IF(NAP.EQ.-1) GO TO 20
+         ICV1=NEL(NLM,1)
+         ICV2=NEL(NLM,2)
+         IF(NCVPR.GT.0) THEN
+            IC1=NCVP(ICV1)
+            IC2=NCVP(ICV2)
+         ENDIF
+         IF(IPRV.EQ.0.AND.(IC1.EQ.1.OR.IC2.EQ.1)) THEN
+            IPRV=1
+      WRITE(IGRAF,5000) IND1
+      WRITE(IGRAF,5000) INA1
+      WRITE(IGRAF,5003) NASLOV
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2004) KOR
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6004) KOR
+      WRITE(IGRAF,1000) IMOTY,IANTY,IDACH,ISDTY,IDATY,NDVPN
+      IF(NDT.EQ.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR
+      IF(NDT.GT.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR,KOR
+      WRITE(IGRAF,5001) FATY8
+         ENDIF
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+C         IBD=0
+C         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+C         IF(IBD.EQ.1) GO TO 20
+C
+         NUM=NLM+ISUMEL
+         IF(ICVEL.EQ.1) NUM=MCVEL(NLM)
+         IF(IC1.EQ.1.OR.IC2.EQ.1) THEN
+            WRITE(IGRAF,1000) NUM,IEXP,NNODS,NVPN
+            WRITE(IGRAF,5001) (F(I,NLM),I=1,12)
+         ENDIF
+   20 CONTINUE
+      IF(IPRV.EQ.1) WRITE(IGRAF,5000) IND1
+      ISUMEL=ISUMEL+NE
+      RETURN
+ 1000 FORMAT(8I10)
+ 5000 FORMAT(I6)
+ 5001 FORMAT(6(1PE13.5))
+ 5003 FORMAT(A80)
+C-----------------------------------------------------------------------
+ 2004 FORMAT('SILE TANKOZIDNIH GREAD'/
+     1       'DATUM I VREME'/
+     1       'PRAZNA'/
+     1       'SLUCAJ OPTERECENJA:',I10)
+C-----------------------------------------------------------------------
+ 6004 FORMAT('THIN-WALLED BEAMS FORCES'/
+     1       'DATE'/
+     1       'EMPTY'/
+     1       'LOAD CASE         :',I10)
+C-----------------------------------------------------------------------
+      END

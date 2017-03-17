@@ -1,0 +1,112 @@
+<html>
+<style type="text/css">
+.indented{padding-left: 25pt;padding-rig;}
+.verb{	font-size:10pt;	font-family:FONT-FAMILY: courrier, verdana, arial, "ms sans serif", monospaced}
+.TITLE{	FONT-SIZE: 22px; MARGIN: 8px 10px; COLOR:#002D7C; LINE-HEIGHT: 26px; FONT-FAMILY: tahoma,geneva, verdana, arial, "ms sans serif", sans-serif}
+P {	    FONT-SIZE: 12px; MARGIN: 10px; COLOR: #444; LINE-HEIGHT: 20px; FONT-FAMILY: geneva, verdana, arial, "ms sans serif", sans-serif}
+H1 {	FONT-SIZE: 18px; MARGIN: 8px 10px; COLOR: #002D7C; LINE-HEIGHT: 26px; FONT-FAMILY: tahoma,geneva, verdana, arial, "ms sans serif", sans-serif}
+H2 {    FONT-SIZE: 16px; MARGIN: 8px 10px; COLOR: #FF9D46; LINE-HEIGHT: 24px; FONT-FAMILY: tahoma,geneva, verdana, arial, "ms sans serif", sans-serif}
+H3 {	FONT-WEIGHT: bold; FONT-SIZE: 14px; MARGIN: 8px 10px; COLOR: #369; LINE-HEIGHT: 22px; FONT-FAMILY: geneva, verdana, arial, "ms sans serif", sans-serif}
+UL {	PADDING-LEFT: 20px; FONT-SIZE: 12px; COLOR: #444; LINE-HEIGHT: 20px; PADDING-TOP: 5px; FONT-FAMILY: geneva, verdana, arial, "ms sans serif", sans-serif}
+OL {	PADDING-LEFT: 20px; FONT-SIZE: 12px; COLOR: #444; LINE-HEIGHT: 20px; PADDING-TOP: 5px; FONT-FAMILY: geneva, verdana, arial, "ms sans serif", sans-serif}
+LI {	PADDING-LEFT: 0px; FONT-SIZE: 12px; COLOR: #444; LINE-HEIGHT: 20px; PADDING-TOP: 5px; FONT-FAMILY: geneva, verdana, arial, "ms sans serif", sans-serif}
+LI.h1 {	FONT-SIZE: 20px; MARGIN: 8px 10px; COLOR: #002D7C; LINE-HEIGHT: 26px; FONT-FAMILY: tahoma,geneva, verdana, arial, "ms sans serif", sans-serif}
+LI.h2{ FONT-SIZE: 18px; MARGIN: 8px 10px; COLOR: #FF9D46; LINE-HEIGHT: 24px; FONT-FAMILY: tahoma,geneva, verdana, arial, "ms sans serif", sans-serif}
+A:link {	FONT-WEIGHT: bold; COLOR: #369; TEXT-DECORATION: underline}
+A:visited {	FONT-WEIGHT: bold; COLOR: #58b; TEXT-DECORATION: underline}
+A:active {	FONT-WEIGHT: bold; COLOR: #69c; TEXT-DECORATION: underline}
+A:hover {	FONT-WEIGHT: bold; COLOR: #f90; TEXT-DECORATION: underline}
+B {	FONT-WEIGHT: bold}
+STRONG {	FONT-WEIGHT: bold}
+BODY {	SCROLLBAR-FACE-COLOR: #369; SCROLLBAR-HIGHLIGHT-COLOR: #69c; SCROLLBAR-SHADOW-COLOR: #036; SCROLLBAR-ARROW-COLOR: #f90; SCROLLBAR-BASE-COLOR: #036; scrollbar-3d-light-color: #369; scrollbar-dark-shadow-color: #036}
+</style>
+<body>
+<title>WinMUMPS</title></head><body>
+
+<h1>WinMUMPS</h1>
+
+<p><b>WinMumps</b> is a set of project files allowing to build MUMPS on Windows 32- and 64-bits.
+<br>These projects are developed and currently used by <a href="http://www.fft.be">Free Field Technologies</a>. So, fell free to modify them if necessary. 
+For more informations, you can send a mail to <a href="mailto:mathieu.gontier@fft.be">mathieu.gontier@fft.be</a>
+</p>
+
+<ul>
+</ul><h2>Requirements</h2><ul>
+
+</ul><h3>MUMPS</h3><ul>
+
+<p>MUMPS-4.6.4 or latter.</p>
+
+</ul><h3>Compilation</h3><ul>
+
+<h4>C/C++ build environment:</h4>
+<p>
+<ul>	
+<li><i>either</i> Visual Studio 2003 Professional;</li>
+<li><i>or</i> Visual Studio 2005 Professional <i><small>(not patched with Visual Studio 2005 Service Pack 1)</small></i>.</li>
+</ul>
+</p>
+
+<h4>Fortran build environment:</h4>
+<p>
+<ul>	
+<li>Intel Fortran compiler 9.x.</li>
+</ul>
+</p>
+
+</ul><h3>Parallelism</h3><ul>
+
+<p>For the parallel version, the compilation is based on the following MPI libraries:
+<ul>
+<li>MPICH-1.2.5 for Windows 32-bits;</li>
+<li>MPICH2-1.0.3 for Windows 64-bits.</li>
+</ul>
+These libraries have to be installed with the default parameters (for instance the installation path). If this requirement is not followed, the project files should be modified.
+</p>
+
+<p>Moreover, MUMPS parallel requires BLACS and SCALAPACK distribution. WinMumps provides project files to build them. Copy these distributions in the same directory than MUMPS if you do not want to modify the project files by yourself.
+</p>
+<html>
+
+</ul><h2>Installation</h2><ul>
+
+<p>Just copy the <i>WinMumps</i> directory in the main directory of MUMPS.</p>
+<p>One should organize MUMPS and its dependencies as following:</p>
+<p><ul><tt>directory-on-the-host-machine</tt>
+<ul><tt>|_ MUMPS-<i>version</i></tt></ul>
+<ul><ul><tt>|_<b>WinMumps</b></tt></ul></ul>
+<ul><ul><tt>|_ ...</tt></ul></ul>
+<ul><tt>|_ blacs</tt></ul>
+<ul><tt>|_ scalapack</tt></ul>
+</ul>
+It will permit to work correctly without any modification of the project files. </p>
+
+</ul><h2>Python scripts</h2><ul>
+
+<p>Some Python scripts are distributed with WinMumps. They are mainly used for an easier deployement of the provided project files.
+<br>Note that Python-2.5-release is required.</p>
+
+</ul><h3>convert_msnet2005to2003.py</h3><ul>
+
+<p>WinMumps is mainly developed with Visual Studio 2005 professional on Windows-x86-64. The script <i>convert_msnet2005to2003.py</i> allows to convert Visual Studio 2005 projects supporting both 32- and 64-bits compilations to Visual Studio 2003 projects supporting 32-bits compilation only.</p>
+
+</ul><h2>Todo list</h2><ul>
+<ul>
+<li>Implement the <i>__declspec(import) / __declspec(export)</i> mechanism in the MUMPS core (Fortran interface).</li>
+<li>Implement the <i>__declspec(import) / __declspec(export)</i> mechanism in the C-MUMPS interface.</li>
+<li>Write project files for shared library generation.</li>
+</ul>
+
+</ul><h2>Links</h2><ul>
+
+<li><a href="http://graal.ens-lyon.fr/MUMPS/">MUMPS web site</a></li>
+<li><a href="http://www.fft.be/">Free Field Technologies web site</a></li>
+<li><a href="http://www-unix.mcs.anl.gov/mpi/mpich1/">MPICH web site</a></li>
+<li><a href="http://www-unix.mcs.anl.gov/mpi/mpich2/">MPICH2 web site</a></li>
+<li><a href="http://www.netlib.org/blacs/">BLACS web site</a></li>
+<li><a href="http://www.netlib.org/scalapack/">SCALAPACK web site</a></li>
+<li><a href="http://www.python.org/">Python web site</a></li>
+
+</ul>
+</body>
+</html>

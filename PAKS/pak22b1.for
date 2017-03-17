@@ -1,0 +1,1914 @@
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE ELTE2B(BLT,SKE,UEL,LM,NOP,NMAT,THID,HE,CORD,UPRI,RTDT,
+     1                FTDT,TAU,ISNA,IPGC,LMEL,SKP,SKP1,ELAS,FOT,EKOR,
+     1                GERS,NSLOJ,MATSL,BBET,DSLOJ,BET0,ALFE,HAEM,HINV,
+     1                GEEK,NCVE2,IALFA,COR0,TEMGT,CORGT,AU,TSG2,N45,
+     1                ZAPS,NPRZ,INDZS,GUSM,LA,CEGE,ESILA,
+     1                SKS,SKES,NDNDS,HS,QS,PS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICA ELEMENATA I SISTEMA
+CE     FORM ELEMENT MATRIX
+C
+      include 'paka.inc'
+      
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /UGAOVL/ TE(4,4)
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /GRUPEE/ NGEL,NGENL,LGEOM,NGEOM,ITERM
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /REPERM/ MREPER(4)
+      COMMON /TEMPCV/ LTECV,ITEMP
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /ANALIZ/ LINEAR,ITERGL,INDDIN
+      COMMON /MATIZO/ E,V
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /INTGRA/ INCOTX,INCOTY,INCOTZ
+      COMMON /SPANEL/ ISHEAR
+      COMMON /CDEBUG/ IDEBUG
+      COMMON /VELIKE/ LCOR0,LGM0,JG,NGR,NGS,NGT,NGS4
+      COMMON /GAUSVR/ LTEMGT,LCORGT,ICORGT
+      COMMON /SOPSVR/ ISOPS,ISTYP,NSOPV,ISTSV,IPROV,IPROL
+      COMMON /DUPLAP/ IDVA
+      COMMON /ITERBR/ ITER
+      COMMON /INDKON/ IKONV
+      COMMON /INDNAP/ NAPON
+      COMMON /FILTER/ TOLNAP,TOLPOM
+      COMMON /PRINCI/ PRINC(3)
+      COMMON /KOREKJ/ AJOT
+      COMMON /fier/ fier(3,3)
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /SRPSKI/ ISRPS
+      COMMON /ZADATA/ LNZADJ,LNZADF,LZADFM,NZADP
+      COMMON /RMISIC/ VMS(3,3),VMS1(3,3),RACGR(3,3)
+C
+      COMMON /MPOINC/ MMP,NMPC,NEZAV,LCMPC,LMPC,NEZA1
+      COMMON /PODTIP/ IPODT
+      COMMON /GEORGE/ TOLG,ALFAG,ICCGG
+      COMMON /MIXEDM/ MIXED,IOPGS(6),NDS
+      COMMON /VELIKD/ DETG,QP(3,3),IGLPR
+      COMMON /LEVDES/ ILEDE,NLD,ICPM1
+      COMMON /GRADIJ/ GRAD(3,3),GRAE(3,3),GRAP(3,3)
+      COMMON /DEBLJG/ THICK,THICT,THIC0,NNSL
+      COMMON /TRA2DN/ TSGD(4,4),TSGN(4,4),INTGL
+      COMMON /DEFNAP/ NAPDEF
+      COMMON /BOBAN3/ IBOB,IC69
+C ARGENTINA
+      COMMON /MMOD51/ TVOLE
+C
+      DIMENSION AU(*)
+      REAL AU
+C
+      DIMENSION BLT(KK,*),SKE(*),UEL(*),LM(*),NOP(NE,*),NMAT(*),ISNA(*),
+     1          THID(NE,*),CORD(NP,*),HE(NCVE,*),IPGC(*),UPRI(*),
+     1          LMEL(NDNDS,*),RTDT(*),FTDT(*),TAU(N45,NGS12,NE,*),
+     1          TEMGT(NGS12,*),CORGT(3,NGS12,*),SKP(ND,*),SKP1(NDNDS,*),
+     1          SKS(*),SKES(NDS,*),HS(KK,*),QS(*),PS(NDS,*),
+     1          ELAS(KK,*),NSLOJ(*),MATSL(MSLOJ,*),BBET(MSLOJ,*),
+     1          DSLOJ(MSLOJ,*),BET0(*),ESILA(ND,*),
+     1          ZAPS(*),NPRZ(*),GUSM(50,*),AMASC(9),
+     1          ALFE(LA,*),HAEM(LA,*),HINV(LA,LA,*),GEEK(LA,NCVE2,*)
+      DIMENSION STRAIN(6),STRESS(8),TA(6)
+      DIMENSION XG(55),WGT(55),NREF(11),XNC(15),WNC(15)
+      DIMENSION XG5(5),YG5(5),WG5(5)
+      DIMENSION TTE(2,3),CORDL(2,9),A12(3),A13(3),EN(3),Y(3),FTDTL(18),
+     1          RTDTL(18),UPRIL(18),LMLAZ(27),
+     1          COR(9,3),CORT(9,3),CON(9,3),COR0(NE,3,*),
+     1          FOT(KK,*),EKOR(KK,*),GERS(KK,*),LJA(5),MJA(5),
+     1          CEGE(LA,*),HAEML(5),TSG2(KK,*)
+C
+      DIMENSION CRAC(2,9),GRAN(3,3),XJT(3,3),XJ0(3,3)
+C
+C     BOBAN: VEKTORI R,S,S JEDINICNO,H-OVI
+      DIMENSION RS(4,2),SJED(4),HOVI(4)
+      DIMENSION BOVI(4,3,2),GAME(4)
+      DIMENSION BZHU(5,8),BNAD(5,8,3),BNL(4,8,3),BLT5(5,8)
+      DIMENSION XG2(2),YG2(2)
+      DIMENSION ELAST4(5,5),STRAIN4(5,3),SIGMA4(5,3)
+C
+      DATA NREF/0,1,3,6,10,15,21,28,36,45,55/
+      DATA WGT/            2.D0,               1.D0,               1.D0,
+     1       .555555555555556D0, .888888888888889D0, .555555555555556D0,
+     2       .347854845137454D0, .652145154862546D0, .652145154862546D0,
+     3       .347854845137454D0, .236926885056189D0, .478628670499366D0,
+     4       .568888888888889D0, .478628670499366D0, .236926885056189D0,
+     5       .171324492379170D0, .360761573048139D0, .467913934572691D0,
+     6       .467913934572691D0, .360761573048139D0, .171324492379170D0,
+     7       .129484966168870D0, .279705391489277D0, .381830050505119D0,
+     8       .417959183673469D0, .381830050505119D0, .279705391489277D0,
+     9       .129484966168870D0, .101228536290376D0, .222381034453374D0,
+     9       .313706645877887D0, .362683783378362D0, .362683783378362D0,
+     1       .313706645877887D0, .222381034453374D0, .101228536290376D0,
+     2       .081274388361574D0, .180648160694857D0, .260610696402935D0,
+     3       .312347077040003D0, .330239355001260D0, .312347077040003D0,
+     4       .260610696402935D0, .180648160694857D0, .081274388361574D0,
+     5       .066671344308688D0, .149451349150581D0, .219086362515982D0,
+     6       .269266719309996D0, .295524224714753D0, .295524224714753D0,
+     7       .269266719309996D0, .219086362515982D0, .149451349150581D0,
+     8       .066671344308688D0/
+      DATA XG /            0.D0,-.577350269189626D0, .577350269189626D0,
+     1      -.774596669241483D0,               0.D0, .774596669241483D0,
+     2      -.861136311594053D0,-.339981043584856D0, .339981043584856D0,
+     3       .861136311594053D0,-.906179845938664D0,-.538469310105683D0,
+     4                     0.D0, .538469310105683D0, .906179845938664D0,
+     5      -.932469514203152D0,-.661209386466265D0,-.238619186083197D0,
+     6       .238619186083197D0, .661209386466265D0, .932469514203152D0,
+     7      -.949107912342759D0,-.741531185599394D0,-.405845151377397D0,
+     8                     0.D0, .405845151377397D0, .741531185599394D0,
+     9       .949107912342759D0,-.960289856497536D0,-.796666477413627D0,
+     9      -.525532409916329D0,-.183434642495650D0, .183434642495650D0,
+     1       .525532409916329D0, .796666477413627D0, .960289856497536D0,
+     2      -.968160239507626D0,-.836031107326636D0,-.613371432700590D0,
+     3      -.324253423403809D0,               0.D0, .324253423403809D0,
+     4       .613371432700590D0, .836031107326636D0, .968160239507626D0,
+     5      -.973906528517172D0,-.865063366688985D0,-.679409568299024D0,
+     6      -.433395394129247D0,-.148874338981631D0, .148874338981631D0,
+     7       .433395394129247D0, .679409568299024D0, .865063366688985D0,
+     8       .973906528517172D0/
+C
+      DATA WNC/            2.D0,               1.D0,               1.D0,
+     1       .333333333333333D0,1.333333333333333D0, .333333333333333D0,
+     2       .250000000000000D0, .750000000000000D0, .750000000000000D0,
+     3       .250000000000000D0, .155555555555556D0, .711111111111111D0,
+     4       .266666666666667D0, .711111111111111D0, .155555555555556D0/
+C
+      DATA XNC/            0.D0,              -1.D0,               1.D0,
+     1                    -1.D0,               0.D0,               1.D0,
+     2                    -1.D0,-.333333333333333D0, .333333333333333D0,
+     3                     1.D0,              -1.D0,             -0.5D0,
+     4                     0.D0,              0.5D0,               1.D0/
+C
+      DATA WG5/1.77777777777778D0,.555555555555556D0,.555555555555556D0,
+     1         .555555555555556D0,.555555555555556D0/
+      DATA XG5/            0.D0,-.774596669241483D0,-.774596669241483D0,
+     1                           .774596669241483D0, .774596669241483D0/
+      DATA YG5/            0.D0,-.774596669241483D0, .774596669241483D0,
+     1                          -.774596669241483D0, .774596669241483D0/
+C
+      DATA RS/ 1.D0,-1.D0,-1.D0,1.D0,
+     1         1.D0,1.D0,-1.D0,-1.D0/
+      DATA HOVI/   1.D0,-1.D0, 1.D0,-1.D0/
+      DATA SJED/ 1.D0, 1.D0, 1.D0, 1.D0/
+C
+      DATA XG2/ -.577350269189626D0, .577350269189626D0/
+      DATA YG2/ -.577350269189626D0, .577350269189626D0/
+
+C
+C      IBOB=0   
+       IC35=IC69  
+C
+      IF(IDEBUG.GT.0) PRINT *, ' ELTE  '
+C
+      PI=4.D0*DATAN(1.D0)
+      NWE=ND*(ND+1)/2
+C
+CS    FORMIRANJE LAZNOG LM KOJI ODGOVARA STEPENIMA SLOBODE
+C
+      DO 9 I=1,ND
+         LMLAZ(I)=I
+    9 CONTINUE
+CS.....   MATRICA TRANSFORMISANJA KONSTITUITIVNIH RELACIJA LAMINATA
+CE.....   FIBER ORIENTATION TRANSFORMATION MATRIX
+C
+      IF(MSET.EQ.0.AND.MODORT(NMODM).EQ.1.AND.IBB0.EQ.0)
+     1   CALL MATRTE(TE,BETA)
+C
+CS            P E T L J A    P O    E L E M N T I M A
+CE            L O O P    O V E R    E L E M E N T S
+C
+C     INDIKATOR ZA INTEGRACIJU: (0-U GL.PRAVCIMA; 1-U DEKARTOVOM) 
+C     (ZA SADA ZBOG SABIRANJA IKOMPATIBILNIH DEFORMACIJA)
+      INTGL=0
+C     INDIKATOR ZA GLAVNE PRAVCE
+      IGLPR=0
+      IF(IATYP.EQ.5.OR.ILEDE.EQ.1.OR.ICPM1.EQ.2) IGLPR=1
+C
+      GRZAP=0.D0
+      GRMAS=0.D0
+      DETGM=0.D0
+      DETGP=0.D0
+      DO 10 NLM=1,NE
+C         WRITE(3,*) 'NLM',NLM
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 10
+C
+         NNXYZ=(NLM-1)*NGS12-1
+C.....................
+CS.....   MATRICA TRANSFORMISANJA KONSTITUITIVNIH RELACIJA LAMINATA
+CE.....   FIBER ORIENTATION TRANSFORMATION MATRIX
+      IF(MSET.EQ.0.AND.MODORT(NMODM).EQ.1.AND.IBB0.EQ.1) THEN
+         BETA=BETA+BET0(NLM)
+         CALL MATRTE(TE,BETA)
+      ENDIF
+C
+         CALL CLEAR(STRAIN,6)
+         CALL CLEAR(STRESS,6)
+         CALL CLEAR(TA,6)
+         CALL CLEAR(XJ0,9)
+         CALL CLEAR(XJT,9)
+         CALL CLEAR(XJJ,9)
+         CALL CLEAR(XJ,9)
+         CALL CLEAR(CORDL,18)
+         CALL CLEAR(COR,27)
+         CALL CLEAR(CORT,27)
+         CALL CLEAR(CON,27)
+         CALL CLEAR(TSG2,KK*KK)
+         IF(IETYP.EQ.1) TSG2(4,4)=1.D0
+C
+CS       VEKTOR  LM I VEKTOR LOKALNIH POMERANJA
+CE       VECTOR  LM  AND  LOCALL DISPLACEMENTS
+C
+         CALL IJEDN1(LM,LMEL(1,NLM),NDNDS)
+C
+      DO 1222 I=1,NCVE
+         II=NOP(NLM,I)
+         IF(II.EQ.0) GO TO 1222
+         DO 1223 J=1,3
+ 1223    COR(I,J)=CORD(II,J)
+ 1222 CONTINUE
+C
+      IF(IATYP.GE.4) THEN
+         DO 1224 I=1,NCVE
+         DO 1224 J=1,3
+            IF(ITER.EQ.0) THEN
+               COR0(NLM,J,I)=COR(I,J)
+            ENDIF
+            CORT(I,J)=COR0(NLM,J,I)
+ 1224    CONTINUE
+      ENDIF
+C
+      IF(ISKNP.NE.2) THEN
+         CALL CLEAR(SKE,NWE)
+         IF(MIXED.EQ.1) THEN
+            NWS=NDS*(NDS+1)/2
+            CALL CLEAR(SKS,NWS)
+            CALL CLEAR(SKES,ND*NDS)
+            CALL CLEAR(SKP1,NDNDS*NDNDS)
+         ENDIF
+      ENDIF
+      IF(MIXED.EQ.1) CALL CLEAR(HS,KK*NDS)
+      CALL CLEAR(AMASC,9)
+      CALL CLEAR(BLT,KK*NCVE2)
+      CALL CLEAR(HE,3*NCVE)
+      IF(IETYP.EQ.3) THEN
+         CALL CLEAR(SKP,ND*NCVE2)
+         CALL CLEAR(SKP1,ND*ND)
+      ENDIF
+      IF(NGENL.GT.0) CALL CLEAR(FTDTL,18)
+C
+CS     FORMIRANJE MATRICE TRANSFORMACIJE
+CE     FORM TRANSFORMATION MATRIX
+C
+      IF(IETYP.EQ.3) THEN
+        I1=NOP(NLM,1)
+        I2=NOP(NLM,2)
+        I3=NOP(NLM,3)
+        DO 620 I=1,3
+          A12(I) = CORD(I2,I) - CORD(I1,I)
+  620     A13(I) = CORD(I3,I) - CORD(I1,I)
+C     VEKTOR NORMALE
+        EN(1) = A12(2)*A13(3) - A12(3)*A13(2)
+        EN(2) = A12(3)*A13(1) - A12(1)*A13(3)
+        EN(3) = A12(1)*A13(2) - A12(2)*A13(1)
+C     VEKTOR Y
+        Y(1) = EN(2)*A12(3) - EN(3)*A12(2)
+        Y(2) = EN(3)*A12(1) - EN(1)*A12(3)
+        Y(3) = EN(1)*A12(2) - EN(2)*A12(1)
+        YI = DSQRT(Y(1)*Y(1)+Y(2)*Y(2)+Y(3)*Y(3))
+        A12I = DSQRT(A12(1)*A12(1)+A12(2)*A12(2)+A12(3)*A12(3))
+        DO 640 I=1,3
+          TTE(1,I) = A12(I)/A12I
+  640     TTE(2,I) = Y(I)/YI
+C     FORMIRANJE LOKALNIH KOORDINATA
+         I1=NOP(NLM,1)
+         CORDL(1,1)=0.0D0
+         CORDL(2,1)=0.0D0
+         DO 660 I=2,NCVE
+            IN=NOP(NLM,I)
+            IF(IN.EQ.0) GO TO 660
+            DO 670 J=1,2
+            DO 670 K =1,3
+  670       CORDL(J,I) = CORDL(J,I) + TTE(J,K)*(CORD(IN,K) - CORD(I1,K))
+  660    CONTINUE
+      ELSE
+         DO 600 I=1,NCVE
+            II = NOP(NLM,I)
+            IF(II.EQ.0) GO TO 600
+            DO 610 J=1,2
+  610       CORDL(J,I)=CORD(II,J)
+  600    CONTINUE
+      ENDIF
+C
+CS    FORMIRANJE LOKALNIH POMERANJA
+C
+      IF(IETYP.EQ.3) THEN
+         MM=0
+         DO 170 I=1,NCVE
+         DO 170 J=1,2
+            MM=MM+1
+            RTDTL(MM)=0.D0
+            IF(NGENL.GT.0) UPRIL(MM)=0.D0
+            DO 172 K=1,3
+               IK=(I-1)*3+K
+               IF(LM(IK).EQ.0) GO TO 172
+               LL=LM(IK)
+               UEL(IK)=RTDT(LL)
+               RTDTL(MM) = RTDTL(MM) + TTE(J,K)*RTDT(LL)
+               IF(NGENL.GT.0) UPRIL(MM) = UPRIL(MM) + TTE(J,K)*UPRI(LL)
+  172       CONTINUE
+  170    CONTINUE
+      ELSE
+         DO 242 I=1,ND
+            UEL(I)=0.D0
+            IF(NGENL.GT.0) UPRIL(I)=0.D0
+            IF(LM(I).EQ.0) GO TO 242
+            J=LM(I)
+            UEL(I)=RTDT(J)
+            if(j.lt.0) uel(i)=condof(rtdt,a(lcmpc),a(lmpc),j)
+            IF(NGENL.GT.0) UPRIL(I)=UPRI(J)
+  242    CONTINUE
+         CALL JEDNA1(RTDTL,UEL,ND)
+      ENDIF
+         IF(MIXED.EQ.1) THEN
+            DO 702 I=1,NDS
+               QS(I)=0.D0
+               I1=ND+I
+               IF(LM(I1).EQ.0) GO TO 702
+               J=LM(I1)
+               QS(I)=RTDT(J)
+  702       CONTINUE
+         ENDIF
+C      WRITE(3,*) 'ITER',ITER
+C     CALL WRR(UEL,8,'U0  ')
+C
+      R=0.0D0
+      S=0.0D0
+      IF(IALFA.GE.0) THEN
+         IF(ISKNP.NE.1) THEN
+C
+CS          RACUNANJE IZRAZA - F * U + h
+CE          CALCULATE EXPRESSION - F * U + h
+C
+            DO 180 I=1,LA
+               HAEML(I)=0.D0
+               DO 190 J=1,NCVE2
+                  IF(NGENL.GT.0) THEN
+                     HAEML(I)=HAEML(I)+GEEK(I,J,NLM)*UPRIL(J)
+                  ELSE
+                     HAEML(I)=HAEML(I)+GEEK(I,J,NLM)*RTDTL(J)
+                  ENDIF
+  190          CONTINUE
+               IF(NGENL.GT.0) HAEML(I)=HAEML(I)+HAEM(I,NLM)
+  180       CONTINUE
+C
+CS          RACUNANJE PARAMETARA - ALFA
+CE          CALCULATE PARAMETERS - ALFA
+C           ALFA = ALFA - (H**-1) * (F * U + h )
+C
+            IF(NGENL.EQ.0) CALL CLEAR(ALFE(1,NLM),LA)
+            CALL INTEV1(ALFE(1,NLM),HINV(1,1,NLM),HAEML,-1.D0,LA,LA)
+C
+         ENDIF
+C
+CS       BRISANJE PROSTORA ZA MATRICE H, F, h, E
+CS       CLEAR SPACE FOR MATRIX H, F, h, E
+C
+         IF(ISKNP.NE.2) CALL CLEAR(HINV(1,1,NLM),LA*LA)
+         IF(ISKNP.NE.2) CALL CLEAR(GEEK(1,1,NLM),LA*NCVE2)
+         IF(NGENL.GT.0) CALL CLEAR(HAEM(1,NLM),LA)
+         CALL CLEAR(EKOR,KK*LA)
+         CALL CLEAR(FOT,KK*KK)
+C
+CS       INTERPOLACIJSKE FUNKCIJE I JAKOBIJAN U TACKI R, S, T
+CE       INTERPOLATED FUNCTIONS AND JACOBIAN MATRIX IN R,S,T POINT
+C
+         CALL JACTEL(NOP,CORDL,HE,R,S,0)
+C        CALL WRR(CORDL,8,'COR0')
+C
+CS       INVERTOVAN JAKOBIJAN - XJ
+CE       INVERSE JACOBIAN - XJ
+C
+         DET0=DET
+C
+CS       MATRICA TRANSFORMACIJE - FOT (KOVARIJANTNI - GLOBALNI DEKARTOV) 
+CE       TRANSFORMATION MATRIX - FOT (COVARIANT - GLOBAL CARTESIAN)
+C
+C         CALL TRANSE(FOT,XJ)
+C
+         FOT(1,1)=XJ(1,1)*XJ(1,1)
+         FOT(2,1)=XJ(2,1)*XJ(2,1)
+         FOT(3,1)=2.D0*XJ(1,1)*XJ(2,1)
+C
+         FOT(1,2)=XJ(1,2)*XJ(1,2)
+         FOT(2,2)=XJ(2,2)*XJ(2,2)
+         FOT(3,2)=2.D0*XJ(1,2)*XJ(2,2)
+C
+         FOT(1,3)=XJ(1,1)*XJ(1,2)
+         FOT(2,3)=XJ(2,1)*XJ(2,2)
+         FOT(3,3)=XJ(1,1)*XJ(2,2)+XJ(1,2)*XJ(2,1)
+C
+         IF(IETYP.EQ.1) THEN
+            FOT(4,4)=1.D0
+            RSNAD=3.D0*(CORDL(1,1)+CORDL(1,2)+CORDL(1,3)+CORDL(1,4))
+            RNAD=(CORDL(1,1)-CORDL(1,2)-CORDL(1,3)+CORDL(1,4))/RSNAD
+            SNAD=(CORDL(1,1)+CORDL(1,2)-CORDL(1,3)-CORDL(1,4))/RSNAD
+            RSNAD=(CORDL(1,1)-CORDL(1,2)+CORDL(1,3)-CORDL(1,4))/RSNAD/3.
+         ENDIF
+C
+      ENDIF 
+C
+C
+CS    P E T L J A    P O    S L O J E V I M A
+CE    L O O P    O V E R    L A Y E R S
+C
+C     ZA VELIKE DEFORMACIJE (IATYP.GE.4)
+C     ISNN=2 - GRIN-LAGRANZEOVA DEFORMACIJA I PIOLA-KIRHOFOV NAPON
+C     ISNN=3 - ALMANSIJEVA DEFORMACIJA I KOSIJEV NAPON
+C     ISNN=4 - ROTIRANA GRIN-LAGR. DEFORM. I ROT. PIOLA-KIRHOFOV NAPON
+      ISNN=3
+C     INDIKATOR ISKLJUCIVANJA SVIH TRANSFORMACIJA 
+      IPRI=0
+C     INDIKATOR KONTROLNE STAMPE
+      IST=0
+      IPG=IPGC(NLM)
+      MAT=NMAT(NLM)
+      GUST=GUSM(NMODM,MAT)
+      THICK=THID(NLM,1)
+      MST=MAT
+      NNSL=1
+      IF(MSET.GT.0) THEN
+         NNSL=NSLOJ(MST)
+         TTT=-1.D0
+      ENDIF
+C
+         ZAPRE=0.D0
+         AMASA=0.D0
+      DO 25 MSL=1,NNSL
+C
+         DDD=1.D0
+         IF(MSET.GT.0) THEN
+            BETA=BBET(MSL,MST)
+            IF(IBB0.EQ.1) BETA=BETA+BET0(NLM)
+            IF(MODORT(NMODM).EQ.1) CALL MATRTE(TE,BETA)
+            DDD =DSLOJ(MSL,MST)
+            TTT =TTT+2.D0*DDD
+            MAT =MATSL(MSL,MST)
+         ENDIF   
+C
+         GO TO (  1,  2,999,999,999,999,999,999,999,999,
+     1          999,999,999,999,999,999,999,999,999,999,
+     2          999,999,999,999,999,999,999,999,999,999,
+     3          999,999,999,999,999,999,999,999,999,999,
+     4          999,999,999,999,999,999,999,999,999,999,
+     5          999,999,999,999,999,999,999,999,999,999,
+     6          999,999,999,999,999,999,999,999,999,999,
+     7          999,999,999,999,999,999,999,999,999,999,
+     8          999,999,999,999,999,999,999,999,999,999,
+     9          999,999,999,999,999,999,999,999,999,999),NMODM
+    1    LFUN=MREPER(1)
+         CALL MEL01(A(LFUN))
+         GO TO 999
+    2    LFUN=MREPER(1)
+         CALL MEL02(A(LFUN))
+C
+CS       PETLJA PO GAUSOVIM TACKAMA 
+CE       LOOP OVER GAUSS POINTS
+C
+  999    JG=0
+C START ARGENTINA
+C CALCULATION OF ELEMENT SURFACE
+      TVOLE=0.
+      IF(NMODM.EQ.51) THEN
+         DO 920 NGR=1,NGAUSX
+            JGR=NREF(NGAUSX)+NGR
+            IF(INCOTX.EQ.0) THEN
+              IF(NGAUSX.EQ.5)THEN
+                R=XG5(NGR)
+                S=YG5(NGR)
+                WR=WG5(NGR)
+                WS=1.D0
+                NGAUSY=1
+            ELSE
+                R=XG(JGR)
+                WR=WGT(JGR)
+              ENDIF
+            ELSE
+               R =XNC(JGR)
+               WR=WNC(JGR)
+            ENDIF
+C
+         DO 920 NGS=1,NGAUSY
+            JGR=NREF(NGAUSY)+NGS
+            IF(INCOTY.EQ.0) THEN
+              IF(NGAUSX.NE.5)THEN
+                S=XG(JGR)
+                WS=WGT(JGR)
+              ENDIF
+            ELSE
+               S =XNC(JGR)
+               WS=WNC(JGR)
+            ENDIF
+C
+         CALL JACTEL(NOP,CORDL,HE,R,S,0)
+            IF(ICORGT.EQ.1.OR.ITERME.EQ.1.OR.IETYP.EQ.1)
+     1      CALL JACGAU(NOP,CORDL,A(LTECV),HE,X1,CORGT(1,JG,NLM),TGT)
+            WT=WR*WS*DET
+            WTU=WT
+C            IF(IETYP.EQ.1) WTU=X1*WT
+            TVOLE=TVOLE+WTU
+  920    CONTINUE
+      ENDIF
+C END ARGENTINA
+C
+C     BOBAN: MATRICA C
+      IF(IBOB.EQ.1) THEN
+C      (7)
+       CALL NAPUNIB2(RS,HOVI,COR,BOVI,GAME)
+      ENDIF
+C
+         IBTC=0
+         DO 20 NGR=1,NGAUSX
+            JGR=NREF(NGAUSX)+NGR
+            IF(INCOTX.EQ.0) THEN
+              IF(NGAUSX.EQ.5)THEN
+                R=XG5(NGR)
+                S=YG5(NGR)
+                WR=WG5(NGR)
+                WS=1.D0
+                NGAUSY=1
+              ELSE
+C     ZA ZHU-OVU INTEGRACIJU U 2 TACKE;   BOBAN
+
+               IF(NGAUSX.EQ.2.AND.NGAUSY.EQ.1)THEN
+                R=XG2(NGR)
+                S=YG2(NGR)
+                WR=2.D0
+                WS=1.D0
+               ELSE
+                R=XG(JGR)
+                WR=WGT(JGR)
+	       ENDIF
+              ENDIF
+            ELSE
+               R =XNC(JGR)
+               WR=WNC(JGR)
+            ENDIF
+C
+         DO 20 NGS=1,NGAUSY
+            JGR=NREF(NGAUSY)+NGS
+            IF(INCOTY.EQ.0) THEN
+C              IF(NGAUSX.NE.5)THEN
+C	BOBAN ZAMENIO: ZA ZHU-OVU INTEGRACIJU U 2 TACKE NE SME DA MENJA S I WS
+	    IF((NGAUSX.NE.5).AND.(NGAUSX.NE.2.OR.NGAUSY.NE.1)) THEN
+                S=XG(JGR)
+                WS=WGT(JGR)
+              ENDIF
+            ELSE
+               S =XNC(JGR)
+               WS=WNC(JGR)
+            ENDIF
+C
+            JG=JG+1
+      IF(IST.EQ.1) WRITE(3,*)'NLM,NGR,NGS',NLM,NGR,NGS
+C
+CS          INTERPOLACIJSKE FUNKCIJE I JAKOBIJAN U TACKI R, S, T
+CE          INTERPOLATED FUNCTIONS AND JACOBIAN MATRIX IN R,S,T POINT
+C
+            IF(IBOB.EQ.0) THEN
+             CALL JACTEL(NOP,CORDL,HE,R,S,0)
+            ELSE
+C            (9)
+             CALL JACBOB2(COR,RS,HOVI,R,S)
+C            (13)
+             CALL DOPUNIB2(BOVI,RS,COR,GAME)
+C            (6)(15)
+             CALL NAPUNIHE2(HE,HOVI,BOVI,SJED,RS,R,S)
+            ENDIF
+
+         IF(MIXED.EQ.1) THEN
+            DO 701 I=1,NCVE
+               I1=(I-1)*KK
+            DO 701 J=1,KK
+               IJ=J+I1
+               HS(J,IJ)=HE(I,1)
+  701       CONTINUE
+         ENDIF
+C
+CS          TEMPERATURA, GLOBALNE KOORDINATE GAUSOVE TACKE
+CE          TEMPERATURE AND GLOBAL COORDINATES OF GAUSS POINT
+C
+            IF(ICORGT.EQ.1.OR.ITERME.EQ.1.OR.IETYP.EQ.1)
+     1      CALL JACGAU(NOP,CORDL,A(LTECV),HE,X1,CORGT(1,JG,NLM),TGT)
+            IF(ITERME.EQ.1) TEMGT(JG,NLM)=TGT
+C
+            IF(IALFA.GE.0) THEN
+               DETT=DET0/DET
+C
+CS             FORMIRANJE MATRICE - E (KOVARIJANTNA)
+CE             FORM MATRIX - E (COVARIANT)
+C
+               IF(IETYP.EQ.1) THEN
+                  EKOR(1,1)=R*DETT-RNAD
+                  EKOR(2,2)=S*DETT-SNAD
+                  EKOR(3,3)=R*DETT-RNAD
+                  EKOR(3,4)=S*DETT-SNAD
+                  EKOR(4,5)=R*S/X1
+               ELSE
+                  EKOR(1,1)=R*DETT
+                  EKOR(2,2)=S*DETT
+                  EKOR(3,3)=R*DETT
+                  EKOR(3,4)=S*DETT
+                  IF(IALFA.EQ.2) THEN
+                     EKOR(1,5)=R*S*DETT
+                     EKOR(2,5)=-R*S*DETT
+                     EKOR(3,5)=(R*R-S*S)*DETT
+                  ENDIF
+               ENDIF
+C
+CS             FORMIRANJE MATRICE - G (GLOBALNI DEKARTOV)
+CE             FORM MATRIX - G (GLOBAL CARTESIAN)
+C
+               CALL MNOZM1(GERS,FOT,EKOR,KK,LA,KK)
+            ENDIF
+C
+CS          FORMIRANJE KONSTITUITIVNE MATRICE
+CE          CONSTITUITIVE MATRIX
+C
+            GO TO ( 70, 70,  3,  4,  5,  5,  5,  5,  5,  5,
+     1               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     2               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     3               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     4               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     5               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     6               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     7               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     8               5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
+     9               5,  5,  5,  5,  5,  5,  5,  5,  5,  5),NMODM
+    3       LFUN=MREPER(1)
+            LNTA=MREPER(2)
+            LTEM=MREPER(3)
+            MATE=MREPER(4)
+            CALL MEL03(A(LFUN),A(LNTA),A(LTEM),MATE,TGT)
+            GO TO 70
+    4       LFUN=MREPER(1)
+            LNTA=MREPER(2)
+            LTEM=MREPER(3)
+            MATE=MREPER(4)
+            CALL MEL04(A(LFUN),A(LNTA),A(LTEM),MATE,TGT)
+            GO TO 70
+    5       IBTC=IBTC+1
+            IRAC=2
+            NPROS=(NNXYZ+IBTC)*MODPR2( NMODM )*IDVA
+            LPLAS=LPLAST+NPROS     
+            LPLA1=LPLAS1+NPROS
+            IF(IATYP.GE.4.AND.IETYP.NE.1.AND.IETYP.NE.2) THEN
+               IT1=4
+               IF(IPODT.EQ.1) IT1=3
+               THIC0=0.D0
+               DO 711 I=1,IT1
+                  THIC0=THIC0+THID(NLM,I)*HE(I,1)
+  711          CONTINUE
+               IF(IPODT.EQ.0) THEN
+                  IF(NOP(NLM,5).GT.0.AND.NCVE.GE.5)
+     +            THIC0=THIC0+(THID(NLM,1)+THID(NLM,2))*HE(5,1)/2.D0
+                  IF(NOP(NLM,6).GT.0.AND.NCVE.GE.6)
+     +            THIC0=THIC0+(THID(NLM,2)+THID(NLM,3))*HE(6,1)/2.D0
+                  IF(NOP(NLM,7).GT.0.AND.NCVE.GE.7)
+     +            THIC0=THIC0+(THID(NLM,3)+THID(NLM,4))*HE(7,1)/2.D0
+                  IF(NOP(NLM,8).GT.0.AND.NCVE.GE.8)
+     +            THIC0=THIC0+(THID(NLM,1)+THID(NLM,4))*HE(8,1)/2.D0
+                  IF(NOP(NLM,9).GT.0.AND.NCVE.EQ.9) THIC0=THIC0+HE(9,1)*
+     +            (THID(NLM,1)+THID(NLM,2)+THID(NLM,3)+THID(NLM,4))/4.D0
+               ENDIF
+               IF(IPODT.EQ.1) THEN
+                  IF(NOP(NLM,4).GT.0.AND.NCVE.GE.4)
+     +            THIC0=THIC0+(THID(NLM,1)+THID(NLM,2))*HE(4,1)/2.D0
+                  IF(NOP(NLM,5).GT.0.AND.NCVE.GE.5)
+     +            THIC0=THIC0+(THID(NLM,2)+THID(NLM,3))*HE(5,1)/2.D0
+                  IF(NOP(NLM,6).GT.0.AND.NCVE.GE.6)
+     +            THIC0=THIC0+(THID(NLM,1)+THID(NLM,3))*HE(6,1)/2.D0
+               ENDIF
+               THICT=THIC0
+               THICK=THIC0
+C               WRITE(3,*) 'R,S',R,S
+C               WRITE(3,*)'H',(HE(I,1),I=1,NCVE)
+C               WRITE(3,*)'T',(THID(NLM,I),I=1,IT1)
+C               WRITE(3,*)'THICK,THICT,THIC0',THICK,THICT,THIC0
+            ENDIF
+            CALL MODMAT(STRAIN,TA,NMODM,IRAC,LPLAS,LPLA1,IBTC,TGT,lpla0)
+   70       WT=WR*WS*DET
+            WTU=WT*THICK*DDD
+            IF(IETYP.EQ.1) WTU=X1*WT
+            IF(IST.EQ.1) WRITE(3,*)'DET,THICK,WR,WS',DET,THICK,WR,WS
+            IF(IST.EQ.1) WRITE(3,*)'WTU,DDD',WTU,DDD
+C           FORMIRANJE VEKTORA H ZA MATRICU MASA
+            IF(ITER.EQ.0.AND.INDZS.GT.0)THEN
+               WD=WTU*GUST
+               ZAPRE=ZAPRE+WTU
+               AMASA=AMASA+WD
+               DO 149 I=1,NCVE
+                  AMASC(I)=AMASC(I)+HE(I,1)*WD
+  149          CONTINUE
+            ELSE
+               ZAPRE=ZAPRE+WTU
+            ENDIF
+C
+CS          FORMIRANJE MATRICE BL0 LINEARNO
+CE          FORM LINEAR BL0 MATRIX
+C
+            IF(IBOB.EQ.0) THEN
+             CALL BETBED(HE,BLT,NOP,X1)
+            ELSE
+C            (20), (21)
+             IF(NGAUSX.EQ.1) THEN
+              CALL FRMBNAD2(BOVI,BNAD)
+C              CALL FLATMAT(BNAD,BZHU,R,S,T)
+C            KONVERTOVANJE IZ ZHU-OVOG 9X24 U PAK 9X24
+              CALL BNAD2BNL2(BNAD,BNL)
+             ELSE
+C             (20) BEZ POBOLJSANJA
+C              CALL FORMBZHU(BOVI,R,S,T,BZHU)              
+C             (44) SA POBOLJSANJEM
+              CALL FRMBZH22(BOVI,R,S,BZHU)
+C            KONVERTOVANJE IZ ZHU-OVOG 9X24 U PAK 3X8
+              IF(IC35.EQ.0) CALL BZH2BLT2(BZHU,BLT)
+C            KONVERTOVANJE IZ ZHU-OVOG 9X24 U PAK 5X8
+              IF(IC35.EQ.1) CALL BZHU2B5(BZHU,BLT5)
+             ENDIF
+            ENDIF
+C
+CS          KOREKCIJA ZA SMICUCI PANEL
+CE          UPDATE FOR SHEARING PANEL
+C
+         IF(NMODM.LT.5) THEN
+            IF(ISHEAR.EQ.1) THEN
+               DO 71 I=1,2
+               DO 71 J=1,2
+   71          ELAST(I,J)=0.0D0
+            ENDIF
+            DO 80 I=1,KK
+            DO 80 J=1,KK
+   80       ELAS(I,J)=ELAST(I,J)
+         ENDIF
+C
+CS          FORMIRANJE MATRICE BL1 LINEARNO
+CE          FORM LINEAR BL1 MATRIX
+C
+            IF(IATYP.EQ.2) CALL BETL12(BLT,NOP,LM,RTDTL,X1,STRAIN,0)
+C
+      IF(IBOB.GT.0) CALL C32C4(ELAST,ELAST4)
+C
+      IF(ISKNP.NE.1) THEN
+C
+CS       RACUNANJE DEFORMACIJA U GLOBALNOM DEKARTOVOM
+CE       CALCULATE STRAINS IN GLOBAL CARTESIAN 
+C
+C
+         CALL CLEAR(STRAIN,6) 
+C
+CS       LINEARNOST I M.N.O.
+CE       LINEAR PART AND M.N.O.
+C
+        IF(IBOB.GT.0.AND.NGAUSX.EQ.1) THEN
+         CALL FORMSTR4(STRAIN4,BNL,UEL)
+        ELSE 
+         IF(IATYP.EQ.0.OR.IATYP.EQ.1)
+     1   CALL MNOZI1(STRAIN,BLT,RTDTL,KK,NCVE2)
+	  ENDIF
+C
+CS       GEOMETRIJSKA NELINEARNOST - UKUPNE DEFORMACIJE ZA T.L. I U.L.
+CE       GEOMETRICAL NONLINEARITY - TOTAL STRAIN FOR T.L. AND U.L.
+C
+         IF(IATYP.EQ.2) CALL BETL12(BLT,NOP,LM,RTDTL,X1,STRAIN,1)
+         IF(IATYP.EQ.3) CALL STRUL2(BLT,NOP,LM,RTDTL,X1,STRAIN)
+C
+C     RACA - !!!!!!!!!!!!!!!!!!!!!!!
+         IF (NMODM.EQ.31) THEN
+C
+CS          KOORDINATE U TRENUTKU - 0
+CE          COORDINATE IN TIME - 0
+C
+            NK=2
+            IF(IETYP.EQ.3) NK=3
+            II=0
+            DO 14 I=1,NCVE
+            DO 14 K=1,NK
+               II=II+1
+               IF (IATYP.EQ.1) THEN 
+                 CON(I,K)=COR(I,K)+UEL(II)
+               ELSE             
+                 CON(I,K)=COR(I,K)-UEL(II)
+               ENDIF
+   14       CONTINUE
+C
+C           CALL WRR(COR,18,'COR ')
+C           CALL WRR(CON,18,'CON ')
+C           CALL WRR(UEL,ND,'UEL ')
+C
+C           ZBOG RACUNANJA VEKTORA GR U T+DT
+CS          JAKOBIJEVA MATRICA U GAUSOVOJ TACKI U TRENUTKU - T+DT
+CE          JACOBIAN MATRIX IN GAUSS POINT IN TIME - T+DT
+C
+               IF (IATYP.EQ.1) THEN 
+                 CALL GRGSG2(CON,XJJ,HE,NCVE)
+               ELSE             
+                 CALL GRGSG2(COR,XJJ,HE,NCVE)
+               ENDIF
+C
+              CALL JEDNA1(VMS,XJJ,9) 
+C
+CS          JAKOBIJEVA MATRICA U GAUSOVOJ TACKI U TRENUTKU - 0
+CE          JACOBIAN MATRIX IN GAUSS POINT IN TIME - 0
+C
+               IF (IATYP.EQ.1) THEN 
+                 CALL GRGSG2(COR,XJJ,HE,NCVE)
+               ELSE             
+                 CALL GRGSG2(CON,XJJ,HE,NCVE)
+               ENDIF
+C
+              CALL JEDNA1(VMS1,XJJ,9) 
+C
+CS          INVERTOVAN JAKOBIJAN - XJJ
+CE          INVERSE JACOBIAN - XJJ
+C
+            CALL MINV2(XJJ,DET)
+C
+CS          RACUNANJE GRADIJENTA DEFORMACIJE OD 0 DO T+DT
+CE          CALCULATE DEFORMATION GRADIENT FROM 0 TO T+DT
+C
+               IF (IATYP.EQ.1) THEN 
+                 CALL GRAD2T(XJJ,HE,CON,COR,GRAD,NCVE,IETYP)
+               ELSE             
+                 CALL GRAD2T(XJJ,HE,COR,CON,GRAD,NCVE,IETYP)
+               ENDIF
+C
+            CALL JEDNA1(GRAD1R,GRAD,9)
+            DLAMZ=GRAD(3,3)
+C
+CS          INVERTOVAN GRADIJENT - GRAD
+CE          INVERSE GRADIENT - GRAD
+C
+            CALL MINV2(GRAD,DET)
+            CALL JEDNA1(RACGR,GRAD,9)
+            RACGR(3,3)=DLAMZ 
+C
+	 ENDIF
+C     RACA - !!!!!!!!!!!!!!!!!!!!!!!
+C
+CS       VELIKE DEFORMACIJE
+CE       LARGE STRAIN
+C
+         IF(IATYP.GE.4) THEN
+C
+CS          STARO - Be, Cp**-1, Fp**-1
+CE          OLD - B
+C
+            IF(ILEDE.EQ.0.AND.ICPM1.LE.1) THEN
+               CALL JEDNA1(STRESS,TAU(1,JG,NLM,MSL),NLD)
+               IF(IST.EQ.1) CALL WRR(STRESS,NLD,'BOLD')
+            ENDIF
+            IF(ILEDE.EQ.1.OR.(ILEDE.EQ.0.AND.ICPM1.EQ.2)) THEN 
+               CALL JEDNA1(GRAP,TAU(1,JG,NLM,MSL),NLD)
+               CALL MINV3(GRAP,DUM)
+               IF(IST.EQ.1) CALL WRR(GRAP,NLD,'BOLD')
+            ENDIF
+C
+CS          JAKOBIJEVA MATRICA U TACKI (R,S,T) U TRENUTKU - T,0
+CE          JACOBIAN MATRIX IN POINT (R,S,T) IN TIME - T,0
+C
+CS          KOORDINATE U TRENUTKU - 0
+CE          COORDINATE IN TIME - 0
+            NK=2
+            IF(IETYP.EQ.3) NK=3
+            II=0
+            DO 12 I=1,NCVE
+            DO 12 K=1,NK
+               II=II+1
+               CON(I,K)=COR(I,K)-UEL(II)
+   12       CONTINUE
+CS          KOVARIJANTNI BAZNI VEKTORI U KONFIGURACIJI - XJT,XJ0
+CE          COVARIANT BASIS VECTORS IN CONFIGURATION - XJT,XJ0
+            CALL GRGSG2(CORT,XJT,HE,NCVE)
+            CALL GRGSG2(CON,XJ0,HE,NCVE)
+C
+CS          INVERTOVAN JAKOBIJAN - XJT,XJ0
+CE          INVERSE JACOBIAN - XJT,XJ0
+C
+            CALL MINV2(XJT,DUM)
+            CALL MINV2(XJ0,DUM)
+C
+CS          RACUNANJE GRADIJENTA DEFORMACIJE OD T DO T+DT
+CE          CALCULATE DEFORMATION GRADIENT FROM T TO T+DT
+C
+            IF(ILEDE.EQ.0) THEN
+               IF(ICPM1.EQ.0) THEN
+                  CALL GRAD2T(XJT,HE,COR,CORT,GRAD,NCVE,IETYP)
+                  IF(IETYP.NE.1.AND.IETYP.NE.2) GRAD(3,3)=THICK/THICT
+               ENDIF
+               IF(ICPM1.GE.1) THEN
+                  CALL GRAD2T(XJ0,HE,COR,CON,GRAD,NCVE,IETYP)
+                  IF(IETYP.NE.1.AND.IETYP.NE.2) GRAD(3,3)=THICK/THIC0
+               ENDIF
+            ENDIF
+            IF(ILEDE.EQ.1) THEN
+               CALL GRAD2T(XJ0,HE,COR,CON,GRAD,NCVE,IETYP)
+               IF(IETYP.NE.1.AND.IETYP.NE.2) GRAD(3,3)=THICK/THIC0
+            ENDIF
+            IF(IST.EQ.1) CALL WRR3(XJJ,9,'XJJ ')
+            IF(IST.EQ.1) CALL WRR3(XJT,9,'XJT ')
+            IF(IST.EQ.1) CALL WRR3(GRAD,9,'GRAD')
+CS          RACUNANJE NORMIRANOG GRADIJENTA DEFORMACIJE OD T DO T+DT
+C            IF(IETYP.NE.1.AND.IETYP.NE.2) THEN
+               CALL JEDNA1(GRAN,GRAD,9)
+C            ELSE
+C               AJOT=GRAD(3,3)*(GRAD(1,1)*GRAD(2,2)-GRAD(1,2)*GRAD(2,1))
+C               IF(AJOT.GT.DETGM) DETGM=AJOT
+C               IF(AJOT.LE.0.D0) THEN
+C                  WRITE(3,*) 'NLM,JG,AJOT',NLM,JG,AJOT
+C                  STOP 'PAK22.FOR'
+C               ENDIF
+C               TKOR=DEXP(-1.D0/3.D0*DLOG(AJOT))
+C               CALL JEDNAK(GRAN,GRAD,TKOR,9)
+C               CALL DETER3(GRAN,DUM)
+C               WRITE(3,*) 'DUM',DUM
+C            ENDIF
+            IF(IST.EQ.1) CALL WRR3(GRAN,9,'GRAN')
+C
+CS          RACUNANJE GRADIJENTA DEFORMACIJE OD 0 DO T+DT
+CE          CALCULATE DEFORMATION GRADIENT FROM 0 TO T+DT
+C
+            CALL GRAD2T(XJ0,HE,COR,CON,GRAD,NCVE,IETYP)
+            IF(IETYP.NE.1.AND.IETYP.NE.2) GRAD(3,3)=THICK/THIC0
+            DETG=GRAD(3,3)*(GRAD(1,1)*GRAD(2,2)-GRAD(1,2)*GRAD(2,1))
+            IF(DETG.LT.1.D-15) STOP 'DETG.LE.0, PAK22.FOR'
+            IF(IST.EQ.1) CALL WRR3(XJJ,9,'XJJ ')
+            IF(IST.EQ.1) CALL WRR3(XJ0,9,'XJ0 ')
+            IF(IST.EQ.1) CALL WRR3(GRAD,9,'GRAD')
+            IF(IST.EQ.1) WRITE(3,*) 'DETG',DETG
+C
+CS          TRANSF. ELASTICNOG LEVOG KOSI - GRINOVOG TENZORA DEFORMACIJE
+CE          TRANSFORM. ELASTIC LEFT CAUCHY - GREEN DEFORMATION TENSOR
+C           Be* = Ft * Be * FtT  (ICPM1=0)
+C           Be* = F * (Cp**-1) * FT  (ICPM1=1)
+            IF(ILEDE.EQ.0.AND.ICPM1.LE.1) CALL PIOKOS(GRAN,STRESS)
+CS          RACUNANJE ELASTICNOG GRADIJENTA DEFORMACIJE
+CE          ELASTIC DEFORMATION GRADIENT
+C           Fe = F * Fp**-1         Be = Fe * FeT
+            IF(ILEDE.EQ.0.AND.ICPM1.EQ.2) THEN
+C  GRAD ILI GRAN
+               CALL MNOZM1(GRAE,GRAD,GRAP,3,3,3)
+               CALL MNOZM3(GRAP,GRAE,GRAE,3,3,3)
+               CALL TENVEK(GRAP,STRESS,1)
+               CALL JEDNA1(XJ,GRAE,9)
+            ENDIF
+C           Fe = F * Fp**-1         Ce = FeT * Fe
+            IF(ILEDE.EQ.1) THEN
+C  GRAD ILI GRAN
+               CALL MNOZM1(GRAE,GRAD,GRAP,3,3,3)
+               CALL MNOZM2(GRAP,GRAE,GRAE,3,3,3)
+               CALL TENVEK(GRAP,STRESS,1)
+               CALL JEDNA1(XJ,GRAE,9)
+            ENDIF
+C
+C           GLAVNE VREDNOSTI I PRAVCI
+C
+            IF(IST.EQ.1) CALL WRR6(STRESS,6,'BECE')
+            IF(IGLPR.EQ.1) THEN
+               NAPDEF=1
+               CALL GLAVN(STRESS)
+               NAPDEF=0
+               CALL GLAPR3(STRESS,QP)
+               CALL JEDNA1(FIER,QP,9)
+c               IF(IETYP.NE.1.AND.IETYP.NE.2)
+c     1         CALL GLASOR(PRINC,QP,0.D0,0.D0,1.D0,IMAX)
+               CALL GLASOR(PRINC,QP,0.D0,0.D0,1.D0,IMAX)
+               IF(IST.EQ.1) CALL WRR3(PRINC,3,'PP  ') 
+               IF(IST.EQ.1) CALL WRR3(QP,9,'QP  ') 
+               CALL TRA2SE(TSGD,QP)
+               CALL TRA2SS(TSGN,QP)
+            ENDIF
+C
+CS          PROBNE ELASTICNE DEFORMACIJE
+CE          TRIAL ELASTIC STRAIN
+C
+            IF(IATYP.EQ.4) THEN
+               IF(IGLPR.EQ.1) THEN
+                  CALL CLEAR(STRESS,6)
+                  STRESS(1)=PRINC(1)
+                  STRESS(2)=PRINC(2)
+                  STRESS(3)=PRINC(3)
+               ENDIF
+               CALL UKDEFV(STRAIN,STRESS)
+            ENDIF
+            IF(IATYP.EQ.5) THEN
+C              GLAVNE VREDNOSTI
+C              LAMBDA
+               P1=DSQRT(PRINC(1))
+               P2=DSQRT(PRINC(2))
+               P3=DSQRT(PRINC(3))
+               IF(IST.EQ.1) WRITE (3,*) 'L1,L2,L3',P1,P2,P3
+               STRAIN(1)=DLOG(P1)
+               STRAIN(2)=DLOG(P2)
+               STRAIN(3)=DLOG(P3)
+               IF(IST.EQ.1) CALL WRR3(STRAIN,6,'STLO')
+            ENDIF
+            IF(IGLPR.EQ.1) THEN
+C              TRANSFORMACIJA DEFORMACIJA: GLAVNI PRAVCI - DEKARTOV SISTEM
+               CALL DIJADS(QP,STRAIN)
+               STRAIN(4)=2.D0*STRAIN(4)
+            ENDIF
+            IF(IST.EQ.1) CALL WRR3(STRAIN,6,'STDE')
+            DUM=STRAIN(3)
+            STRAIN(3)=STRAIN(4)
+            STRAIN(4)=DUM
+         ENDIF
+C
+CS       INKOMPATIBILNE DEFORMACIJE
+CE       INCOMPATIBILE STRAIN
+C        ovaj koncept ne valja za velike deformacije
+         IF(IALFA.GE.0.AND.IATYP.LT.4)
+     1   CALL MNOZI1(STRAIN,GERS,ALFE(1,NLM),KK,LA)
+C
+CS       TRANSFORMACIJA DEFORMACIJA (GLOBALNI DEKART - GLAVNI PRAVCI)
+CE       TRANSFORM STRAIN (GLOBAL CARTESIAN - PRINCIPAL DIRECTIONS) 
+C
+C        ZA INTEGRACIJU U DEKARTOVOM SISTEMU (INTGL.EQ.1)
+         IF(IATYP.GE.4.AND.IGLPR.EQ.1.AND.INTGL.EQ.0) THEN
+C           Eg=Qd*Ed
+            CALL CLEAR(TA,4) 
+            CALL MNOZI1(TA,TSGD,STRAIN,4,4)
+            CALL JEDNA1(STRAIN,TA,4)
+         ENDIF
+C
+CS       TERMICKE DEFORMACIJE   ETH=ALFA*(T-T0)
+CE       THERMAL STRAINS
+C
+         IF(NMODM.EQ.3.OR.NMODM.EQ.4) CALL MAMO34(STRAIN,TGT)
+         IF(NMODM.EQ.3.OR.NMODM.EQ.4) DTGT0=TGT-TEMP0
+         IF(IETYP.EQ.0.OR.IETYP.EQ.3) THEN
+           IF(NMODM.EQ.1) STRAIN(4)=-(STRAIN(1)+STRAIN(2))*V/(1.D0-V)
+           IF(NMODM.EQ.2)
+     &     STRAIN(4)=-STRAIN(1)*(VZX*EX/EZ+VXY*VYZ)/(1.D0-VXY*VXY*EY/EX)
+     &               -STRAIN(2)*(VYZ+VXY*VZX*EY/EZ)/(1.D0-VXY*VXY*EY/EX)
+         ENDIF
+         IF(IST.EQ.1) CALL WRR3(STRAIN,6,'STRA')
+C
+C
+CS       RACUNANJE NAPONA
+CE       CALCULATE STRESS 
+C
+C
+         CALL CLEAR(TA,6) 
+C
+         IF(NMODM.LT.5) THEN
+C
+CS          MATERIJALNA LINEARNOST
+CE          MATERIAL LINEAR
+C
+         IF(IBOB.GT.0.AND.NGAUSX.EQ.1) THEN
+          CALL FORMSIG4(SIGMA4,ELAST4,STRAIN4)
+         ELSE
+            CALL MNOZI1(TA,ELAS,STRAIN,KK,KK)
+	   ENDIF
+C
+CS          RACUNANJE UNUTRASNJIH SILA
+CE          CALCULATE INTERNAL FORCES
+C           r = BT * S 
+C
+         IF(IBOB.GT.0.AND.NGAUSX.EQ.1) THEN
+          CALL FORMFE2(FE,BNAD,SIGMA4)
+         ELSE
+            IF(NZADP.GT.0.AND.ISKNP.EQ.2.AND.NGENL.EQ.0) THEN
+               IF(IETYP.EQ.3) THEN
+                  CALL INTEGF(FTDTL,BLT,TA,LMLAZ,WTU,NCVE2,3)
+               ELSE
+                  CALL INTEGF(FTDT,BLT,TA,LM,WTU,ND,KK)
+                  IF(MIXED.EQ.1) THEN
+                     CALL JEDNAK(STRESS,TA,-1.D0,KK)
+                     CALL MNOZI1(STRESS,HS,QS,KK,NDS)
+                     CALL INTEGF(FTDT,HS,STRESS,LM(ND+1),WTU,NDS,KK)
+                  ENDIF
+               ENDIF
+            ENDIF
+	   ENDIF
+C
+CS          CISCENJE NUMERICKIH GRESAKA ZA NAPONE
+CE          CLEANING NUMERICAL ERRORS FOR STRESS
+C
+            CALL CISTIN(TA,KK)
+C
+            DO 21 I=1,4
+               IF(IATYP.EQ.2) THEN
+C
+CS                KOSIJEVI NAPONI U GLOBAL. ILI LOKAL. DEKART. SISTEMU
+CE                CAUCHY STRESS IN GLOBAL OR LOCAL CARTESIAN SYSTEM 
+C
+C?                  CALL GLLOKN(TAK,TSS,SIG,ISNA(NLM),I)
+               ELSE
+C
+CS                KOSIJEVI NAPONI U GLOBAL. ILI LOKAL. DEKART. SISTEMU
+CE                CAUCHY STRESS IN GLOBAL OR LOCAL CARTESIAN SYSTEM 
+C
+C?                  CALL GLLOKN(TA,TSG,SIG,ISNA(NLM),I)
+               ENDIF
+               SIG=TA(I)
+               IF(DABS(SIG).LT.TOLNAP) SIG=0.D0
+               TAU(I,JG,NLM,MSL)=SIG
+   21       CONTINUE
+C
+CS          RACUNANJE NAPONA U PRAVCU DEBLJINE
+C
+            IF(IETYP.EQ.2) THEN
+               IF(NMODM.EQ.1.OR.NMODM.EQ.3) THEN
+                  TA(4)=(TA(1)+TA(2))*V
+                  IF(ITERME.NE.0) TA(4)=TA(4)-E*ALFA(3)*DTGT0
+               ENDIF
+               IF(NMODM.EQ.2.OR.NMODM.EQ.4) THEN
+                  TA(4)=(TA(1)*VZX+TA(2)*VYZ*EZ/EY)
+                  IF(ITERME.NE.0) TA(4)=TA(4)-EZ*ALFA(3)*DTGT0
+               ENDIF
+               TAU(4,JG,NLM,MSL)=TA(4)
+            ENDIF
+         ELSE
+C
+CS          NAPONI ZA PLASTICAN MODEL
+CE          STRESS FOR MATERIAL NONLINEARITY 
+C
+            IRAC=1
+            CALL MODMAT(STRAIN,TA,NMODM,IRAC,LPLAS,LPLA1,IBTC,TGT,lpla0)
+            IF(IST.EQ.1) CALL WRR3(STRAIN,6,'DEFL')
+            IF(IST.EQ.1) CALL WRR3(TA,6,'STRL')
+CS          TRANSFORMACIJA ELAST
+            DO 81 I=1,KK
+            DO 81 J=1,KK
+   81       ELAS(I,J)=ELAST(I,J)
+C
+CS          PROMENA ELASTICNOG LEVOG KOSI - GRINOVOG TENZORA DEFORMACIJE
+CE          UPDATE ELASTIC LEFT CAUCHY - GREEN DEFORMATION TENSOR
+C
+C  OVO PROVERITI ????????????????????????????
+            IF(NAPON.EQ.1.AND.IATYP.GE.4) THEN
+C               CALL WRR6(TAU(1,JG,NLM,MSL),NLD,'BST ')
+               IF(ILEDE.EQ.0) THEN
+                  IF(ICPM1.EQ.0) THEN
+                     CALL JEDNA1(TAU(1,JG,NLM,MSL),STRAIN,NLD)
+                  ENDIF
+                  IF(ICPM1.EQ.1) THEN
+CS                   TRANSF. ELAS. LEVOG KOSI - GRINOVOG TENZORA DEFOR.
+CS                   U DESNI PLASTICNI INVERZNI
+CE                   TRANSFORM. ELASTIC LEFT CAUCHY - GREEN DEFOR. TENS.
+C                    CP**-1 = F**-1 * Be * F**-T
+                     CALL MINV3(GRAN,DUM)
+C                     CALL WRR(GRAN,9,'GR-1')
+                     CALL PIOKOS(GRAN,STRAIN)
+C                     CALL WRR6(STRAIN,6,'CP-1')
+C                     CALL WRR6(TAU(1,JG,NLM,MSL),NLD,'BST ')
+                     CALL JEDNA1(TAU(1,JG,NLM,MSL),STRAIN,NLD)
+C                     CALL WRR6(TAU(1,JG,NLM,MSL),6,'BNOV')
+C                    PROVERA PLASTICNE ROTACIJE
+C                     IF(NLM.EQ.1.AND.JG.EQ.1) THEN
+C                        WRITE(3,*) 'NLM,JG,ITER,KOR',NLM,JG,ITER,KOR
+C                        CALL WRR3(PRINC,3,'PRI0')
+C                        CALL WRR3(QP,9,'QP0 ')
+C                        CALL GLAVN(STRAIN)
+C                        CALL GLAPR3(STRAIN,QP)
+C                        CALL WRR3(PRINC,3,'PRIN')
+C                        CALL WRR3(QP,9,'QP  ')
+C                     ENDIF
+                  ENDIF
+               ENDIF
+               IF(ILEDE.EQ.1.OR.(ILEDE.EQ.0.AND.ICPM1.EQ.2)) THEN 
+                  CALL JEDNA1(GRAD,TAU(1,JG,NLM,MSL),NLD)
+                  P1=DEXP(STRAIN(1))
+                  P2=DEXP(STRAIN(2))
+                  P3=DEXP(STRAIN(3))
+                  CALL DIJAD(GRAN,QP,QP,P1,P2,P3)
+                  CALL MNOZM1(GRAP,GRAN,GRAD,3,3,3)
+                  CALL JEDNA1(TAU(1,JG,NLM,MSL),GRAP,NLD)
+C                 PROVERA PLASTICNE ROTACIJE
+C                  IF(NLM.EQ.1.AND.JG.EQ.1) THEN
+C                     WRITE(3,*) 'NLM,JG,ITER,KOR',NLM,JG,ITER,KOR
+C                     CALL WRR3(GRAD,9,'GRAD')
+C                     CALL WRR3(PRINC,3,'PRI0')
+C                     CALL WRR3(QP,9,'QP0 ')
+C                     CALL WRR3(GRAP,9,'GRAP')
+C                     CALL MNOZM2(GRAN,GRAP,GRAP,3,3,3)
+C                     CALL WRR3(GRAN,9,'GRAN')
+C                     CALL TENVEK(GRAN,STRESS,1)
+C                     CALL GLAVN(STRESS)
+C                     CALL GLAPR3(STRESS,QP)
+C                     CALL WRR3(PRINC,3,'PRIN')
+C                     CALL WRR3(QP,9,'QP  ')
+C                     CALL MNOZM3(GRAN,GRAP,GRAP,3,3,3)
+C                     CALL WRR3(GRAN,9,'GRA1')
+C                     CALL TENVEK(GRAN,STRESS,1)
+C                     CALL GLAVN(STRESS)
+C                     CALL GLAPR3(STRESS,QP)
+C                     CALL WRR3(PRINC,3,'PRI1')
+C                     CALL WRR3(QP,9,'QP1 ')
+C                  ENDIF
+                  NAPKO=0
+                  IF(NAPKO.EQ.1) THEN
+                     IF(IATYP.EQ.4.AND.ILEDE.EQ.1) THEN
+                        CALL MINV3(GRAP,DETP)
+                        IF(DETP.GT.DETGP) DETGP=DETP
+                        CALL MNOZM1(GRAE,GRAD,GRAP,3,3,3)
+CS                      TRANSF. PIOLA KIRKOFOV - KOSIJEV NAPON 
+CE                      TRANSFORM. PIOLA KIRCKOF - CAUCHY STRESS
+C                       s = F * S * FT
+                        DUM=TA(3)
+                        TA(3)=TA(4)
+                        TA(4)=DUM
+                        CALL PIOKOS(GRAE,TA)
+                        DUM=TA(3)
+                        TA(3)=TA(4)
+                        TA(4)=DUM
+                        CALL CEPMT(ELAST,CT,0)
+C                       Cmnop = Fmi Fnj Fok Fpl Cijkl
+                        CALL RRRRC(ELAST,CT,GRAE,1)
+CS                      TRANSFORMACIJA ELAST
+                        DO 82 I=1,KK
+                        DO 82 J=1,KK
+   82                   ELAS(I,J)=ELAST(I,J)
+                     ENDIF
+                  ENDIF
+               ENDIF
+               IF(IST.EQ.1) CALL WRR6(TAU(1,JG,NLM,MSL),NLD,'BNOV')
+            ENDIF
+C
+         ENDIF
+C
+C
+CS       RACUNANJE UNUTRASNJIH SILA
+CE       CALCULATE INTERNAL FORCES 
+C
+C
+         IF(NGENL.GT.0) THEN
+C
+CS          INTEGRACIJA VEKTORA - h
+CE          INTEGRATE VEKTOR - h
+C           h = GT * S
+C
+         IF(IBOB.GT.0.AND.NGAUSX.EQ.1) THEN
+          CALL FORMFE2(FE,BNAD,SIGMA4)
+         ELSE
+            IF(IALFA.GE.0)
+     1      CALL INTEV2(HAEM(1,NLM),GERS,TA,WTU,LA,KK)
+	   ENDIF
+C
+CS          RACUNANJE UNUTRASNJIH SILA
+CE          CALCULATE INTERNAL FORCES
+C           r = BT * S 
+C
+            IF(IETYP.EQ.3) THEN
+               CALL INTEGF(FTDTL,BLT,TA,LMLAZ,WTU,NCVE2,3)
+            ELSE
+               CALL INTEGF(FTDT,BLT,TA,LM,WTU,ND,KK)
+               IF(MIXED.EQ.1) THEN
+C                  CALL WRR6(UEL,ND,'UEL ')
+C                  CALL WRR6(QS,NDS,'QS  ')
+                  CALL JEDNAK(STRESS,TA,-1.D0,KK)
+C                  CALL WRR(TA,KK,'TA  ')
+                  CALL MNOZI1(STRESS,HS,QS,KK,NDS)
+C                  CALL WRR(STRESS,KK,'STRS')
+                  CALL INTEGF(FTDT,HS,STRESS,LM(ND+1),WTU,NDS,KK)
+C                  CALL WRR(FTDT,JEDN,'FTDT')
+               ENDIF
+            ENDIF
+C
+         ENDIF
+C
+         IF(IPG.GT.0) THEN
+            CALL JEDNAK(STRAIN,TA,WTU,KK)
+            CALL MNOZI2(ESILA(1,IPG),BLT,STRAIN,ND,KK)
+         ENDIF
+C
+      ENDIF
+C
+C
+CS    INTEGRACIJA MATRICE KRUTOSTI ELEMENTA - SKE
+CE    INTEGRATE ELEMENT STIFFNESS MATRIX - SKE
+C     SKE = BT * C * B
+C
+C
+      IF(ISKNP.EQ.2) GO TO 20
+                  IF(IST.EQ.1) CALL WRR6(ELAST,36,'ELAS')
+
+      IF(IBOB.GT.0.AND.NGAUSX.EQ.1) THEN
+       CALL FORMK2(SKE,BNL,ELAST4,LM)
+      ELSE
+	    IF(IETYP.EQ.3) THEN
+			CALL INTEGK(SKE,BLT,ELAS,LMLAZ,WTU,NCVE2,3)
+		ELSE
+			CALL INTEGK(SKE,BLT,ELAS,LM,WTU,ND,KK)
+		ENDIF
+	ENDIF
+C
+CS    GEOMETRIJSKI NELINEARAN DEO MATRICE KRUTOSTI
+CE    GEOMETRIC NONLINEAR PART OF STIFFNESS MATRIX   
+C
+      IF(IATYP.GT.1) CALL KNL2(SKE,HE,NOP,LM,X1,TA,WTU)
+C
+      IF(IALFA.GE.0) THEN
+C
+CS       PROIZVOD MATRICA - GT * C
+CE       MULTIPLY MATRIX - GT * C
+C
+         CALL MNOZM2(CEGE,GERS,ELAS,LA,KK,KK)
+C
+CS       INTEGRACIJA MATRICE - H
+CE       INTEGRATE MATRIX - H
+C        H = GT * C * G
+C
+         CALL INTEM1(HINV(1,1,NLM),CEGE,GERS,WTU,LA,LA,KK)
+C
+CS       INTEGRACIJA MATRICE - GAMA
+CE       INTEGRATE MATRIX - GAMA
+C        GAMA = GT * C * B
+C
+         CALL INTEM1(GEEK(1,1,NLM),CEGE,BLT,WTU,LA,NCVE2,KK)
+      ENDIF
+C
+         IF(MIXED.EQ.1) THEN
+C
+CS          INTEGRACIJA MATRICE - KSS
+CE          INTEGRATE MATRIX - KSS
+C           SKS = HST * HS
+C
+            CALL INTEGV(SKS,HS,LM(ND+1),WTU,NDS,KK)
+C
+CS          PROIZVOD MATRICA - HST * C
+CE          MULTIPLY MATRIX - HST * C
+C
+            CALL MNOZM2(PS,HS,ELAS,NDS,KK,KK)
+C
+CS          INTEGRACIJA MATRICE - KSU
+CE          INTEGRATE MATRIX - KSU
+C           SKES = HST * C * BL
+C
+            CALL INTEM1(SKES,PS,BLT,WTU,NDS,ND,KK)
+         ENDIF
+C
+   20    CONTINUE
+C
+   25 CONTINUE
+C
+CS-------------------------- KRAJ PETLJE PO GAUSOVIM TACKAMA --------
+CE-------------------------- END  LOOP  OVER  GAUSS  POINTS  --------
+C
+C
+         IF(IALFA.GE.0) THEN
+C
+CS          INVERTOVANJE MATRICE - H
+CE          INVERSE MATRIX - H
+C
+            IF(ISKNP.NE.2) CALL MINV(HINV(1,1,NLM),LA,DET,LJA,MJA)
+C
+            IF(NGENL.GT.0) THEN
+C
+CS             RACUNANJE IZRAZA - (H**-1) * h
+CE             CALCULATE EXPRESSION - (H**-1) * h
+C
+               CALL CLEAR(HAEML,LA)
+               CALL MNOZI1(HAEML,HINV(1,1,NLM),HAEM(1,NLM),LA,LA)
+C
+CS             KOREKCIJA UNUTRASNJIH SILA
+CE             CORECTION INTERNAL FORCES
+C              r = r - FT * (H**-1) * h
+C
+               IF(IETYP.EQ.3) THEN
+             CALL INTEGF(FTDTL,GEEK(1,1,NLM),HAEML,LMLAZ,-1.D0,NCVE2,LA)
+               ELSE
+                  CALL INTEGF(FTDT,GEEK(1,1,NLM),HAEML,LM,-1.D0,ND,LA)
+               ENDIF
+C
+               IF(IPG.GT.0) 
+     1         CALL MNOZ2I(ESILA(1,IPG),GEEK(1,1,NLM),HAEML,ND,LA)
+C
+            ENDIF
+C
+CS          KOREKCIJA MATRICE KRUTOSTI
+CE          CORECTION STIFFNESS MATRIX
+C           K = K - FT * (H**-1) * F
+C
+            IF(ISKNP.NE.2) THEN
+               IF(IETYP.EQ.3) THEN
+       CALL INTEGK(SKE,GEEK(1,1,NLM),HINV(1,1,NLM),LMLAZ,-1.D0,NCVE2,LA)
+               ELSE
+             CALL INTEGK(SKE,GEEK(1,1,NLM),HINV(1,1,NLM),LM,-1.D0,ND,LA)
+               ENDIF
+            ENDIF
+C
+         ENDIF
+C
+      IF(IETYP.EQ.3.AND.ISKNP.NE.2) THEN
+         DO 370 I=1,NCVE
+         DO 370 K=1,3
+            IK=(I-1)*3+K
+            IF(LM(IK).EQ.0) GO TO 370
+            LL=LM(IK)
+            DO 372 J =1,2
+               MM=(I-1)*2+J
+  372       FTDT(LL) = FTDT(LL) + TTE(J,K)*FTDTL(MM)
+  370    CONTINUE
+C
+         IJ=0
+         DO 480 I=1,NCVE*2
+         DO 480 J=I,NCVE*2
+            IJ=IJ+1
+            SKP1(I,J)=SKE(IJ)
+            SKP1(J,I)=SKP1(I,J)
+  480    CONTINUE
+         DO 800 N=1,NCVE
+         DO 800 I=1,3
+            II=3*(N-1)+I
+         DO 800 J=1,NCVE*2
+            SKP(II,J)=0.0D0
+         DO 800 K=1,2
+            MM=2*(N-1)+K
+            SKP(II,J)=SKP(II,J)+TTE(K,I)*SKP1(J,MM)
+  800    CONTINUE 
+         DO 850 N=1,NCVE
+         DO 850 I=1,3
+            II=3*(N-1)+I
+         DO 850 J1=1,NCVE
+         DO 850 J2=1,3
+            J=3*(J1-1)+J2
+            SKP1(II,J)=0.0D0
+         DO 850 K=1,2
+            MM=2*(J1-1)+K
+            SKP1(II,J)=SKP1(II,J)+TTE(K,J2)*SKP(II,MM)
+  850    CONTINUE
+         IJ=0
+         DO 900 I=1,ND
+         DO 900 J=I,ND
+            IJ=IJ+1
+            SKE(IJ)=SKP1(I,J)
+  900    CONTINUE
+      ENDIF
+C
+CS       RASPOREDJIVANJE MATRICE KRUTOSTI (SKE)
+CE       ASSEMBLE STIFFNESS MATRIX
+C
+         IF(ICCGG.EQ.2) THEN
+            IJ=0
+            DO 481 I=1,NCVE*2
+            DO 481 J=I,NCVE*2
+               IJ=IJ+1
+               SKP1(I,J)=SKE(IJ)
+               SKP1(J,I)=SKP1(I,J)
+  481       CONTINUE
+            IF(MIXED.EQ.1) THEN
+               IJ=0
+               DO 482 I=1,NDS
+               DO 482 J=I,NDS
+                  IJ=IJ+1
+                  I1=NCVE*2+I
+                  J1=NCVE*2+J
+                  SKP1(I1,J1)=SKS(IJ)
+                  SKP1(J1,I1)=SKP1(I1,J1)
+  482          CONTINUE
+               DO 483 I=1,NDS
+               DO 483 J=1,NCVE*2
+                  I1=NCVE*2+I
+                  SKP1(I1,J)=-SKES(I,J)
+                  SKP1(J,I1)=SKP1(I1,J)
+  483          CONTINUE
+            ENDIF
+            IF(ISKNP.NE.2) CALL SPAKUJ(A(LSK),A(LMAXA),SKP1,LM,NDNDS)
+         ELSE
+            IF(ISKNP.NE.2) CALL SPAKUJ(A(LSK),A(LMAXA),SKE,LM,ND)
+         ENDIF
+C        RASPOREDJIVANJE KONCENTRISANIH MATRICE MASA AMASC U VEKTOR ZAPS
+         IF(ITER.EQ.0.AND.INDZS.GT.0)THEN
+C        WRITE(3,*) 'AMASA,NCVE,ND,NLM',AMASA,NCVE,ND,NLM
+C        CALL WRR(AMASC,NCVE,'AMAS')
+            II=3
+            IF(IETYP.LE.2) II=2
+            IK=0
+            DO 500 I=1,NCVE
+            DO 500 K=1,II
+               IK=IK+1
+               NJ=LM(IK)
+               IF(NJ.GT.0) THEN
+                  NPRNJ=NPRZ(NJ)
+                  IF(NPRNJ.GT.0.AND.NPRNJ.NE.K) STOP 'NPRNJ'
+                  NPRZ(NJ)=K
+                  ZAPS(NJ)=ZAPS(NJ)+AMASC(I)
+               ENDIF
+  500       CONTINUE
+         ENDIF
+         IF(ITER.EQ.0.AND.INDZS.GT.0)THEN
+            GRZAP=GRZAP+ZAPRE
+            GRMAS=GRMAS+AMASA
+         ELSE
+            GRZAP=GRZAP+ZAPRE
+         ENDIF
+   10 CONTINUE
+      IF(ITER.EQ.0.AND.INDZS.GT.0)THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) NGE,GRZAP,NGE,GRMAS
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) NGE,GRZAP,NGE,GRMAS
+      ELSE
+C      WRITE(3,*) 'DETGM,DETGP',DETGM,DETGP
+      WRITE(3,*) 'NGE,GRZAP,ITER',NGE,GRZAP,ITER
+      ENDIF
+      RETURN
+C-----------------------------------------------------------------------
+ 2000 FORMAT(///
+     111X,'GRUPA ELEMENATA',I5,' ZAPREMINA =',1PD12.5/
+     111X,'GRUPA ELEMENATA',I5,'      MASA =',1PD12.5)
+C-----------------------------------------------------------------------
+ 6000 FORMAT(///
+     111X,'ELEMENT GROUP',I5,' VOLUME =',1PD12.5/
+     111X,'ELEMENT GROUP',I5,'   MASS =',1PD12.5)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C     RUTINA ZA FORMIRANJE MATRICE KOJA SADRZI B-OVE BOVI(4,3,2)
+C     BOVI(1-4=CVOROVI ; 1=BEZ INDEKSA,2-3=R-S; 1-2=X-Y)
+C=======================================================================
+      SUBROUTINE NAPUNIB2(RS,HOVI,COR,BOVI,GAME)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION RS(4,2),HOVI(4),COR(9,3),
+     +          BOVI(4,3,2),GAME(4)
+      DIMENSION POM(8,3)
+C
+      ONE4=1./4
+      A=(DOT(RS(1,1),COR(1,1),4)*DOT(RS(1,2),COR(1,2),4)-
+     1   DOT(RS(1,1),COR(1,2),4)*DOT(RS(1,2),COR(1,1),4))*ONE4
+C     BX,BY
+      CALL ZBIR2(BOVI(1,1,1),RS(1,1),RS(1,2),
+     1          DOT(RS(1,2),COR(1,2),4)*ONE4/A,
+     1          -DOT(RS(1,1),COR(1,2),4)*ONE4/A,4)
+      CALL ZBIR2(BOVI(1,1,2),RS(1,1),RS(1,2),
+     1          -DOT(RS(1,2),COR(1,1),4)*ONE4/A,
+     1          DOT(RS(1,1),COR(1,1),4)*ONE4/A,4)
+C
+C     GAME
+      CALL ZBIR3(GAME,HOVI,BOVI(1,1,1),BOVI(1,1,2),
+     1     ONE4,-DOT(HOVI,COR(1,1),4)*ONE4,-DOT(HOVI,COR(1,2),4)*ONE4,4)       
+C       CALL ZBIR4(DELTA,SJED,BOVI(1,1,1),BOVI(1,1,2),BOVI(1,1,3),
+C     1      ONE8,-DOT(SJED,COR(1,1),8)/8,-DOT(SJED,COR(1,2),8)/8,
+C     1      -DOT(SJED,COR(1,3),8)/8,8)
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE JACBOB2(COR,RS,HOVI,R,S)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.       FOR BOBAN JACOBIAN MATRIX IN CURRENT
+CE.       INTEGRATION POINT (R,S,T - ARE NATURAL COORDINATES)
+C .
+C ......................................................................
+C
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      DIMENSION COR(9,3),RS(4,2),HOVI(4)
+      DIMENSION POM(4)
+C
+      ONE4=1./4
+      DO I=1,2
+	   IF(I.EQ.1) THEN
+        CALL ZBIR2(POM,RS(1,1),HOVI,ONE4,ONE4*S,4)
+	   ELSE
+        CALL ZBIR2(POM,RS(1,2),HOVI,ONE4,ONE4*R,4)
+	   ENDIF
+       DO J=1,2
+        XJ(I,J)=DOT(POM,COR(1,J),4)
+       ENDDO
+      ENDDO
+      CALL JEDNA1(XJJ,XJ,9)
+      CALL MINV2(XJ,DET)
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA DOPUNJAVANJE MATRICE KOJA SADRZI B-OVE BOVI(4,3,2)
+C     BOVI(1-4=CVOROVI ; 1=BEZ INDEKSA,2-3=R-S; 1-2=X-Y)
+C=======================================================================
+      SUBROUTINE DOPUNIB2(BOVI,RS,COR,GAME)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      DIMENSION BOVI(4,3,2),RS(4,2),COR(9,3),GAME(4)
+C
+      ONE4=1./4
+      CALL JEDNAK(BOVI(1,2,1),GAME,-DOT(RS(1,1),COR(1,2),4)*ONE4/DET,4)
+      CALL JEDNAK(BOVI(1,3,1),GAME,DOT(RS(1,2),COR(1,2),4)*ONE4/DET,4)
+      CALL JEDNAK(BOVI(1,2,2),GAME,DOT(RS(1,1),COR(1,1),4)*ONE4/DET,4)
+      CALL JEDNAK(BOVI(1,3,2),GAME,-DOT(RS(1,2),COR(1,1),4)*ONE4/DET,4)
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA FORMIRANJE ZHU-OVIH MATRICA BNAD
+C=======================================================================
+      SUBROUTINE FRMBNAD2(BOVI,BNAD)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      DIMENSION BOVI(4,3,2),BNAD(5,8,3)
+C
+C     **********
+      E1=1.D0/2
+      E2=-1.D0/2
+      E3=0
+C     **********
+C
+      CALL CLEAR(BNAD,5*8*3)
+C     FORMIRANJE B0
+      DO I=1,2
+       DO J=1,4
+        BNAD(I,J,1)=BOVI(J,1,I)
+        BNAD(I+2,J+4,1)=BNAD(I,J,1)
+       ENDDO
+      ENDDO
+C
+
+      DO I=2,3
+       CALL DPODM_2(BOVI,1,E1,BNAD,1,1,I)
+       CALL DPODM_2(BOVI,2,E2,BNAD,1,5,I)
+C                    
+       CALL DPODM_2(BOVI,1,E2,BNAD,4,1,I)
+       CALL DPODM_2(BOVI,2,E1,BNAD,4,5,I)
+C
+       CALL DPODM_2(BOVI,1,E3,BNAD,5,1,I)
+       CALL DPODM_2(BOVI,2,E3,BNAD,5,5,I)
+      ENDDO
+C      
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA FORMIRANJE ZHU-OVE MATRICE B SA POBOLJSANJEM
+C=======================================================================
+      SUBROUTINE FRMBZH22(BOVI,R,S,BZHU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C     COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      DIMENSION BOVI(4,3,2),BZHU(5,8)
+C
+C     **********
+      E1=1.D0/2
+      E2=-1.D0/2
+      E3=0
+C     **********
+C
+      CALL CLEAR(BZHU,5*8)
+      DO I=1,2
+       DO J=1,4
+        BZHU(I,J)=BOVI(J,1,I)
+        BZHU(I+2,J+4)=BZHU(I,J)
+       ENDDO
+      ENDDO
+C
+      CALL DPODM2_2(BOVI,1,E1,BZHU,1,1,R,S)
+      CALL DPODM2_2(BOVI,2,E2,BZHU,1,5,R,S)
+C                    
+      CALL DPODM2_2(BOVI,1,E2,BZHU,4,1,R,S)
+      CALL DPODM2_2(BOVI,2,E1,BZHU,4,5,R,S)
+C
+      CALL DPODM2_2(BOVI,1,E3,BZHU,5,1,R,S)
+      CALL DPODM2_2(BOVI,2,E3,BZHU,5,5,R,S)
+C      
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA DODAVANJE PODMATRICE U MATRICU BNAD
+C=======================================================================
+      SUBROUTINE DPODM_2(BOVI,IXYZ,COEF,BNAD,IROW,ICOL,INDEX)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION BOVI(4,3,2),BNAD(5,8,3)
+C
+      DO I=1,4
+       BNAD(IROW,ICOL+I-1,INDEX)=COEF*BOVI(I,INDEX,IXYZ)
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA DODAVANJE PODMATRICE U MATRICU B
+C=======================================================================
+      SUBROUTINE DPODM2_2(BOVI,IXYZ,COEF,BZHU,IROW,ICOL,R,S)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION BOVI(4,3,2),BZHU(5,8)
+C
+      DO I=1,4
+       BZHU(IROW,ICOL+I-1)=BZHU(IROW,ICOL+I-1)+COEF*
+     1        (R*BOVI(I,2,IXYZ)+S*BOVI(I,3,IXYZ))
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA KONVERTOVANJE ZHU-OVE MATRICE 5X8 B U PAK-OVU 3X8
+C=======================================================================
+      SUBROUTINE BZH2BLT2(BZHU,BLT)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION BZHU(5,8),BLT(3,*)
+C
+      CALL COPYBZ_2(BZHU,BLT,1,1)
+      CALL COPYBZ_2(BZHU,BLT,4,2)
+      CALL COPYBZ22(BZHU,BLT,2,3,3)
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA KONVERTOVANJE ZHU-OVE MATRICE 5X8 B U PAK-OVU 5X8
+C=======================================================================
+      SUBROUTINE BZHU2B5(BZHU,BLT5)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION BZHU(5,8),BLT5(5,8)
+C
+      DO I=1,5
+       DO J=1,4
+        DO K=1,2
+         BLT5(I,(J-1)*2+K)=BZHU(I,(K-1)*4+J)
+        ENDDO
+       ENDDO
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA KOPIRANJE ZHU-OVE VRSTE U PAK-OVU
+C=======================================================================
+      SUBROUTINE COPYBZ_2(BZHU,BLT,IROWZHU,IROWPAK)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION BZHU(5,8),BLT(3,*)
+C
+      DO I=1,4
+       DO J=1,2
+        BLT(IROWPAK,(I-1)*2+J)=BZHU(IROWZHU,(J-1)*4+I)
+       ENDDO
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA KOPIRANJE ZBIRA DVE ZHU-OVE VRSTE U PAK-OVU
+C=======================================================================
+      SUBROUTINE COPYBZ22(BZHU,BLT,IROWZHU1,IROWZHU2,IROWPAK)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION BZHU(5,8),BLT(3,*)
+C
+      DO I=1,4
+       DO J=1,2
+        BLT(IROWPAK,(I-1)*2+J)=BZHU(IROWZHU1,(J-1)*4+I)+
+     +                  BZHU(IROWZHU2,(J-1)*4+I)
+       ENDDO
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA PUNJENJE INTERPOLACIONE MATRICE (N U TEORIJI)
+C=======================================================================
+      SUBROUTINE NAPUNIHE2(HE,HOVI,BOVI,SJED,RS,R,S)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      DIMENSION HE(NCVE,*),HOVI(4),BOVI(4,3,2),SJED(4),RS(4,2)
+C
+      DO I=1,4
+       HE(I,1)=SJED(I)+R*RS(I,1)+S*RS(I,2)+
+     1         HOVI(I)*R*S
+       HE(I,1)=HE(I,1)/4
+      ENDDO
+C
+      DO J=1,2
+       DO I=1,4
+        HE(I,J+1)=BOVI(I,1,J)+R*BOVI(I,2,J)+S*BOVI(I,3,J)
+       ENDDO
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA KONVERTOVANJE C 6X6 U C 9X9
+C=======================================================================
+      SUBROUTINE C32C4(ELAST,ELAST4)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION ELAST(6,6),ELAST4(4,4),IA(4)
+      DATA IA/1,3,3,2/
+C
+      DO I=1,4
+       DO J=1,4
+        ELAST4(I,J)=ELAST(IA(I),IA(J))
+       ENDDO
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA KONVERTOVANJE ZHU-OVE MATRICE 9X24 B U PAK-OVU 9X24
+C=======================================================================
+      SUBROUTINE BNAD2BNL2(BNAD,BNL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION BNAD(5,8,3),BNL(4,8,3)
+C
+      DO M=1,3
+       DO I=1,4
+        DO J=1,4
+         DO K=1,2
+          BNL(I,(J-1)*2+K,M)=BNAD(I,(K-1)*4+J,M)
+         ENDDO
+        ENDDO
+       ENDDO
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA RACUNANJE DEFORMACIJA
+C=======================================================================
+      SUBROUTINE FORMSTR4(STRAIN4,BNL,UEL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION STRAIN4(4,3),BNL(4,8,3),UEL(8)
+C
+      CALL CLEAR(STRAIN4,4*3)
+      DO I=1,3
+       CALL MNOZI1(STRAIN4(1,I),BNL(1,1,I),UEL,4,8)
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA RACUNANJE NAPONA
+C=======================================================================
+      SUBROUTINE FORMSIG4(SIGMA4,ELAST4,STRAIN4)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION SIGMA4(4,3),ELAST4(4,4),STRAIN4(4,3)
+C
+      CALL CLEAR(SIGMA4,4*3)
+      DO I=1,3
+       CALL MNOZI1(SIGMA4(1,I),ELAST4,STRAIN4(1,I),4,4)
+      ENDDO
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA RACUNANJE SILA
+C=======================================================================
+      SUBROUTINE FORMFE2(FE,BNAD,SIGMA4)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      DIMENSION FE(8),BNAD(5,8,3),SIGMA4(4,3),S1(8),S2(8)
+C
+      A=DET*4
+      CALL MNOZM2(FE,BNAD(1,1,1),SIGMA4(1,1),8,1,4)
+      DO I=1,8
+       FE(I)=FE(I)*A
+      ENDDO
+C
+      CALL CLEAR(S1,8)
+      CALL CLEAR(S2,8)
+      DO I=2,3
+       CALL MNOZI2(S1,BNAD(1,1,I),SIGMA4(1,I),8,4)
+      ENDDO
+      CALL ZBIRM(FE,S1,A/3,8)
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA RACUNANJE MATRICE KRUTOSTI
+C=======================================================================
+      SUBROUTINE FORMK2(SKE,BNL,ELAST4,LM)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      DIMENSION SKE(*),BNL(4,8,3),ELAST4(4,4),LM(*),S1(300),S2(300)
+C
+      A=DET*4
+C      CALL CLEAR(SKE,300)
+      CALL INTEGK(SKE,BNL(1,1,1),ELAST4,LM,A,8,4)
+C
+      CALL CLEAR(S1,300)
+      CALL CLEAR(S2,300)
+      DO I=2,3
+       CALL INTEGK(S1,BNL(1,1,I),ELAST4,LM,A/3,8,4)
+      ENDDO
+      CALL ZBIRM(SKE,S1,1.D0,300)
+      RETURN
+      END
+C=======================================================================
+C     RUTINA ZA FORMIRANJE C+S
+C=======================================================================
+C      SUBROUTINE DODS2(ELAST9,SIGMA9,R,S,T)
+C      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C      DIMENSION ELAST9(9,9),SIGMA9(9,7)
+C      DO I=1,3
+C       DO J=1,3
+C        S=SIGMA9((J-1)*3+I,1)+
+C     1              R*SIGMA9((J-1)*3+I,2)+S*SIGMA9((J-1)*3+I,3)+
+C     1              T*SIGMA9((J-1)*3+I,4)+SIGMA9((J-1)*3+I,5)*R*S+
+C     1              SIGMA9((J-1)*3+I,6)*R*T+SIGMA9((J-1)*3+I,7)*S*T
+C        ELAST9(I,J)=ELAST9(I,J)+S
+C        ELAST9(I+3,J+3)=ELAST9(I+3,J+3)+S
+C        ELAST9(I+6,J+6)=ELAST9(I+6,J+6)+S
+C       ENDDO
+C      ENDDO
+C      RETURN
+C      END

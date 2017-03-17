@@ -1,0 +1,767 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="scalapack_sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="scalapack_headers">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="tools_sources">
+      <UniqueIdentifier>{e3daa518-1b33-491c-a68b-b1b138c0a7d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pblas_tools_sources">
+      <UniqueIdentifier>{da99054e-a196-443b-b1c3-36f7c6b94402}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pblas_sources">
+      <UniqueIdentifier>{5b3e15b9-66f8-45f9-867f-566403890e55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pblas_headers">
+      <UniqueIdentifier>{0f4d85ac-8383-4982-98c0-e5c68b54b84c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\scalapack\SRC\getpbbuf.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pbchkvect.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pcrot.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pdlaiect.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pslaiect.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pzaxpy.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pzdotc.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pzdotu.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\SRC\pzrot.c">
+      <Filter>scalapack_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\TOOLS\reshape.c">
+      <Filter>tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\TOOLS\SL_gridreshape.c">
+      <Filter>tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cabort.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cainfog2l.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CargFtoC.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cbinfo.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cchkmat.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cchkvec.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cconjg.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cctypeset.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cdescribe.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cdescset.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cdtypeset.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cfirstnb.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cg2lrem.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CGatherV.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cgcd.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cgetbuf.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cindxg2p.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cinfog2l.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInOutV.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInOutV2.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInV.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CInV2.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Citypeset.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Clastnb.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Clcm.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cmalloc.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cnnxtroc.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cnpreroc.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cnumroc.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_COutV.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpaxpby.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpaxpbyDN.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpaxpbyND.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpaxpbyNN.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpdot11.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpdotND.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpdotNN.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpgeadd.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpgemmAB.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpgemmAC.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpgemmBC.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplacnjg.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplapad.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplapd2.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplaprnt.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplasca2.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cplascal.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpswapND.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpswapNN.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsym.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsymmAB.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsymmBC.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr2.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr2kA.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cpsyr2kAC.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsyrkA.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CpsyrkAC.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptradd.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptran.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptrm.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrmmAB.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrmmB.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptrsm.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmAB.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmAB0.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmAB1.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CptrsmB.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cptrsv.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CScatterV.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cspan.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cstypeset.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctop.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzahemv.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzasymv.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzatrmv.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzhemm.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzhemv.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzher.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzher2.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzher2k.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzherk.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsymm.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsymv.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyr.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyr2.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyr2k.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctzsyrk.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctztrmm.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Ctztrmv.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMcontig.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMinit.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMloc.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMnpq.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMpack.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMswp.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_CVMupdate.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cwarn.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_Cztypeset.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_freebuf_.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_topget_.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\PTOOLS\PB_topset_.c">
+      <Filter>pblas_tools_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcagemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcahemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcamax_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcatrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcaxpy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pccopy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcdotc_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcdotu_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgeadd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgemm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgerc_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcgeru_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pchemm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pchemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcher2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcher2k_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcher_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcherk_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcscal_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsscal_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcswap_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsymm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsyr2k_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pcsyrk_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctradd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctranc_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctranu_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrmm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrsm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pctrsv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdagemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdamax_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdasum_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdasymv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdatrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdaxpy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdcopy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pddot_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdgeadd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdgemm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdgemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdger_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdnrm2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdscal_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdswap_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsymm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsymv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyr2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyr2k_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyr_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdsyrk_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtradd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtran_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrmm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrsm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdtrsv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdzasum_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pdznrm2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\picopy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psagemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psamax_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psasum_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psasymv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psatrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psaxpy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pscasum_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pscnrm2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pscopy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psdot_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psgeadd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psgemm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psgemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psger_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psnrm2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psscal_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\psswap_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssymm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssymv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyr2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyr2k_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyr_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pssyrk_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstradd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstran_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrmm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrsm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pstrsv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzagemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzahemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzamax_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzatrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzaxpy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzcopy_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzdotc_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzdotu_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzdscal_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgeadd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgemm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgerc_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzgeru_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzhemm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzhemv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzher2_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzher2k_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzher_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzherk_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzscal_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzswap_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzsymm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzsyr2k_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pzsyrk_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztradd_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztranc_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztranu_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrmm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrmv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrsm_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scalapack\PBLAS\SRC\pztrsv_.c">
+      <Filter>pblas_sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\scalapack\SRC\compiler.h">
+      <Filter>scalapack_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\SRC\pblas.h">
+      <Filter>scalapack_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\SRC\pxsyevx.h">
+      <Filter>scalapack_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\SRC\tools.h">
+      <Filter>scalapack_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\compiler.h">
+      <Filter>pblas_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBblacs.h">
+      <Filter>pblas_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBblas.h">
+      <Filter>pblas_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\pblas.h">
+      <Filter>pblas_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBpblas.h">
+      <Filter>pblas_headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\scalapack\PBLAS\SRC\PBtools.h">
+      <Filter>pblas_headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,94 @@
+C======================================================================
+      SUBROUTINE D1M11(DEF,TAU,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PODPROGRAM ZA POZIVANJE PODPROGRAMA ZA INTEGRACIJU KONSTITUTIVNIH
+C     RELACIJA ZA STAP
+C
+      include 'paka.inc'
+      
+      COMMON /REPERM/ MREPER(4)
+C
+      LFUN=MREPER(1)
+      LNTA=MREPER(2)
+      MATE=MREPER(4)
+C
+      CALL TAU11(DEF,TAU,A(LFUN),A(LNTA),MATE,IRAC)
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE TAU11(DEF,TAU,FUN,NTA,MATE,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PODPROGRAM ZA RACUNANJE VREDNOSTI NAPONA (PREMA ZADATOJ TABELI
+C     NAPON - DEFORMACIJA) ZA IZRACUNATU VREDNOST DEFORMACIJE
+C
+      DIMENSION FUN(2,MATE,*)
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+C
+C     FORMIRANJE MATRICE ELAST ZA PROPISANO NELINEARNO PONASANJE STAPOVA
+C     I ODREDJIVANJE NAPONA
+C
+      CALL MEL111(DEF,TAU,E,NL,FUN,NTA,MATE,IRAC)
+C
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE MEL111(DEF,TAU,E,NL,FUN,NTA,MATE,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     FORMIRANJE MATRICE ELAST ZA PROPISANO NELINEARNO PONASANJE STAPOVA
+C
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      DIMENSION FUN(2,MATE,*),NTA(*)
+C
+C     UCITAVANJE FUNKCIJE
+C
+      TOL = 1.D-10
+      NCT=NTA(MAT)
+      IF (NCT.EQ.1) THEN
+         E=FUN(2,MAT,1)/FUN(1,MAT,1)
+         ELAST(1,1)=E
+         NL=1
+         RETURN
+      END IF
+      DEFA = DEF
+      INDA = 0
+      IF  ((DEF.LT.0.D0 .AND. FUN(1,MAT,1).GT.-TOL) .OR. 
+     1     (DEF.GT.0.D0 .AND. FUN(1,MAT,NCT).LT.TOL)) THEN
+          DEFA = -DEF
+          INDA = 1
+      ENDIF
+      IF (DEFA.LT.FUN(1,MAT,1). OR. DABS(DEFA-FUN(1,MAT,1)).LT.TOL)
+     1   THEN
+         NR=2
+         NL=1
+      ELSE IF (DEFA.GT.FUN(1,MAT,NCT) .OR. DABS(DEFA-FUN(1,MAT,NCT)).LT
+     1   .TOL) THEN
+         NR=NCT
+         NL=NR-1
+      ELSE
+         NR=NCT
+         NL=1
+         IF ((NR-NL).EQ.1) GO TO 20
+         NM = 0
+   10    NM = NM + 1 
+         IF (NM.EQ.NCT. OR. DEFA.LT.FUN(1,MAT,NM)) THEN
+            NL=NM-1
+            NR = NM
+            GO TO 20
+         ENDIF
+         GO TO 10
+      END IF
+   20 E=(FUN(2,MAT,NR)-FUN(2,MAT,NL))/(FUN(1,MAT,NR)-FUN(1,MAT,NL))
+      IF (E.LT.1.D-04) E=1.D-04
+      ELAST(1,1)=E
+      IF (IRAC.NE.1) RETURN
+C
+C     ODREDIVANJE NAPONA
+C
+      TAU=E*(DEFA-FUN(1,MAT,NL))+FUN(2,MAT,NL)
+      IF (INDA.NE.0) TAU = -TAU
+      RETURN
+      END

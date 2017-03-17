@@ -1,0 +1,2308 @@
+C=======================================================================
+C
+C        INTEGRALJENJE MATRICA GREDNOG SUPER ELEMENATA
+C
+C     SUBROUTINE IZLJ4B
+C                SISTEL
+C                INT4B 
+C                IZLJAC
+C                READL 
+C                MEL81
+C                MEL82
+C                MEL83
+C                MEL84
+C                                                         27.01.1994.
+C=======================================================================
+      SUBROUTINE IZLJ9B(KOZOVE)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     GLAVNI UPRAVLJACKI PROGRAM ZA FORMIRANJE MATRICA I VEKTORA 
+CS     GREDNIH SUPER ELEMENATA 
+CE     MAIN PROGRAM FOR CALCULATION OF ELEMENT MATRIX FOR 
+CE     BEAM SUPERELEMENTS
+C
+      include 'paka.inc'
+      
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /DUPLAP/ IDVA
+      COMMON /BROJUK/ KARTIC,INDFOR,NULAZ
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /NOVAGR/ NS,NCVS,NCVP,NCVJ,LNOS,LCORS,LIDP,LNVEZ,LNPR,LFPR,
+     1                LIDD,LLMU,LMA9,NMC,JEDPP,JEDNN,LVITOP,LVITTP,
+     1                LCOPT,LNMA,LIPG,LISN,LIPR,LTHI,LTBT,LTDT,NPRES,
+     1                NWPP,NWKK,NWEE,NCU,NCVU,IND3D
+      COMMON /SRPSKI/ ISRPS
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' IZLJ9B'
+C
+      LAU=LMAX
+      CALL READL9(A(LAU))
+      CALL DELJIV(LMAX,2,INDL)
+      IF(INDL.EQ.0) LMAX=LMAX+1
+      LAE=LMAX
+      NCVV=3*NCVE*NCVS
+      NCVJJ=0
+      IF(JEDPP.GT.0) NCVJJ=NCVJ
+      NCVN=NCVJJ+ND
+      NWE=NCVN*(NCVN+1)/2
+      IF(NWE.LT.NWEE) NWE=NWEE
+      LA=18
+      MXAE=(NWE+2*NWKK+8*NCVN+3*NCVJ+3*NCVV+3*JEDPP+3*JEDNN+24*LA)*IDVA+
+     +      NCVN+1
+      IF(IATYP.GT.1) MXAE=MXAE+9*NCVN*IDVA
+      LMAX = LAE + MXAE
+C      WRITE(3,*) 'LAU,LAE,LMAX',LAU,LAE,LMAX
+C
+      IF(LMAX.LT.MTOT) GO TO 70
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2009) LMAX,MTOT
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6009) LMAX,MTOT
+      STOP
+C
+C     FORMIRANJE MATRICE KRUTOSTI ELEMENATA I PAKOVANJE U SISTEM
+C
+   70 CALL SISTE9(A(LAE),A(LAU),KOZOVE)
+      RETURN
+C-----------------------------------------------------------------------
+ 2009 FORMAT(/1X,'NEDOVOLJNA DIMENZIJA U OSNOVNOM RADNOM VEKTORU A ZA UC
+     1ITAVANJE ULAZNIH PODATAKA'/1X,'POTREBNA DIMENZIJA, LMAX=',I10/1X,'
+     2RASPOLOZIVA DIMENZIJA, MTOT=',I10)
+C-----------------------------------------------------------------------
+ 6009 FORMAT(///' NOT ENOUGH SPACE IN WORKING VECTOR  A'
+     1/' REQUESTED DIMENSION , LMAX=',I10
+     2/' AVAILABLE DIMENSION , MTOT=',I10)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+      SUBROUTINE READL9(AU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     UPRAVLJACKI PROGRAM ZA UCITAVANJE ULAZNIH PODATAKA U AU
+CE     MENAGEMENT ROUTINE FOR INPUT DATA IN    AU
+C
+      include 'paka.inc'
+      
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /SIMO2D/ LALFE,LHAEM,LHINV,LGEEK,IALFA
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /DUPLAP/ IDVA
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /PLASTV/ LPLAVT,LPLAV1,LSIGMV
+      COMMON /ZAPISI/ LSTAZA(5)
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      COMMON /INTGRA/ INCOTX,INCOTY,INCOTZ
+      COMMON /PODTIP/ IPODT
+      COMMON /TRANS6/ LTR0,NPD6
+      COMMON /VELIKE/ LCOR0,LGM0,JG,NGR,NGS,NGT,NGS4
+      COMMON /GAUSVR/ LTEMGT,LCORGT,ICORGT
+      COMMON /NOVAGR/ NS,NCVS,NCVP,NCVJ,LNOS,LCORS,LIDP,LNVEZ,LNPR,LFPR,
+     1                LIDD,LLMU,LMA9,NMC,JEDPP,JEDNN,LVITOP,LVITTP,
+     1                LCOPT,LNMA,LIPG,LISN,LIPR,LTHI,LTBT,LTDT,NPRES,
+     1                NWPP,NWKK,NWEE,NCU,NCVU,IND3D
+      COMMON /LOKROT/ LDLV,LDLV1,LDLV0,LDLV2,IMALR
+      COMMON /COEFSM/ COEF(3),ICOEF
+      COMMON /IKOVAR/ INDKOV
+      COMMON /CEPMAT/ INDCEP
+      COMMON /LEVDES/ ILEDE,NLD,ICPM1
+      COMMON /LOKSIL/ NCFL,LNCFL,LFCFL,NPRL,LNPRL,LFPRL,LTEZP
+      COMMON /PTACKA/ IPOMT,LNPOM
+      COMMON /CVSILE/ NSILA,LESILA
+      COMMON /CUVAJN/ TAUCEN(6,5),INDSEL,NGAUSU
+      DIMENSION AU(*)
+      REAL AU
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' READL '
+C
+CS     CITANJE SKALARA IZ DIREKT ACCES FILE 
+CE     READ SCALARS FROM A DIRECT ACCESS FILE
+C
+      LSTAZA(1)=LMAX8
+C      WRITE(3,*) '92R,LAU,LMAX8',LAU,LMAX8
+      READ(IELEM,REC=LMAX8)
+     1NGAUSX,NGAUSY,NGAUSZ,BETA,NCVE,ITERME,ICORGT,LCEL,LELC,NMA,NMI,
+     1MXAU,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,LTR0,IPODT,
+     1ND,NGS12,MSLOJ,MXS,MSET,NSILA,LESILA,
+     1LNSLOJ,LMATSL,LDSLOJ,LBBET,INCOTX,INCOTY,INCOTZ,
+     1LBET0,(CPP(J,1),J=1,3),IBB0,LALFE,LHAEM,LHINV,LGEEK,IALFA,
+     1INDBTH,INDDTH,LTBTH,LTDTH,NS,NCVS,NCVP,NCVJ,LNOS,LCORS,LIDP,
+     1LNVEZ,LNPR,LFPR,LIDD,LLMU,LMA9,NMC,JEDPP,JEDNN,
+     1LCOPT,LNMA,LIPG,LISN,LIPR,LTHI,LTBT,LTDT,NPRES,
+     1NWPP,NWKK,NWEE,NCU,NCVU,IND3D,INDKOV,ICOEF,(COEF(I),I=1,3),
+     1LDLV,LDLV1,LDLV0,LDLV2,IMALR,NCFL,LNCFL,LFCFL,IPOMT,LNPOM,
+     1NPRL,LNPRL,LFPRL,LTEZP,INDSEL,INDCEP,ILEDE,NLD,ICPM1
+      LSTAZA(2)=LMAX8+1
+C         WRITE(3,*) '92R,LMAX8,MXAU,LNSLOJ',LMAX8,MXAU,LNSLOJ
+      CALL READDD(AU(LNSLOJ),MXAU/IDVA,IELEM,LMAX8,LDUZI)
+      LMAX=LAU+MXAU
+      CALL DELJIV(LMAX,2,INDL)
+      IF(INDL.EQ.0) LMAX=LMAX+1
+CS     PLASTICNOST
+CE     PLASTICITY
+      LPLAST=LMAX
+      LPLAS1=LMAX
+      LSIGMA=LMAX
+      LCOR0 =LMAX
+      LGM0  =LMAX
+      LTEMGT=LMAX
+      LCORGT=LMAX
+      LVITOP=LMAX
+      LVITTP=LMAX
+      IF(IATYP.EQ.0) GO TO 10
+      IF(NMODM.LE.4) GO TO 10
+      NPROS=NE*NGS12*NS*MXS*MODPRO( NMODM )*IDVA
+      LPLAS1=LPLAST+NPROS
+      LMAX=LPLAS1+NPROS
+      IF(LMAX.GT.MTOT) CALL ERROR(1)
+      LSTAZA(3)=LMAX8+1
+C         WRITE(3,*) '92R,LMAX8,NPROS,LPLAST',LMAX8,NPROS,LPLAST
+      CALL READDD(A(LPLAST),NPROS/IDVA,IELEM,LMAX8,LDUZI)
+      LSTAZA(4)=LMAX8+1
+C         WRITE(3,*) '92R,LMAX8,NPROS,LPLAS1',LMAX8,NPROS,LPLAS1
+      CALL READDD(A(LPLAS1),NPROS/IDVA,IELEM,LMAX8,LDUZI)
+      IF(IATYP.GE.4) GO TO 10
+      NPROS=0
+      LSIGMA=LMAX
+      IF(JEDPP.GT.0) GO TO 40
+      IF(ITERME.EQ.1) GO TO 20
+      IF(ICORGT.EQ.1) GO TO 30
+      RETURN
+C
+CE    POINTER FOR STRESSES AT INTEGRATION POINTS FOR ALL ELEMENTS,
+CE    USED FOR LINEAR ANALYSIS
+   10 LSIGMA=LMAX
+      N45=NLD*NS
+      NPROS=NE*NGS12*N45*MXS*IDVA
+      LMAX=LSIGMA+NPROS
+   40 NPRO1=JEDPP*IDVA
+      LVITOP=LMAX
+      LMAX=LVITOP+NPRO1
+      NPROS=NPROS+NPRO1
+      IF(IATYP.GT.0) THEN
+         LVITTP=LMAX
+         LMAX=LVITTP+NPRO1
+         NPROS=NPROS+NPRO1
+      ENDIF
+CE    POINTER FOR COORDINATES IN TIME (T) USED FOR LARGE STRAIN ANALYSIS
+      LCOR0=LMAX
+      IF(IATYP.GE.4) THEN
+         NPRO1=NE*NCVE*3*IDVA
+         LGM0=LCOR0+NPRO1
+         LMAX=LGM0+NPRO1*3
+         NPROS=NPROS+NPRO1*4
+      ENDIF
+CE    POINTER FOR TEMPERATURES AT INTEGRATION POINTS
+   20 LTEMGT=LMAX
+      IF(ITERME.EQ.1) THEN
+         NPRO1=NE*NGS12*NS*MXS*IDVA
+         LMAX=LTEMGT+NPRO1
+         NPROS=NPROS+NPRO1
+      ENDIF
+CE    POINTER FOR INTEGRATION POINTS COORDINATES
+   30 LCORGT=LMAX
+      IF(ICORGT.EQ.1) THEN
+         NPRO1=NE*NGS12*NS*3*MXS*IDVA
+         LMAX=LCORGT+NPRO1
+         NPROS=NPROS+NPRO1
+      ENDIF
+      IF(LMAX.GT.MTOT) CALL ERROR(1)
+      LSTAZA(5)=LMAX8+1
+C         WRITE(3,*) '92R,LMAX8,NPROS,LSIGMA',LMAX8,NPROS,LSIGMA
+      CALL READDD(A(LSIGMA),NPROS/IDVA,IELEM,LMAX8,LDUZI)
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE SISTE9(AE,AU,KOZOVE)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     GLAVNI UPRAVLJACKI PROGRAM  ZA MATRICE ELEMENATA I SISTEMA
+CE     MAIN MANAGEMENT  PROGRAM  FOR ELEMENT MATRIX
+C
+      include 'paka.inc'
+      
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /SIMO2D/ LALFE,LHAEM,LHINV,LGEEK,IALFA
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ZAPISI/ LSTAZA(5)
+      COMMON /UPRIRI/ LUPRI
+      COMMON /DUPLAP/ IDVA
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /REPERM/ MREPER(4)
+      COMMON /UPDLAG/ LUL,LCORUL
+      COMMON /DIREKT/ LSTAZZ(9),LDRV0,LDRV1,LDRV,IDIREK
+      COMMON /TRANS6/ LTR0,NPD6
+      COMMON /VELIKE/ LCOR0,LGM0,JG,NGR,NGS,NGT,NGS4
+      COMMON /GAUSVR/ LTEMGT,LCORGT,ICORGT
+      COMMON /PROBAS/ IILS
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /ITERBR/ ITER
+      COMMON /INDKON/ IKONV
+      COMMON /LEVDES/ ILEDE,NLD,ICPM1
+      COMMON /INDNAP/ NAPON
+      COMMON /PODTIP/ IPODT
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /NOVAGR/ NS,NCVS,NCVP,NCVJ,LNOS,LCORS,LIDP,LNVEZ,LNPR,LFPR,
+     1                LIDD,LLMU,LMA9,NMC,JEDPP,JEDNN,LVITOP,LVITTP,
+     1                LCOPT,LNMA,LIPG,LISN,LIPR,LTHI,LTBT,LTDT,NPRES,
+     1                NWPP,NWKK,NWEE,NCU,NCVU,IND3D
+      COMMON /LOKROT/ LDLV,LDLV1,LDLV0,LDLV2,IMALR
+      COMMON /MATERM/ LMODEL,LGUSM
+      COMMON /ZAPSIL/ UBXYZ(3,10),NVFUB(10),INDZS,LZAPS,LNPRZ
+      COMMON /LOKSIL/ NCFL,LNCFL,LFCFL,NPRL,LNPRL,LFPRL,LTEZP
+      COMMON /CVSILE/ NSILA,LESILA
+      COMMON /PTACKA/ IPOMT,LNPOM
+C
+      DIMENSION AE(*),AU(*)
+      REAL AE,AU
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' SISTE9'
+      LA=1 
+      IF(IPODT.EQ.2) THEN
+         IF(IALFA.EQ.1) LA=9
+         IF(IALFA.EQ.2) LA=18
+         IF(IALFA.GE.3) LA=9
+      ENDIF
+      IF(IPODT.EQ.1) THEN
+         IF(IALFA.EQ.1) LA=4
+         IF(IALFA.EQ.2) LA=5
+         IF(IALFA.GE.3) LA=6
+      ENDIF
+      IF(IPODT.EQ.0) THEN
+         IF(IALFA.GE.0) LA=5
+         IF(IALFA.EQ.3) LA=3
+         IF(IALFA.EQ.5) LA=2
+      ENDIF
+C     REPERI U VEKTORU ELEMENATA AE
+      NCVV=3*NCVE*NCVS
+      NCVJJ=0
+      IF(JEDPP.GT.0) NCVJJ=NCVJ
+C     (NCVN) UKUPAN BROJ STEPENI SLOBODE ZA PODELEMENT
+C            (NCVJ) - BROJ LOKALNIH, (ND)- BROJ GLOBALNIH
+      NCVN=NCVJJ+ND
+      NWE=NCVN*(NCVN+1)/2
+      IF(NWE.LT.NWEE) NWE=NWEE
+      LSKE =1
+      LSKEL=LSKE +NWE*IDVA
+      LSKE1=LSKEL+NWKK*IDVA
+C
+      LVOP =LSKE1+NWKK*IDVA
+C
+      LVITL=LVOP +NCVN*IDVA
+      LVITT=LVITL+NCVV*IDVA
+      LVIT0=LVITT+NCVV*IDVA
+      LBTT =LVIT0+NCVV*IDVA
+      LBNL =LBTT +6*NCVN*IDVA
+      LVIT =LBNL
+      IF(IATYP.GT.1) LVIT =LBNL +9*NCVN*IDVA
+      LVITE=LVIT +(JEDPP+JEDNN)*IDVA
+      LFTD =LVITE+NCVN*IDVA
+      LFTD1=LFTD +(JEDPP+JEDNN)*IDVA
+C
+      LVR  =LFTD1+(JEDPP+JEDNN)*IDVA
+C
+      LVS  =LVR  +NCVV*IDVA
+      LVZ  =LVS  +NCVV*IDVA
+      LCEGE=LVZ  +NCVV*IDVA
+      LBNLK=LCEGE+6*LA*IDVA
+      LBNLS=LBNLK+9*LA*IDVA
+      LLME =LBNLS+9*LA*IDVA
+      MXAE1=LLME +NCVN
+      MXAE=(NWE+2*NWKK+8*NCVN+3*NCVJ+3*NCVV+3*JEDPP+3*JEDNN+24*LA)*IDVA+
+     +      NCVN+1
+      IF(IATYP.GT.1) MXAE=MXAE+9*NCVN*IDVA
+      IF(MXAE1.GT.MXAE) STOP 'MXAE1.GT.MXAE - PAK92'
+C
+      N45=NLD*NS
+C
+CE    LCORD - POINTER FOR INITIAL COORDINATES 
+CE    LCORUL- POINTER FOR CURRENT COORDINATES IF(IATYP.GE.3), SEE /13/
+C
+      KORD=LCORD
+      IF(IATYP.GE.3.AND.IDIREK.EQ.-1) KORD=LCORUL
+C         WRITE(3,*) 'LALFE,LHAEM,LHINV,LGEEK',LALFE,LHAEM,LHINV,LGEEK
+C         WRITE(3,*) 'LSIGMA,LVITOP,LVITTP',LSIGMA,LVITOP,LVITTP
+C     WRITE(3,*) 'LVOP,LVITE,LFTD,MXAE1,NCVN',LVOP,LVITE,LFTD,MXAE1,NCVN
+C      WRITE(3,*)'PRE-MXAE1,IDIREK,IILS',MXAE1,IDIREK,IILS
+C
+CE    STRAIN AND STRESS CALCULATION AND INTEGRATION OF ELEMENT STIFFNESS
+CE    MATRIX AND INTERNAL FORCES
+C
+      CALL INT92(A(LID),A(KORD),AU(LTHID),AU(LTHI),AU(LNEL),AU(LNMAT),
+     1A(LDRV0),A(LDRV),A(LSK),A(LFTDT),AE(LSKE),A(LRTDT),A(LDRV1),
+     1AU(LNSLOJ),AU(LMATSL),AU(LBBET),AU(LDSLOJ),AU(LBET0),AU(LISNA),
+     1AU(LIPGC),AU(LTR0),AU(LALFE),AU(LHAEM),AU(LHINV),AU(LGEEK),
+     1IALFA,LA,A(LUPRI),A(LCOR0),A(LGM0),A(LTEMGT),A(LCORGT),A(LAU),N45,
+     1A(LSIGMA),A(LVITOP),A(LVITTP),AU(LNOS),AE(LLME),AU(LIDP),
+     1AU(LCORS),AE(LVIT),AE(LVITE),AE(LSKEL),AU(LMA9),AE(LVOP),
+     1AE(LVITL),AE(LVITT),AE(LVIT0),AE(LBTT),AU(LCOPT),AU(LNVEZ),
+     1AU(LNPR),AU(LFPR),AU(LIDD),AU(LLMU),AE(LFTD),AE(LVR),AE(LVS),NCVN,
+     1AE(LVZ),AE(LBNL),A(LZAPS),A(LNPRZ),INDZS,A(LGUSM),A(LMAXA),KOZOVE,
+     1AE(LCEGE),AU(LDLV),AU(LDLV1),AU(LDLV0),AU(LDLV2),
+     1AU(LFCFL),AU(LNCFL),AE(LSKE1),AE(LFTD1),AU(LIPG),AU(LESILA),
+     1AU(LNPOM),AU(LFPRL),AU(LNPRL),AU(LTEZP),AE(LBNLK),AE(LBNLS),
+     +AU(LCEL),A(LCVEL))
+C
+C      WRITE(3,*)'POS-MXAE1,IDIREK,IILS',MXAE1,IDIREK,IILS
+      IF(IDIREK.EQ.0.OR.((IALFA.GE.0.OR.NSILA.GT.0).AND.IILS.NE.-1))THEN
+         LMA8=LSTAZA(2)-1
+C         WRITE(3,*) '92,LMA8,MXAU,LNSLOJ',LMA8,MXAU,LNSLOJ
+         CALL WRITDD(AU(LNSLOJ),MXAU/IDVA,IELEM,LMA8,LDUZI)
+         IF(IDIREK.EQ.0) RETURN
+      ENDIF
+C
+      IF(IATYP.EQ.0) GO TO 10
+      IF(NMODM.LE.4) GO TO 10
+      IF(IILS.NE.-1) THEN
+        NPROS=NE*NGS12*NS*MXS*MODPRO( NMODM )*IDVA
+        LMA8=LSTAZA(4)-1
+C         WRITE(3,*) '92,LMA8,NPROS,LPLAS1',LMA8,NPROS,LPLAS1
+        CALL WRITDD(A(LPLAS1),NPROS/IDVA,IELEM,LMA8,LDUZI)
+        IF(IATYP.GE.4) GO TO 10
+        NPROS=0
+        IF(JEDPP.GT.0) GO TO 40
+        IF(ITERME.EQ.1) GO TO 20
+        IF(ICORGT.EQ.1) GO TO 30
+      ENDIF
+      RETURN
+C
+   10 NPROS=NE*NGS12*N45*MXS*IDVA
+   40 NPRO1=JEDPP*IDVA
+      NPROS=NPROS+NPRO1
+      IF(IATYP.GT.0) NPROS=NPROS+NPRO1
+      IF(IATYP.GE.4) THEN
+         NPRO1=NE*NCVE*3*IDVA
+         NPROS=NPROS+NPRO1*4
+         IF(NAPON.EQ.0.AND.ITER.GT.0) RETURN
+      ENDIF
+   20 IF(ITERME.EQ.1) THEN
+         NPRO1=NE*NGS12*NS*MXS*IDVA
+         NPROS=NPROS+NPRO1
+      ENDIF
+   30 IF(ICORGT.EQ.1) THEN
+         NPRO1=NE*NGS12*NS*3*MXS*IDVA
+         NPROS=NPROS+NPRO1
+      ENDIF
+      LMA8=LSTAZA(5)-1
+C         WRITE(3,*) '92W,LMA8,NPROS,LSIGMA',LMA8,NPROS,LSIGMA
+      IF(IILS.NE.-1) 
+     1CALL WRITDD(A(LSIGMA),NPROS/IDVA,IELEM,LMA8,LDUZI)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE STBET9(TBETA,BETA)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS.....   MATRICA TRANSFORMISANJA KONSTITUITIVNIH RELACIJA LAMINATA
+CE.....   CONSTITUITIVE LAW TRANSFORMATION MATRIX
+C
+      DIMENSION TBETA(6,*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' STBET9'
+C
+      SB=DSIN(BETA)
+      CB=DCOS(BETA)
+C....   SLUCAJ  BETA = K * PI
+      IF(DABS(SB).LT.1.D-4) THEN
+        SB=0.D0
+        CB=1.D0
+      ENDIF
+C....   SLUCAJ  BETA = K * PI/2
+      IF(DABS(CB).LT.1.D-4) THEN
+        SB=1.D0
+        CB=0.D0
+      ENDIF
+C
+      TBETA(1,1)= 1.D0
+      TBETA(1,2)= 0.D0
+      TBETA(1,3)= 0.D0
+      TBETA(1,4)= 0.D0
+      TBETA(1,5)= 0.D0
+      TBETA(1,6)= 0.D0
+C
+      TBETA(2,1)= 0.D0
+      TBETA(2,2)= CB*CB
+      TBETA(2,3)= SB*SB
+      TBETA(2,4)= 0.D0
+      TBETA(2,5)= SB*CB
+      TBETA(2,6)= 0.D0
+C
+      TBETA(3,1)= 0.D0
+      TBETA(3,2)= SB*SB
+      TBETA(3,3)= CB*CB
+      TBETA(3,4)= 0.D0
+      TBETA(3,5)=-SB*CB
+      TBETA(3,6)= 0.D0
+C
+      TBETA(4,1)= 0.D0
+      TBETA(4,2)= 0.D0
+      TBETA(4,3)= 0.D0
+      TBETA(4,4)= CB
+      TBETA(4,5)= 0.D0
+      TBETA(4,6)= SB
+C
+      TBETA(5,1)= 0.D0
+      TBETA(5,2)=-2.D0*SB*CB
+      TBETA(5,3)= 2.D0*SB*CB
+      TBETA(5,4)= 0.D0
+      TBETA(5,5)= CB*CB-SB*SB
+      TBETA(5,6)= 0.D0
+C
+      TBETA(6,1)= 0.D0
+      TBETA(6,2)= 0.D0
+      TBETA(6,3)= 0.D0
+      TBETA(6,4)=-SB
+      TBETA(6,5)= 0.D0
+      TBETA(6,6)= CB
+C
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE INTER9(H,R,N)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION H(3,3)
+C INTERPOLACIJSKE FUNKCIJE
+      H(1,1)=0.5D0*(1.D0+R)
+      H(2,1)=0.5D0*(1.D0-R)
+      H(3,1)=0.D0
+C PRVI IZVOD PO T
+      H(1,2)=0.5D0
+      H(2,2)=-0.5D0
+      H(3,2)=0.D0
+C DRUGI IZVOD PO T
+      H(1,3)=0.D0
+      H(2,3)=0.D0
+      H(3,3)=0.D0
+      IF(N.EQ.3) THEN
+         H(3,1)=1.D0-R*R
+         H(3,2)=-2.D0*R
+         H(1,1)=H(1,1)-0.5D0*H(3,1)
+         H(2,1)=H(2,1)-0.5D0*H(3,1)
+         H(1,2)=H(1,2)-0.5D0*H(3,2)
+         H(2,2)=H(2,2)-0.5D0*H(3,2)
+         H(1,3)=1.D0
+         H(2,3)=1.D0
+         H(3,3)=-2.D0
+      ENDIF
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE INTER2(H,R,S,NOP,NE,NSEG,NCVE)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE INTERPOLACIONIH   F-JA  I  JAKOBIJANA
+CE     FORM INTERPOLATION FUNCTION AND JACOBIAN MATRIX
+C
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /SRPSKI/ ISRPS
+      DIMENSION NOP(NE,*),H(9,*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' INTER2'
+      RP=1.D0+R
+      RM=1.D0-R
+      RK=1.D0-R*R
+      SP=1.D0+S
+      SM=1.D0-S
+      SK=1.D0-S*S
+      H(1,1)=.25D0*RP*SP
+      H(2,1)=.25D0*RM*SP
+      H(3,1)=.25D0*RM*SM
+      H(4,1)=.25D0*RP*SM
+      H(1,2)=.25D0*SP
+      H(2,2)=-.25D0*SP
+      H(3,2)=-.25D0*SM
+      H(4,2)=.25D0*SM
+      H(1,3)=.25D0*RP
+      H(2,3)=.25D0*RM
+      H(3,3)=-.25D0*RM
+      H(4,3)=-.25D0*RP
+CS     KOREKCIJA FUNKCIJA KADA JE BROJ CVOROVA VECI OD 4
+      IF(NCVE.EQ.4) GO TO 50
+      NND5=NCVE-4
+      I=0
+    5 I=I+1
+      IF(I.GT.NND5) GO TO 80
+      NN=I+4
+      IF(NOP(NSEG,NN).EQ.0) GO TO 5
+      GO TO (10,15,20,30,40),I
+CS     PETI CVOR
+   10 H(5,1)=.5D0*RK*SP
+      H(5,2)=-R*SP
+      H(5,3)=.5D0*RK
+      GO TO 5
+CS     SESTI CVOR
+   15 H(6,1)=.5D0*SK*RM
+      H(6,2)=-.5D0*SK
+      H(6,3)=-S*RM
+      GO TO 5
+CS    SEDMI CVOR
+   20 H(7,1)=.5D0*RK*SM
+      H(7,2)=-R*SM
+      H(7,3)=-.5D0*RK
+      GO TO 5
+CS     OSMI CVOR
+   30 H(8,1)=.5D0*SK*RP
+      H(8,2)=.5D0*SK
+      H(8,3)=-S*RP
+      GO TO 5
+CS     DEVETI CVOR
+   40 H(9,1)=RK*SK
+      H(9,2)=-2.D0*R*SK
+      H(9,3)=-2.D0*S*RK
+CS     KOREKCIJA SVIH CVOROVA AKO POSTOJI DEVETI
+      DO 150 I=1,4
+      DO 145 J=1,3
+      H(I,J)=H(I,J)-.25D0*H(9,J)
+  145 CONTINUE
+  150 CONTINUE
+      DO 160 I=5,8
+      IF(NOP(NSEG,I).EQ.0) GO TO 160
+      DO 155 J=1,3
+      H(I,J)=H(I,J)-0.5D0*H(9,J)
+  155 CONTINUE
+  160 CONTINUE
+C
+CS     KOREKCIJA PRVA CETIRI CVORA
+C
+   80 IF(NND5.EQ.5) NND5=4
+      I=0
+   55 I=I+1
+      IF(I.GT.NND5) GO TO 50
+      NN=I+4
+      IF(NOP(NSEG,NN).EQ.0) GO TO 55
+      GO TO (90,100,200,300),I
+C
+   90 H(1,1)=H(1,1)-.5D0*H(5,1)
+      H(2,1)=H(2,1)-.5D0*H(5,1)
+      H(1,2)=H(1,2)-.5D0*H(5,2)
+      H(2,2)=H(2,2)-.5D0*H(5,2)
+      H(1,3)=H(1,3)-.5D0*H(5,3)
+      H(2,3)=H(2,3)-.5D0*H(5,3)
+      GO TO 55
+C
+  100 H(2,1)=H(2,1)-.5D0*H(6,1)
+      H(3,1)=H(3,1)-.5D0*H(6,1)
+      H(2,2)=H(2,2)-.5D0*H(6,2)
+      H(3,2)=H(3,2)-.5D0*H(6,2)
+      H(2,3)=H(2,3)-.5D0*H(6,3)
+      H(3,3)=H(3,3)-.5D0*H(6,3)
+      GO TO 55
+C
+  200 H(3,1)=H(3,1)-.5D0*H(7,1)
+      H(4,1)=H(4,1)-.5D0*H(7,1)
+      H(3,2)=H(3,2)-.5D0*H(7,2)
+      H(4,2)=H(4,2)-.5D0*H(7,2)
+      H(3,3)=H(3,3)-.5D0*H(7,3)
+      H(4,3)=H(4,3)-.5D0*H(7,3)
+      GO TO 55
+C
+  300 H(4,1)=H(4,1)-.5D0*H(8,1)
+      H(1,1)=H(1,1)-.5D0*H(8,1)
+      H(4,2)=H(4,2)-.5D0*H(8,2)
+      H(1,2)=H(1,2)-.5D0*H(8,2)
+      H(4,3)=H(4,3)-.5D0*H(8,3)
+      H(1,3)=H(1,3)-.5D0*H(8,3)
+C
+   50 RETURN
+      END
+C======================================================================
+      SUBROUTINE MEL91(FUN,COEFE,ETP,IOPT,IND3D)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE ELAST
+CE     ELAST MATRIX
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /MATIZO/ E,V
+      COMMON /PODTIP/ IPODT
+C
+      DIMENSION FUN(2,*),ETP(6,*),COEFE(*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEL91 '
+C
+      E=FUN(1,MAT)
+      V=FUN(2,MAT)
+C      WRITE(3,*) 'E,V,IND3D,IPODT',E,V,IND3D,IPODT
+C      WRITE(3,*) 'COEFE,IOPT',COEFE(1),COEFE(2),IOPT
+C     NULOVANJE ETP
+      CALL CLEAR(ETP,36)
+C     MATRICA ETP ZA 3D
+      IF(IPODT.EQ.2) THEN
+         IF(IND3D.EQ.0) ETP(3,3)=E
+         IF(IND3D.EQ.1) THEN
+            ETP(3,3)=E
+            ETP(5,5)=E/(2.*(1.+V))
+            ETP(6,6)=ETP(5,5)
+C           ETP(6,6)=COEFE(2)*ETP(5,5)
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ETP(1,1)=E*(1.-V)/(1.+V)/(1.-2.*V)
+            ETP(2,2)=ETP(1,1)
+            ETP(3,3)=ETP(1,1)
+            ETP(1,2)=ETP(1,1)*V/(1.-V)
+            ETP(2,1)=ETP(1,2)
+            ETP(1,3)=ETP(1,2)
+            ETP(3,1)=ETP(1,2)
+            ETP(2,3)=ETP(1,2)
+            ETP(3,2)=ETP(1,2)
+            ETP(4,4)=ETP(1,1)*(1.-2.*V)/(1.-V)/2.
+            ETP(5,5)=ETP(4,4)
+            ETP(6,6)=ETP(4,4)
+         ENDIF
+      ENDIF
+C     MATRICA ETP ZA LJUSKU
+      IF(IPODT.EQ.1) THEN
+         EA=E/(1.D0-V*V)
+         E1=0.5D0*(1.D0-V)
+         IF(IOPT.EQ.0) THEN
+C           NULOVANJE ELAST
+            CALL CLEAR(ELAST,36)
+            ELAST(2,2)=EA
+            ELAST(3,3)=ELAST(2,2)
+            ELAST(4,4)=ELAST(2,2)*E1
+            ELAST(6,6)=ELAST(4,4)
+            RETURN
+         ENDIF
+C
+         IF(IND3D.EQ.-2) ETP(5,5)=E/(2.*(1.+V))
+         IF(IND3D.EQ.-1) ETP(2,2)=E
+         IF(IND3D.EQ.0) ETP(3,3)=E
+         IF(IND3D.EQ.1) THEN
+             ETP(3,3)=E
+             ETP(5,5)=E/(2.*(1.+V))
+C            ETP(6,6)=ETP(5,5)
+             ETP(6,6)=COEFE(2)*ETP(5,5)
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ETP(2,2)=EA
+            ETP(3,3)=EA
+            ETP(2,3)=EA*V
+            ETP(3,2)=ETP(2,3)
+            ETP(5,5)=EA*E1
+            ETP(4,4)=COEFE(1)*ETP(5,5)
+            ETP(6,6)=COEFE(2)*ETP(5,5)
+C           ETP(4,4)=ETP(5,5)
+C           ETP(6,6)=ETP(5,5)
+         ENDIF
+      ENDIF
+C     MATRICA ETP ZA GREDU
+      IF(IPODT.EQ.0) THEN
+         IF(IND3D.EQ.0) THEN
+            ETP(3,3)=E
+            ETP(5,5)=0.D0
+            ETP(6,6)=0.D0
+         ENDIF
+         IF(IND3D.EQ.1) THEN
+            ETP(3,3)=E
+            ETP(5,5)=COEFE(1)*E/(2.*(1.+V))
+            ETP(6,6)=COEFE(2)*E/(2.*(1.+V))
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ETP(1,1)=E*(1.-V)/(1.+V)/(1.-2.*V)
+            ETP(2,2)=ETP(1,1)
+            ETP(3,3)=ETP(1,1)
+            ETP(1,2)=ETP(1,1)*V/(1.-V)
+            ETP(2,1)=ETP(1,2)
+            ETP(1,3)=ETP(1,2)
+            ETP(3,1)=ETP(1,2)
+            ETP(2,3)=ETP(1,2)
+            ETP(3,2)=ETP(1,2)
+            ETP(4,4)=ETP(1,1)*(1.-2.*V)/(1.-V)/2.
+            ETP(5,5)=ETP(4,4)
+            ETP(6,6)=ETP(4,4)
+         ENDIF
+      ENDIF
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE MEL92(FUN,COEFE,ETP,TBETA,BETA,IOPT,IND3D)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE ELAST
+CE     ELAST MATRIX
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /PODTIP/ IPODT
+C
+      DIMENSION FUN(9,*),COEFE(*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEL92 '
+C
+      EX=FUN(1,MAT)
+      EY=FUN(2,MAT)
+      EZ=FUN(3,MAT)
+      VXY=FUN(4,MAT)
+      VYZ=FUN(5,MAT)
+      VZX=FUN(6,MAT)
+      GXY=FUN(7,MAT)
+      GYZ=FUN(8,MAT)
+      GZX=FUN(9,MAT)
+C     MODUL SMICANJA
+C     NULOVANJE ELAST
+      CALL CLEAR(ELAST,36)
+C     MATRICA ELAST ZA 3D
+      IF(IPODT.EQ.2) THEN
+         POM=(1.-2.*VXY*VYZ*VZX-EX/EZ*VZX*VZX-EY/EX*VXY*VXY
+     1       -EZ/EY*VYZ*VYZ)/(EX*EY*EZ)
+         IF(IND3D.EQ.0) ELAST(3,3)=EZ
+         IF(IND3D.EQ.1) THEN
+            ELAST(3,3)=EZ
+            ELAST(5,5)=GYZ
+            ELAST(6,6)=COEFE(2)*GZX
+C           ELAST(6,6)=GZX
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ELAST(1,1)=(1./EZ-VYZ*VYZ/EY)/(EY*POM)
+            ELAST(2,2)=(1./EX-VZX*VZX/EZ)/(EZ*POM)
+            ELAST(3,3)=(1./EY-VXY*VXY/EX)/(EX*POM)
+            ELAST(1,2)=(VZX*VYZ/EY+VXY/EX)/(EZ*POM)
+            ELAST(2,1)=ELAST(1,2)
+            ELAST(1,3)=(VXY*VYZ/EX+VZX/EZ)/(EY*POM)
+            ELAST(3,1)=ELAST(1,3)
+            ELAST(2,3)=(VXY*VZX/EZ+VYZ/EY)/(EX*POM)
+            ELAST(3,2)=ELAST(2,3)
+            ELAST(4,4)=GXY
+            ELAST(5,5)=GYZ
+            ELAST(6,6)=GZX
+         ENDIF
+      ENDIF
+C     MATRICA ELAST ZA LJUSKU
+      IF(IPODT.EQ.1) THEN
+         POM=EY-EZ*VYZ*VYZ
+         IF(IOPT.EQ.0) THEN
+            ELAST(2,2)=EY*EY/POM
+            ELAST(3,3)=EY*EZ/POM
+            ELAST(4,4)=GXY
+            ELAST(6,6)=GZX
+         RETURN
+         ENDIF
+C
+         IF(IND3D.EQ.-2) ELAST(5,5)=GYZ
+         IF(IND3D.EQ.-1) ELAST(2,2)=EY
+         IF(IND3D.EQ.0) ELAST(3,3)=EZ
+         IF(IND3D.EQ.1) THEN
+            ELAST(3,3)=EZ
+            ELAST(5,5)=GYZ
+            ELAST(6,6)=COEFE(2)*GZX
+C           ELAST(6,6)=GZX
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+             ELAST(2,2)=EY*EY/POM
+             ELAST(3,3)=EY*EZ/POM
+             ELAST(2,3)=EY*EZ*VYZ/POM
+             ELAST(3,2)=ELAST(2,3)
+             ELAST(4,4)=COEFE(1)*GXY
+             ELAST(5,5)=GYZ
+             ELAST(6,6)=COEFE(2)*GZX
+         ENDIF
+      ENDIF
+C     MATRICA ELAST ZA GREDU
+      IF(IPODT.EQ.0) THEN
+         IF(IND3D.EQ.0) ELAST(3,3)=EZ
+         IF(IND3D.EQ.1) THEN
+            ELAST(3,3)=EZ
+            ELAST(5,5)=COEFE(1)*GYZ
+            ELAST(6,6)=COEFE(2)*GZX
+C           ELAST(5,5)=GYZ
+C           ELAST(6,6)=GZX
+         ENDIF
+      ENDIF
+C
+      IF(DABS(BETA).GT.1.D-6) THEN
+         CALL TRAETP(ELAST,ETP,TBETA)
+      ELSE
+         CALL JEDNA1(ETP,ELAST,36)
+      ENDIF
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE MEL93(FUN,NTA,TEM,MATE,TGT,COEFE,ETP,IOPT,IND3D)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE ELAST
+CE     ELAST MATRIX
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /MATIZO/ E,V
+      COMMON /PODTIP/ IPODT
+      COMMON /SRPSKI/ ISRPS
+C
+      DIMENSION FUN(2,MATE*3,*),NTA(*),TEM(*),ETP(6,*),COEFE(*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEL93 '
+C
+C     UCITAVANJE FUNKCIJE E,V,ALFA
+C
+      DO 6 J=1,3
+      NFE=(MAT-1)*3+J
+      CALL TABF(FUN,NTA,NFE,MATE*3,TGT,EVA,NTMX,IND)
+      IF(IND.GT.0) GO TO 120
+      IF(J.EQ.1) E=EVA
+      IF(J.EQ.2) V=EVA
+    6 CONTINUE
+      DO 7 I=1,3
+    7 ALFA(I)=EVA
+      TEMP0=TEM(MAT)
+C     NULOVANJE ETP
+      CALL CLEAR(ETP,36)
+C     MATRICA ETP ZA 3D
+      IF(IPODT.EQ.2) THEN
+         IF(IND3D.EQ.0) ETP(3,3)=E
+         IF(IND3D.EQ.1) THEN
+            ETP(3,3)=E
+            ETP(5,5)=E/(2.*(1.+V))
+            ETP(6,6)=ETP(5,5)
+C           ETP(6,6)=COEFE(2)*ETP(5,5)
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ETP(1,1)=E*(1.-V)/(1.+V)/(1.-2.*V)
+            ETP(2,2)=ETP(1,1)
+            ETP(3,3)=ETP(1,1)
+            ETP(1,2)=ETP(1,1)*V/(1.-V)
+            ETP(2,1)=ETP(1,2)
+            ETP(1,3)=ETP(1,2)
+            ETP(3,1)=ETP(1,2)
+            ETP(2,3)=ETP(1,2)
+            ETP(3,2)=ETP(1,2)
+            ETP(4,4)=ETP(1,1)*(1.-2.*V)/(1.-V)/2.
+            ETP(5,5)=ETP(4,4)
+            ETP(6,6)=ETP(4,4)
+         ENDIF
+      ENDIF
+C     MATRICA ETP ZA LJUSKU
+      IF(IPODT.EQ.1) THEN
+         EA=E/(1.D0-V*V)
+         E1=0.5D0*(1.D0-V)
+         IF(IOPT.EQ.0) THEN
+C           NULOVANJE ELAST
+            CALL CLEAR(ELAST,36)
+            ELAST(2,2)=EA
+            ELAST(3,3)=ELAST(2,2)
+            ELAST(4,4)=ELAST(2,2)*E1
+            ELAST(6,6)=ELAST(4,4)
+            RETURN
+         ENDIF
+C
+         IF(IND3D.EQ.-2) ETP(5,5)=E/(2.*(1.+V))
+         IF(IND3D.EQ.-1) ETP(2,2)=E
+         IF(IND3D.EQ.0) ETP(3,3)=E
+         IF(IND3D.EQ.1) THEN
+             ETP(3,3)=E
+             ETP(5,5)=E/(2.*(1.+V))
+C            ETP(6,6)=ETP(5,5)
+             ETP(6,6)=COEFE(2)*ETP(5,5)
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ETP(2,2)=EA
+            ETP(3,3)=EA
+            ETP(2,3)=EA*V
+            ETP(3,2)=ETP(2,3)
+            ETP(5,5)=EA*E1
+            ETP(4,4)=COEFE(1)*ETP(5,5)
+            ETP(6,6)=COEFE(2)*ETP(5,5)
+C           ETP(4,4)=ETP(5,5)
+C           ETP(6,6)=ETP(5,5)
+         ENDIF
+      ENDIF
+C     MATRICA ETP ZA GREDU
+      IF(IPODT.EQ.0) THEN
+         IF(IND3D.EQ.0) ETP(3,3)=E
+         IF(IND3D.EQ.1) THEN
+            ETP(3,3)=E
+            ETP(5,5)=COEFE(1)*E/(2.*(1.+V))
+            ETP(6,6)=COEFE(2)*E/(2.*(1.+V))
+C           ETP(5,5)=E/(2.*(1.+V))
+C           ETP(6,6)=ETP(5,5)
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ETP(1,1)=E*(1.-V)/(1.+V)/(1.-2.*V)
+            ETP(2,2)=ETP(1,1)
+            ETP(3,3)=ETP(1,1)
+            ETP(1,2)=ETP(1,1)*V/(1.-V)
+            ETP(2,1)=ETP(1,2)
+            ETP(1,3)=ETP(1,2)
+            ETP(3,1)=ETP(1,2)
+            ETP(2,3)=ETP(1,2)
+            ETP(3,2)=ETP(1,2)
+            ETP(4,4)=ETP(1,1)*(1.-2.*V)/(1.-V)/2.
+            ETP(5,5)=ETP(4,4)
+            ETP(6,6)=ETP(4,4)
+         ENDIF
+      ENDIF
+      RETURN
+  120 CONTINUE
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) NFE,TGT
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) NFE,TGT
+      STOP
+C-----------------------------------------------------------------------
+ 2000 FORMAT(///' ARGUMENT VAN OPSEGA ZADATE KRIVE U MEL83'/
+     1' TEMPERATURSKA FUNKCIJA BROJ =',I5/
+     2' ARGUMENT TEMPERATURA =',1PD12.4)
+ 6000 FORMAT(///' ARGUMENT IS OUT OF RANGE'/
+     1' TEMPERATURE FUNCTION  =',I5/
+     2' ARGUMENT TEMPERATURE  =',1PD12.4)
+C-----------------------------------------------------------------------
+      END
+C======================================================================
+      SUBROUTINE MEL94(FUN,NTA,TEM,MATE,TGT,COEFE,ETP,TBETA,BETA,IOPT,
+     1                 IND3D)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE ELAST
+CE     ELAST MATRIX
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /PODTIP/ IPODT
+      COMMON /SRPSKI/ ISRPS
+C
+      DIMENSION FUN(2,MATE*12,*),NTA(*),TEM(*),COEFE(*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEL94 '
+C
+C     UCITAVANJE FUNKCIJE E,V,ALFA
+C
+      DO 6 J=1,12
+      NFE=(MAT-1)*12+J
+      CALL TABF(FUN,NTA,NFE,MATE*12,TGT,EVA,NTMX,IND)
+      IF(IND.GT.0) GO TO 120
+      IF(J.EQ.1) EX=EVA
+      IF(J.EQ.2) EY=EVA
+      IF(J.EQ.3) EZ=EVA
+      IF(J.EQ.4) VXY=EVA
+      IF(J.EQ.5) VYZ=EVA
+      IF(J.EQ.6) VZX=EVA
+      IF(J.EQ.7) GXY=EVA
+      IF(J.EQ.8) GYZ=EVA
+      IF(J.EQ.9) GZX=EVA
+      IF(J.EQ.10) ALFA(1)=EVA
+      IF(J.EQ.11) ALFA(2)=EVA
+      IF(J.EQ.12) ALFA(3)=EVA
+    6 CONTINUE
+      TEMP0=TEM(MAT)
+C     MODUL SMICANJA
+C     NULOVANJE ELAST
+      CALL CLEAR(ELAST,36)
+C     MATRICA ELAST ZA 3D
+      IF(IPODT.EQ.2) THEN
+         POM=(1.-2.*VXY*VYZ*VZX-EX/EZ*VZX*VZX-EY/EX*VXY*VXY
+     1       -EZ/EY*VYZ*VYZ)/(EX*EY*EZ)
+         IF(IND3D.EQ.0) ELAST(3,3)=EZ
+         IF(IND3D.EQ.1) THEN
+            ELAST(3,3)=EZ
+            ELAST(5,5)=GYZ
+            ELAST(6,6)=COEFE(2)*GZX
+C           ELAST(6,6)=GZX
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+            ELAST(1,1)=(1./EZ-VYZ*VYZ/EY)/(EY*POM)
+            ELAST(2,2)=(1./EX-VZX*VZX/EZ)/(EZ*POM)
+            ELAST(3,3)=(1./EY-VXY*VXY/EX)/(EX*POM)
+            ELAST(1,2)=(VZX*VYZ/EY+VXY/EX)/(EZ*POM)
+            ELAST(2,1)=ELAST(1,2)
+            ELAST(1,3)=(VXY*VYZ/EX+VZX/EZ)/(EY*POM)
+            ELAST(3,1)=ELAST(1,3)
+            ELAST(2,3)=(VXY*VZX/EZ+VYZ/EY)/(EX*POM)
+            ELAST(3,2)=ELAST(2,3)
+            ELAST(4,4)=GXY
+            ELAST(5,5)=GYZ
+            ELAST(6,6)=GZX
+         ENDIF
+      ENDIF
+C     MATRICA ELAST ZA LJUSKU
+      IF(IPODT.EQ.1) THEN
+         POM=EY-EZ*VYZ*VYZ
+         IF(IOPT.EQ.0) THEN
+            ELAST(2,2)=EY*EY/POM
+            ELAST(3,3)=EY*EZ/POM
+            ELAST(4,4)=GXY
+            ELAST(6,6)=GZX
+         RETURN
+         ENDIF
+C
+         IF(IND3D.EQ.-2) ELAST(5,5)=GYZ
+         IF(IND3D.EQ.-1) ELAST(2,2)=EY
+         IF(IND3D.EQ.0) ELAST(3,3)=EZ
+         IF(IND3D.EQ.1) THEN
+            ELAST(3,3)=EZ
+            ELAST(5,5)=GYZ
+            ELAST(6,6)=COEFE(2)*GZX
+C           ELAST(6,6)=GZX
+         ENDIF
+         IF(IND3D.EQ.2) THEN
+             ELAST(2,2)=EY*EY/POM
+             ELAST(3,3)=EY*EZ/POM
+             ELAST(2,3)=EY*EZ*VYZ/POM
+             ELAST(3,2)=ELAST(2,3)
+             ELAST(4,4)=COEFE(1)*GXY
+             ELAST(5,5)=GYZ
+             ELAST(6,6)=COEFE(2)*GZX
+         ENDIF
+      ENDIF
+C     MATRICA ELAST ZA GREDU
+      IF(IPODT.EQ.0) THEN
+         IF(IND3D.EQ.0) ELAST(3,3)=EZ
+         IF(IND3D.EQ.1) THEN
+            ELAST(3,3)=EZ
+            ELAST(5,5)=COEFE(1)*GYZ
+            ELAST(6,6)=COEFE(2)*GZX
+C           ELAST(5,5)=GYZ
+C           ELAST(6,6)=GZX
+         ENDIF
+      ENDIF
+C
+      IF(DABS(BETA).GT.1.D-6) THEN
+         CALL TRAETP(ELAST,ETP,TBETA)
+      ELSE
+         CALL JEDNA1(ETP,ELAST,36)
+      ENDIF
+      RETURN
+  120 CONTINUE
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) NFE,TGT
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) NFE,TGT
+      STOP
+C-----------------------------------------------------------------------
+ 2000 FORMAT(///' ARGUMENT VAN OPSEGA ZADATE KRIVE U MEL94'/
+     1' TEMPERATURSKA FUNKCIJA BROJ =',I5/
+     2' ARGUMENT TEMPERATURA =',1PD12.4)
+ 6000 FORMAT(///' ARGUMENT IS OUT OF RANGE'/
+     1' TEMPERATURE FUNCTION  =',I5/
+     2' ARGUMENT TEMPERATURE  =',1PD12.4)
+C-----------------------------------------------------------------------
+      END
+C======================================================================
+      SUBROUTINE MEL95(FUN,NTA,MATE)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C     FORMIRANJE MATRICE ELAST
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /MATIZO/ E,V
+C
+      DIMENSION FUN(2,MATE,*),NTA(*)
+C
+      NCT=NTA(MAT) 
+      E=FUN(1,MAT,1)
+      V=FUN(2,MAT,1)
+C     NULOVANJE ELAST
+      DO 15 I=1,6
+      DO 15 J=1,6
+   15 ELAST(I,J)=0.0D0
+C     MATRICA ELAST
+      ELAST(1,1)=E*(1.-V)/(1.+V)/(1.-2.*V)
+      ELAST(2,2)=ELAST(1,1)
+      ELAST(3,3)=ELAST(1,1)
+      ELAST(1,2)=ELAST(1,1)*V/(1.-V)
+      ELAST(1,3)=ELAST(1,2)
+      ELAST(2,3)=ELAST(1,2)
+      ELAST(4,4)=ELAST(1,1)*(1.-2.*V)/(1.-V)/2.
+      ELAST(5,5)=ELAST(4,4)
+      ELAST(6,6)=ELAST(4,4)
+      DO 50 I=1,6
+      DO 50 J=I,6
+   50 ELAST(J,I)=ELAST(I,J)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE BETBE9(BTT,XJ,H,HK,VITL,V3,NCVE,NCVS,NCVJ,BNL,IATYP)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     MATRICE BTT ( B )
+CE     MATRIX  BTT ( B )
+C
+      DIMENSION BTT(6,*),XJ(3,*),H(9,*),HK(3,*),VITL(3,NCVS,*),
+     1          V3(3,3,*),ST(3),HVX(3,3,3),BNL(9,*)
+C
+         KK=NCVJ
+         DO 126 K=1,NCVE
+            DO 127 J=1,3
+               KK=KK+1
+               BTT(1,KK)= XJ(1,3)*DELTA(1,J)*HK(K,2)
+               BTT(2,KK)= XJ(2,3)*DELTA(2,J)*HK(K,2)
+               BTT(3,KK)= XJ(3,3)*DELTA(3,J)*HK(K,2)
+               BTT(4,KK)=(XJ(1,3)*DELTA(2,J)+XJ(2,3)*DELTA(1,J))*HK(K,2)
+               BTT(5,KK)=(XJ(2,3)*DELTA(3,J)+XJ(3,3)*DELTA(2,J))*HK(K,2)
+               BTT(6,KK)=(XJ(3,3)*DELTA(1,J)+XJ(1,3)*DELTA(3,J))*HK(K,2)
+               IF(IATYP.GT.2) THEN
+                  BNL(1,KK)= XJ(1,3)*DELTA(1,J)*HK(K,2)
+                  BNL(2,KK)= XJ(1,3)*DELTA(2,J)*HK(K,2)
+                  BNL(3,KK)= XJ(1,3)*DELTA(3,J)*HK(K,2)
+                  BNL(4,KK)= XJ(2,3)*DELTA(1,J)*HK(K,2)
+                  BNL(5,KK)= XJ(2,3)*DELTA(2,J)*HK(K,2)
+                  BNL(6,KK)= XJ(2,3)*DELTA(3,J)*HK(K,2)
+                  BNL(7,KK)= XJ(3,3)*DELTA(1,J)*HK(K,2)
+                  BNL(8,KK)= XJ(3,3)*DELTA(2,J)*HK(K,2)
+                  BNL(9,KK)= XJ(3,3)*DELTA(3,J)*HK(K,2)
+               ENDIF
+  127       CONTINUE
+            CALL CLEAR(HVX,27)
+            DO 128 M=1,NCVS
+            DO 128 J=1,3
+               HHJ=XJ(J,1)*HK(K,1)*H(M,2)+XJ(J,2)*HK(K,1)*H(M,3)+
+     1             XJ(J,3)*HK(K,2)*H(M,1)
+            DO 128 I=1,3
+               HVX(I,J,1)=HVX(I,J,1)+HHJ*(V3(I,3,K)*VITL(2,M,K)-
+     1                                    V3(I,2,K)*VITL(3,M,K))
+               HVX(I,J,2)=HVX(I,J,2)+HHJ*(V3(I,1,K)*VITL(3,M,K)-
+     1                                    V3(I,3,K)*VITL(1,M,K))
+               HVX(I,J,3)=HVX(I,J,3)+HHJ*(V3(I,2,K)*VITL(1,M,K)-
+     1                                    V3(I,1,K)*VITL(2,M,K))
+  128       CONTINUE
+         DO 126 J=1,3
+            KK=KK+1
+            BTT(1,KK)=HVX(1,1,J)
+            BTT(2,KK)=HVX(2,2,J)
+            BTT(3,KK)=HVX(3,3,J)
+            BTT(4,KK)=HVX(1,2,J)+HVX(2,1,J)
+            BTT(5,KK)=HVX(2,3,J)+HVX(3,2,J)
+            BTT(6,KK)=HVX(3,1,J)+HVX(1,3,J)
+            IF(IATYP.GT.2) THEN
+               BNL(1,KK)=HVX(1,1,J) 
+               BNL(2,KK)=HVX(2,1,J) 
+               BNL(3,KK)=HVX(3,1,J) 
+               BNL(4,KK)=HVX(1,2,J) 
+               BNL(5,KK)=HVX(2,2,J) 
+               BNL(6,KK)=HVX(3,2,J) 
+               BNL(7,KK)=HVX(1,3,J) 
+               BNL(8,KK)=HVX(2,3,J) 
+               BNL(9,KK)=HVX(3,3,J) 
+            ENDIF
+  126    CONTINUE
+         IF(NCVJ.EQ.0) RETURN
+         KK=0
+         DO 121 K=1,NCVE
+         DO 121 M=1,NCVS
+            DO 122 J=1,3
+               ST(J)=XJ(J,1)*HK(K,1)*H(M,2)+XJ(J,2)*HK(K,1)*H(M,3)+
+     1               XJ(J,3)*HK(K,2)*H(M,1)
+  122       CONTINUE
+         DO 121 J=1,3
+            KK=KK+1
+            BTT(1,KK)=ST(1)*V3(1,J,K)
+            BTT(2,KK)=ST(2)*V3(2,J,K)
+            BTT(3,KK)=ST(3)*V3(3,J,K)
+            BTT(4,KK)=ST(1)*V3(2,J,K)+ST(2)*V3(1,J,K)
+            BTT(5,KK)=ST(2)*V3(3,J,K)+ST(3)*V3(2,J,K)
+            BTT(6,KK)=ST(3)*V3(1,J,K)+ST(1)*V3(3,J,K)
+            IF(IATYP.GT.2) THEN
+               BNL(1,KK)=ST(1)*V3(1,J,K)
+               BNL(2,KK)=ST(1)*V3(2,J,K)
+               BNL(3,KK)=ST(1)*V3(3,J,K)
+               BNL(4,KK)=ST(2)*V3(1,J,K)
+               BNL(5,KK)=ST(2)*V3(2,J,K)
+               BNL(6,KK)=ST(2)*V3(3,J,K)
+               BNL(7,KK)=ST(3)*V3(1,J,K)
+               BNL(8,KK)=ST(3)*V3(2,J,K)
+               BNL(9,KK)=ST(3)*V3(3,J,K)
+            ENDIF
+  121    CONTINUE
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE GRGSG9(XJ,D,H,HK,COR,VITL,V3,NCVE,NCVS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO CALCULATE DERIVATION CARTESIAN BY NATURAL COORDINATES
+CE.      COVARIANT BASIS VECTORS - JACOBIAN MATRIX
+CS.   P R O G R A M
+CS.      ZA RACUNANJE IZVODA DEKARTOVIH PO PRIRODNIM KOORDINATAMA
+CS.      KOVARIJANTNI BAZNI VEKTORI - JAKOBIJEVA MATRICA
+C .
+C ......................................................................
+C
+      DIMENSION XJ(3,*),D(*),H(9,*),HK(3,*),COR(3,*),VITL(3,NCVS,*),
+     1          V3(3,3,*),XJJ(3,3),ST(3)
+C
+C        (D) KOORDINATE GAUSOVE TACKE
+         CALL CLEAR(D,3)
+C        (XJ) JAKOBIJAN MATRICA
+         CALL CLEAR(XJ,9)
+C        (NCVE) BROJ GLOBALNIH CVOROVA
+         DO 111 K=1,NCVE
+C           (XJJ) POMOCNI PROSTOR ZA SUMU PO (J) I PO (M)
+            CALL CLEAR(XJJ,9)
+C           (J) OSA LOKALNOG DEKARTOVOG KOORDINATNOG SISTEMA
+            DO 112 J=1,3
+C              (ST) PROSTOR ZA SUMU PO (M) PO BAZNIM VEKTORIMA G1,G2,G3
+               CALL CLEAR(ST,3)
+C              (NCVS) BROJ LOKALNIH CVOROVA, SUMA PO (M)
+               DO 113 M=1,NCVS
+C                 (H) INTERPOLACIJSKE FUNKCIJE, (VITL) LOKALNE KOORDINATE
+                  ST(1)=ST(1)+H(M,2)*VITL(J,M,K)
+                  ST(2)=ST(2)+H(M,3)*VITL(J,M,K)
+                  ST(3)=ST(3)+H(M,1)*VITL(J,M,K)
+  113          CONTINUE
+C            CALL WRR(ST,3,'ST  ')
+C           (I) PROJEKTOVANJE NA GLOBALNU DEKARTOVU OSU XI
+            DO 112 I=1,3
+C           (M) BAZNI VEKTOR GM
+            DO 112 M=1,3
+               XJJ(I,M)=XJJ(I,M)+V3(I,J,K)*ST(M)
+  112       CONTINUE
+C            CALL WRR(XJJ,9,'XJJJ')
+C        (I) PROJEKCIJA NA GLOBALNU DEKARTOVU OSU XI BAZNIH VEKTORA G1,G2,G3
+         DO 111 I=1,3
+            XJ(1,I)=XJ(1,I)+HK(K,1)*XJJ(I,1)
+            XJ(2,I)=XJ(2,I)+HK(K,1)*XJJ(I,2)
+            XJ(3,I)=XJ(3,I)+HK(K,2)*(XJJ(I,3)+COR(K,I))
+            D(I)=D(I)+HK(K,1)*(XJJ(I,3)+COR(K,I))
+  111    CONTINUE
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE BETB19(BTT,XJ,H,HK,VITL,V3,VR,R,VS,VZ,
+     1                  NCVE,NCVS,NCVJ,BNL,IATYP,IND3D)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     MATRICE BTT ( B )
+CE     MATRIX  BTT ( B )
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /CUVAJN/ TAUCEN(6,5),INDSEL,NGAUSU
+      COMMON /IKOVAR/ INDKOV
+C      COMMON /COEFSM/ COEF(3),ICOEF
+C
+      DIMENSION BTT(6,*),XJ(3,*),H(3,*),HK(3,*),VITL(3,NCVS,*),BNL(9,*),
+     1          V3(3,3,*),ST(3),HVX(3,3,3),VR(3,NCVS,*),VS(3,NCVS,*),
+     1          VZ(3,NCVS,*),HVT(3,3),HVS(3,3),HVR(3,3)
+C
+C         COEF1=DSQRT(COEF(1))
+C         COEF2=DSQRT(COEF(2))
+      IF(INDKOV.GE.0) THEN
+         KK=NCVJ
+         DO 126 K=1,NCVE
+            DO 127 J=1,3
+               KK=KK+1
+               BTT(1,KK)= XJ(1,3)*DELTA(1,J)*HK(K,2)
+               BTT(2,KK)= XJ(2,3)*DELTA(2,J)*HK(K,2)
+               BTT(3,KK)= XJ(3,3)*DELTA(3,J)*HK(K,2)
+               BTT(5,KK)=(XJ(2,3)*DELTA(3,J)+XJ(3,3)*DELTA(2,J))*HK(K,2)
+               BTT(4,KK)=(XJ(1,3)*DELTA(2,J)+XJ(2,3)*DELTA(1,J))*HK(K,2)
+               BTT(6,KK)=(XJ(3,3)*DELTA(1,J)+XJ(1,3)*DELTA(3,J))*HK(K,2)
+  127       CONTINUE
+            CALL CLEAR(HVX,27)
+            DO 128 M=1,NCVS
+            DO 128 J=1,3
+               HHH=XJ(J,1)*HK(K,1)*H(M,1)
+               HHJ=XJ(J,2)*HK(K,1)*H(M,2)+XJ(J,3)*HK(K,2)*H(M,1)
+            DO 128 I=1,3
+        HVX(I,J,1)=HVX(I,J,1)+HHJ*(V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K))-
+     1                             V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)))+
+     1                     HHH*(V3(I,3,K)*VR(2,M,K)-V3(I,2,K)*VR(3,M,K))
+        HVX(I,J,2)=HVX(I,J,2)+HHJ*(V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K))-
+     1                             V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)))+
+     1                     HHH*(V3(I,1,K)*VR(3,M,K)-V3(I,3,K)*VR(1,M,K))
+        HVX(I,J,3)=HVX(I,J,3)+HHJ*(V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K))-
+     1                             V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)))+
+     1                     HHH*(V3(I,2,K)*VR(1,M,K)-V3(I,1,K)*VR(2,M,K))
+  128       CONTINUE
+         DO 126 J=1,3
+            KK=KK+1
+            BTT(1,KK)=HVX(1,1,J)
+            BTT(2,KK)=HVX(2,2,J)
+            BTT(3,KK)=HVX(3,3,J)
+            BTT(5,KK)=HVX(2,3,J)+HVX(3,2,J)
+            BTT(4,KK)=HVX(1,2,J)+HVX(2,1,J)
+            BTT(6,KK)=HVX(3,1,J)+HVX(1,3,J)
+  126    CONTINUE
+         IF(NCVJ.EQ.0) RETURN
+         KK=0
+         DO 121 K=1,NCVE
+         DO 121 M=1,NCVS
+            DO 122 J=1,3
+               ST(J)=XJ(J,2)*HK(K,1)*H(M,2)+XJ(J,3)*HK(K,2)*H(M,1)
+  122       CONTINUE
+            DO 123 J=1,3
+               KK=KK+1
+               BTT(1,KK)=ST(1)*V3(1,J,K)
+               BTT(2,KK)=ST(2)*V3(2,J,K)
+               BTT(3,KK)=ST(3)*V3(3,J,K)
+               BTT(5,KK)=ST(2)*V3(3,J,K)+ST(3)*V3(2,J,K)
+               BTT(4,KK)=ST(1)*V3(2,J,K)+ST(2)*V3(1,J,K)
+               BTT(6,KK)=ST(3)*V3(1,J,K)+ST(1)*V3(3,J,K)
+  123       CONTINUE
+            DO 124 J=4,6
+               KK=KK+1
+               BTT(1,KK)=0.D0
+               BTT(2,KK)=0.D0
+               BTT(3,KK)=0.D0
+               BTT(5,KK)=0.D0
+               BTT(4,KK)=0.D0
+               BTT(6,KK)=0.D0
+  124       CONTINUE
+  121    CONTINUE
+      ELSE
+         KK=NCVJ
+         DO 226 K=1,NCVE
+            DO 227 J=1,3
+               KK=KK+1
+            IF(INDSEL.EQ.1.AND.NGAUSU.LT.NGS12) GO TO 991
+C               BTT(1,KK)= 0.D0
+C               BTT(2,KK)= 0.D0
+               BTT(3,KK)= XJ(3,J)*HK(K,2)
+               BTT(5,KK)= XJ(2,J)*HK(K,2)
+  991       IF(INDSEL.EQ.1.AND.NGAUSU.EQ.NGS12) GO TO 927
+C               BTT(4,KK)= 0.D0
+               BTT(6,KK)= XJ(1,J)*HK(K,2)
+  927          IF(IATYP.GT.1) THEN
+C                  BNL(1,KK)=0.D0
+C                  BNL(2,KK)=0.D0
+C                  BNL(3,KK)=0.D0
+C                  BNL(4,KK)=0.D0
+C                  BNL(5,KK)=0.D0
+C                  BNL(6,KK)=0.D0
+                  BNL(7,KK)=HK(K,2)*DELTA(1,J)
+                  BNL(8,KK)=HK(K,2)*DELTA(2,J)
+                  BNL(9,KK)=HK(K,2)*DELTA(3,J)
+               ENDIF
+  227       CONTINUE
+            KK1=KK+1
+            KK2=KK+2
+            KK3=KK+3
+            CALL CLEAR(HVR,9)
+            CALL CLEAR(HVS,9)
+            CALL CLEAR(HVT,9)
+            DO 228 I=1,3
+            DO 228 M=1,NCVS
+               DO 229 J=1,3
+                  HHS=XJ(J,I)*HK(K,1)
+                  HHJ=XJ(J,I)*HK(K,2)
+       HVT(J,1)=HVT(J,1)+HHJ*H(M,1)*
+     1                             (V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K))-
+     1                              V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)))
+       HVT(J,2)=HVT(J,2)+HHJ*H(M,1)*
+     1                             (V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K))-
+     1                              V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)))
+       HVT(J,3)=HVT(J,3)+HHJ*H(M,1)*
+     1                             (V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K))-
+     1                              V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)))
+       HVS(J,1)=HVS(J,1)+HHS*H(M,2)*
+     1                             (V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K))-
+     1                              V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)))
+       HVS(J,2)=HVS(J,2)+HHS*H(M,2)*
+     1                             (V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K))-
+     1                              V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)))
+       HVS(J,3)=HVS(J,3)+HHS*H(M,2)*
+     1                             (V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K))-
+     1                              V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)))
+      IF(J.GT.1) THEN
+       HVR(J,1)=HVR(J,1)+HHS*H(M,1)*
+     1                         (V3(I,3,K)*VR(2,M,K)-V3(I,2,K)*VR(3,M,K))
+       HVR(J,2)=HVR(J,2)+HHS*H(M,1)*
+     1                         (V3(I,1,K)*VR(3,M,K)-V3(I,3,K)*VR(1,M,K))
+       HVR(J,3)=HVR(J,3)+HHS*H(M,1)*
+     1                         (V3(I,2,K)*VR(1,M,K)-V3(I,1,K)*VR(2,M,K))
+      ENDIF
+  229          CONTINUE
+               IF(IATYP.GT.1) THEN
+                  II1=I
+                  II2=I+3
+                  II3=I+6
+        BNL(II1,KK1)=BNL(II1,KK1)+HK(K,1)*H(M,1)*
+     1                         (V3(I,3,K)*VR(2,M,K)-V3(I,2,K)*VR(3,M,K))
+        BNL(II2,KK1)=BNL(II2,KK1)+HK(K,1)*H(M,2)*
+     1                             (V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K))-
+     1                              V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)))
+        BNL(II3,KK1)=BNL(II3,KK1)+HK(K,2)*H(M,1)*
+     1                             (V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K))-
+     1                              V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)))
+        BNL(II1,KK2)=BNL(II1,KK2)+HK(K,1)*H(M,1)*
+     1                         (V3(I,1,K)*VR(3,M,K)-V3(I,3,K)*VR(1,M,K))
+        BNL(II2,KK2)=BNL(II2,KK2)+HK(K,1)*H(M,2)*
+     1                             (V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K))-
+     1                              V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)))
+        BNL(II3,KK2)=BNL(II3,KK2)+HK(K,2)*H(M,1)*
+     1                             (V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K))-
+     1                              V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)))
+        BNL(II1,KK3)=BNL(II1,KK3)+HK(K,1)*H(M,1)*
+     1                         (V3(I,2,K)*VR(1,M,K)-V3(I,1,K)*VR(2,M,K))
+        BNL(II2,KK3)=BNL(II2,KK3)+HK(K,1)*H(M,2)*
+     1                             (V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K))-
+     1                              V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)))
+        BNL(II3,KK3)=BNL(II3,KK3)+HK(K,2)*H(M,1)*
+     1                             (V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K))-
+     1                              V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)))
+               ENDIF
+  228       CONTINUE
+         DO 226 J=1,3
+            KK=KK+1
+            IF(INDSEL.EQ.1.AND.NGAUSU.LT.NGS12) GO TO 993
+C            BTT(1,KK)= 0.D0
+            BTT(2,KK)=HVS(2,J)
+            BTT(3,KK)=HVT(3,J)
+            BTT(5,KK)=HVT(2,J)+HVS(3,J)
+  993       IF(INDSEL.EQ.1.AND.NGAUSU.EQ.NGS12) GO TO 226
+            BTT(4,KK)=HVR(2,J)+HVS(1,J)
+            BTT(6,KK)=HVT(1,J)+HVR(3,J)
+  226    CONTINUE
+         IF(NCVJ.EQ.0) RETURN
+C
+         KK=0
+         DO 221 K=1,NCVE
+         DO 221 M=1,NCVS
+            CALL CLEAR(HVR,9)
+            CALL CLEAR(HVS,9)
+            DO 223 L=1,3
+            DO 223 N=1,3
+            DO 223 I=1,3
+               HVR(L,N)=HVR(L,N)+XJ(L,I)*V3(I,N,K)
+               IF(L.EQ.1) HVS(L,N)=HVS(L,N)-V3(N,I,K)*VZ(I,M,K)
+               IF(L.EQ.2) HVS(L,N)=HVS(L,N)+V3(N,I,K)*VS(I,M,K)
+  223       CONTINUE
+            DO 222 J=1,3
+               KK=KK+1
+               IF(INDSEL.EQ.1.AND.NGAUSU.LT.NGS12) GO TO 995
+C               BTT(1,KK)= 0.D0
+               BTT(2,KK)=HK(K,1)*H(M,2)*HVR(2,J)
+               BTT(3,KK)=HK(K,2)*H(M,1)*HVR(3,J)
+               BTT(5,KK)=HK(K,2)*H(M,1)*HVR(2,J)+
+     1                   HK(K,1)*H(M,2)*HVR(3,J)
+  995          IF(INDSEL.EQ.1.AND.NGAUSU.EQ.NGS12) GO TO 996
+               BTT(4,KK)=HK(K,1)*H(M,2)*HVR(1,J)
+               BTT(6,KK)=HK(K,2)*H(M,1)*HVR(1,J)
+  996          IF(IATYP.GT.1) THEN
+                  DO 230 I=1,3
+C                     BNL(I,KK)=0.D0
+                     BNL(I+3,KK)=HK(K,1)*H(M,2)*V3(I,J,K)
+                     BNL(I+6,KK)=HK(K,2)*H(M,1)*V3(I,J,K)
+  230             CONTINUE
+               ENDIF
+  222       CONTINUE
+            DO 224 J=1,3
+               KK=KK+1
+               IF(J.EQ.3) GO TO 224
+               CALL CLEAR(HVT,3)
+               DO 225 I=1,3
+                  IF(IATYP.GT.1) THEN
+                     BNL(I,KK)=HK(K,1)*H(M,1)*HVS(J,I)
+                     BNL(I+3,KK)=HK(K,1)*H(M,2)*HVS(J,I)*R
+                     BNL(I+6,KK)=HK(K,2)*H(M,1)*HVS(J,I)*R
+                  ENDIF
+               DO 225 L=1,3
+                  HVT(L,1)=HVT(L,1)+XJ(L,I)*HVS(J,I)
+  225          CONTINUE
+               IF(INDSEL.EQ.1.AND.NGAUSU.LT.NGS12) GO TO 985
+C               BTT(1,KK)=0.D0
+               BTT(2,KK)=R*HK(K,1)*H(M,2)*HVT(2,1)
+               BTT(3,KK)=R*HK(K,2)*H(M,1)*HVT(3,1)
+               BTT(5,KK)=R*(HK(K,1)*H(M,2)*HVT(3,1)+
+     1                      HK(K,2)*H(M,1)*HVT(2,1))
+  985          IF(INDSEL.EQ.1.AND.NGAUSU.EQ.NGS12) GO TO 224
+               BTT(4,KK)=HK(K,1)*(R*H(M,2)*HVT(1,1)+H(M,1)*HVT(2,1))
+               BTT(6,KK)=H(M,1)*(R*HK(K,2)*HVT(1,1)+HK(K,1)*HVT(3,1))
+  224       CONTINUE
+  221    CONTINUE
+      ENDIF
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE GRGS19(XJ,D,H,HK,COR,VITL,V3,VR,R,NCVE,NCVS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO CALCULATE DERIVATION CARTESIAN BY NATURAL COORDINATES
+CE.      COVARIANT BASIS VECTORS - JACOBIAN MATRIX
+CS.   P R O G R A M
+CS.      ZA RACUNANJE IZVODA DEKARTOVIH PO PRIRODNIM KOORDINATAMA
+CS.      KOVARIJANTNI BAZNI VEKTORI - JAKOBIJEVA MATRICA
+C .
+C ......................................................................
+C
+      DIMENSION XJ(3,*),D(*),H(3,*),HK(3,*),COR(3,*),VITL(3,NCVS,*),
+     1          V3(3,3,*),XJJ(3,3),ST(3),VR(3,NCVS,*)
+C
+C       CALL WRR3(H,9,'H   ')
+C       CALL WRR3(HK,9,'HK  ')
+C       CALL WRR3(COR,9,'COR ')
+C       CALL WRR3(V3,27,'V3  ')
+C       CALL WRR3(VR,27,'VR  ')
+C       CALL WRR3(VITL,27,'VITL')
+C        (D) KOORDINATE GAUSOVE TACKE
+         CALL CLEAR(D,3)
+C        (XJ) JAKOBIJAN MATRICA
+         CALL CLEAR(XJ,9)
+C        (NCVE) BROJ GLOBALNIH CVOROVA
+         DO 111 K=1,NCVE
+C           (XJJ) POMOCNI PROSTOR ZA SUMU PO (J) I PO (M)
+            CALL CLEAR(XJJ,9)
+C           (J) OSA LOKALNOG DEKARTOVOG KOORDINATNOG SISTEMA
+            DO 112 J=1,3
+C              (ST) PROSTOR ZA SUMU PO (M) PO BAZNIM VEKTORIMA G1,G2,G3
+               CALL CLEAR(ST,3)
+C              (NCVS) BROJ LOKALNIH CVOROVA, SUMA PO (M)
+               DO 113 M=1,NCVS
+C                 (H) INTERPOLACIJSKE FUNKCIJE, (VITL) LOKALNE KOORDINATE
+                  ST(1)=ST(1)+H(M,1)*VR(J,M,K)
+                  ST(2)=ST(2)+H(M,2)*(VITL(J,M,K)+R*VR(J,M,K))
+                  ST(3)=ST(3)+H(M,1)*(VITL(J,M,K)+R*VR(J,M,K))
+  113          CONTINUE
+C             CALL WRR3(ST,3,'ST  ')
+C           (I) PROJEKTOVANJE NA GLOBALNU DEKARTOVU OSU XI
+            DO 112 I=1,3
+C           (M) BAZNI VEKTOR GM
+            DO 112 M=1,3
+               XJJ(I,M)=XJJ(I,M)+V3(I,J,K)*ST(M)
+  112       CONTINUE
+C             CALL WRR3(XJJ,9,'XJJJ')
+C        (I) PROJEKCIJA NA GLOBALNU DEKARTOVU OSU XI BAZNIH VEKTORA G1,G2,G3
+         DO 111 I=1,3
+            XJ(1,I)=XJ(1,I)+HK(K,1)*XJJ(I,1)
+            XJ(2,I)=XJ(2,I)+HK(K,1)*XJJ(I,2)
+            XJ(3,I)=XJ(3,I)+HK(K,2)*(XJJ(I,3)+COR(K,I))
+            D(I)=D(I)+HK(K,1)*(XJJ(I,3)+COR(K,I))
+  111    CONTINUE
+C       CALL WRR3(XJ,9,'XJ  ')
+C       CALL WRR3(D,3,'D   ')
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE BETB09(BTT,XJ,HK,VITL,V3,VR,R,VS,S,NCVE,NCVS,NCVJ,
+     1                  BNL,IATYP,IND3D)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     MATRICE BTT ( B )
+CE     MATRIX  BTT ( B )
+C
+      COMMON /COEFSM/ COEF(3),ICOEF
+      DIMENSION BTT(6,*),XJ(3,*),HK(3,*),VITL(3,NCVS,*),BNL(9,*),
+     1          V3(3,3,*),HVX(3,3),VR(3,NCVS,*),VS(3,NCVS,*)
+C
+         COEF1=DSQRT(COEF(1))
+         COEF2=DSQRT(COEF(2))
+         M=1
+         KK=NCVJ
+         DO 126 K=1,NCVE
+            DO 127 J=1,3
+               KK=KK+1
+               BTT(1,KK)= 0.D0
+               BTT(2,KK)= 0.D0
+               BTT(3,KK)= XJ(3,J)*HK(K,2)
+               BTT(4,KK)= 0.D0
+               IF(IND3D.EQ.0) THEN
+                  BTT(5,KK)= 0.D0
+                  BTT(6,KK)= 0.D0
+C                  BTT(5,KK)= XJ(2,J)*HK(K,2)*COEF1
+C                  BTT(6,KK)= XJ(1,J)*HK(K,2)*COEF2
+               ELSE
+                  BTT(5,KK)= XJ(2,J)*HK(K,2)
+                  BTT(6,KK)= XJ(1,J)*HK(K,2)
+               ENDIF
+               IF(IATYP.GT.2) THEN
+                  BNL(1,KK)=0.D0
+                  BNL(2,KK)=0.D0
+                  BNL(3,KK)=0.D0
+                  BNL(4,KK)=0.D0
+                  BNL(5,KK)=0.D0
+                  BNL(6,KK)=0.D0
+                  BNL(7,KK)=HK(K,2)*DELTA(1,J)
+                  BNL(8,KK)=HK(K,2)*DELTA(2,J)
+                  BNL(9,KK)=HK(K,2)*DELTA(3,J)
+               ENDIF
+  127       CONTINUE
+            KK1=KK+1
+            KK2=KK+2
+            KK3=KK+3
+            CALL CLEAR(HVX,9)
+            DO 128 I=1,3
+               DO 129 J=1,3
+                  HHJ=XJ(J,I)*HK(K,2)
+       HVX(J,1)=HVX(J,1)+HHJ*
+     1                (V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K)+S*VS(2,M,K))-
+     1                 V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)+S*VS(3,M,K)))
+       HVX(J,2)=HVX(J,2)+HHJ*
+     1                (V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K)+S*VS(3,M,K))-
+     1                 V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)+S*VS(1,M,K)))
+       HVX(J,3)=HVX(J,3)+HHJ*
+     1                (V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K)+S*VS(1,M,K))-
+     1                 V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)+S*VS(2,M,K)))
+  129          CONTINUE
+                  HHH=XJ(3,I)*HK(K,1)
+       HVX(1,1)=HVX(1,1)+HHH*(V3(I,3,K)*VR(2,M,K)-V3(I,2,K)*VR(3,M,K)) 
+       HVX(1,2)=HVX(1,2)+HHH*(V3(I,1,K)*VR(3,M,K)-V3(I,3,K)*VR(1,M,K)) 
+       HVX(1,3)=HVX(1,3)+HHH*(V3(I,2,K)*VR(1,M,K)-V3(I,1,K)*VR(2,M,K))
+       HVX(2,1)=HVX(2,1)+HHH*(V3(I,3,K)*VS(2,M,K)-V3(I,2,K)*VS(3,M,K))
+       HVX(2,2)=HVX(2,2)+HHH*(V3(I,1,K)*VS(3,M,K)-V3(I,3,K)*VS(1,M,K))
+       HVX(2,3)=HVX(2,3)+HHH*(V3(I,2,K)*VS(1,M,K)-V3(I,1,K)*VS(2,M,K))
+               IF(IATYP.GT.2) THEN
+                  II1=I
+                  II2=I+3
+                  II3=I+6
+        BNL(II1,KK1)=HK(K,1)*(V3(I,3,K)*VR(2,M,K)-V3(I,2,K)*VR(3,M,K))
+        BNL(II2,KK1)=HK(K,1)*(V3(I,3,K)*VS(2,M,K)-V3(I,2,K)*VS(3,M,K))
+        BNL(II3,KK1)=HK(K,2)*
+     1                (V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K)+S*VS(2,M,K))-
+     1                 V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)+S*VS(3,M,K)))
+        BNL(II1,KK2)=HK(K,1)*(V3(I,1,K)*VR(3,M,K)-V3(I,3,K)*VR(1,M,K))
+        BNL(II2,KK2)=HK(K,1)*(V3(I,1,K)*VS(3,M,K)-V3(I,3,K)*VS(1,M,K))
+        BNL(II3,KK2)=HK(K,2)*
+     1                (V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K)+S*VS(3,M,K))-
+     1                 V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)+S*VS(1,M,K)))
+        BNL(II1,KK3)=HK(K,1)*(V3(I,2,K)*VR(1,M,K)-V3(I,1,K)*VR(2,M,K))
+        BNL(II2,KK3)=HK(K,1)*(V3(I,2,K)*VS(1,M,K)-V3(I,1,K)*VS(2,M,K))
+        BNL(II3,KK3)=HK(K,2)*
+     1                (V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K)+S*VS(1,M,K))-
+     1                 V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)+S*VS(2,M,K)))
+               ENDIF
+  128       CONTINUE
+         DO 126 J=1,3
+            KK=KK+1
+            BTT(1,KK)= 0.D0
+            BTT(2,KK)= 0.D0
+            BTT(3,KK)=HVX(3,J)
+            BTT(4,KK)= 0.D0
+            IF(IND3D.EQ.0) THEN
+C            IF(IND3D.EQ.0.AND.J.LT.3) THEN
+                  BTT(5,KK)= 0.D0
+                  BTT(6,KK)= 0.D0
+C               BTT(5,KK)=HVX(2,J)*COEF1
+C               BTT(6,KK)=HVX(1,J)*COEF2
+            ELSE
+               BTT(5,KK)=HVX(2,J)
+               BTT(6,KK)=HVX(1,J)
+            ENDIF
+  126    CONTINUE
+         IF(NCVJ.EQ.0) RETURN
+C
+         KK=0
+         DO 121 K=1,NCVE
+            DO 123 J=1,3
+               KK=KK+1
+            DO 123 I=1,3
+               BTT(1,KK)= 0.D0
+               BTT(2,KK)= 0.D0
+               BTT(3,KK)=HK(K,2)*XJ(3,I)*V3(I,J,K)
+               BTT(4,KK)= 0.D0
+               BTT(5,KK)=HK(K,2)*XJ(2,I)*V3(I,J,K)
+               BTT(6,KK)=HK(K,2)*XJ(1,I)*V3(I,J,K)
+  123       CONTINUE
+            DO 124 J=4,6
+               KK=KK+1
+               BTT(1,KK)=0.D0
+               BTT(2,KK)=0.D0
+               BTT(3,KK)=0.D0
+               BTT(5,KK)=0.D0
+               BTT(4,KK)=0.D0
+               BTT(6,KK)=0.D0
+  124       CONTINUE
+  121    CONTINUE
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE BETB0(BTT,XJ,HK,VITL,V3,VR,R,VS,S,NCVE,NCVS,NCVJ)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     MATRICE BTT ( B )
+CE     MATRIX  BTT ( B )
+C
+      DIMENSION BTT(6,*),XJ(3,*),HK(3,*),VITL(3,NCVS,*),
+     1          V3(3,3,*),ST(3),HVX(3,3,3),VR(3,NCVS,*),VS(3,NCVS,*)
+C
+         KK=NCVJ
+         DO 126 K=1,NCVE
+            DO 127 J=1,3
+               KK=KK+1
+               BTT(1,KK)= XJ(1,3)*DELTA(1,J)*HK(K,2)
+               BTT(2,KK)= XJ(2,3)*DELTA(2,J)*HK(K,2)
+               BTT(3,KK)= XJ(3,3)*DELTA(3,J)*HK(K,2)
+               BTT(4,KK)=(XJ(1,3)*DELTA(2,J)+XJ(2,3)*DELTA(1,J))*HK(K,2)
+               BTT(5,KK)=(XJ(2,3)*DELTA(3,J)+XJ(3,3)*DELTA(2,J))*HK(K,2)
+               BTT(6,KK)=(XJ(3,3)*DELTA(1,J)+XJ(1,3)*DELTA(3,J))*HK(K,2)
+  127       CONTINUE
+            CALL CLEAR(HVX,27)
+            DO 128 M=1,NCVS
+            DO 128 J=1,3
+               HHH=XJ(J,1)*HK(K,1)
+               HH2=XJ(J,2)*HK(K,1)
+               HHJ=XJ(J,3)*HK(K,2)
+            DO 128 I=1,3
+       HVX(I,J,1)=HVX(I,J,1)+
+     1            HHJ*(V3(I,3,K)*(VITL(2,M,K)+R*VR(2,M,K)+S*VS(2,M,K))-
+     1                 V3(I,2,K)*(VITL(3,M,K)+R*VR(3,M,K)+S*VS(3,M,K)))+
+     1            HHH*(V3(I,3,K)*VR(2,M,K)-V3(I,2,K)*VR(3,M,K))+
+     1            HH2*(V3(I,3,K)*VS(2,M,K)-V3(I,2,K)*VS(3,M,K))
+       HVX(I,J,2)=HVX(I,J,2)+
+     1            HHJ*(V3(I,1,K)*(VITL(3,M,K)+R*VR(3,M,K)+S*VS(3,M,K))-
+     1                 V3(I,3,K)*(VITL(1,M,K)+R*VR(1,M,K)+S*VS(1,M,K)))+
+     1            HHH*(V3(I,1,K)*VR(3,M,K)-V3(I,3,K)*VR(1,M,K))+
+     1            HH2*(V3(I,1,K)*VS(3,M,K)-V3(I,3,K)*VS(1,M,K))
+       HVX(I,J,3)=HVX(I,J,3)+
+     1            HHJ*(V3(I,2,K)*(VITL(1,M,K)+R*VR(1,M,K)+S*VS(1,M,K))-
+     1                 V3(I,1,K)*(VITL(2,M,K)+R*VR(2,M,K)+S*VS(2,M,K)))+
+     1            HHH*(V3(I,2,K)*VR(1,M,K)-V3(I,1,K)*VR(2,M,K))+
+     1            HH2*(V3(I,2,K)*VS(1,M,K)-V3(I,1,K)*VS(2,M,K))
+  128       CONTINUE
+         DO 126 J=1,3
+            KK=KK+1
+            BTT(1,KK)=HVX(1,1,J)
+            BTT(2,KK)=HVX(2,2,J)
+            BTT(3,KK)=HVX(3,3,J)
+            BTT(4,KK)=HVX(1,2,J)+HVX(2,1,J)
+            BTT(5,KK)=HVX(2,3,J)+HVX(3,2,J)
+            BTT(6,KK)=HVX(3,1,J)+HVX(1,3,J)
+  126    CONTINUE
+         IF(NCVJ.EQ.0) RETURN
+         KK=0
+         DO 121 K=1,NCVE
+            DO 122 J=1,3
+               ST(J)=XJ(J,3)*HK(K,2)
+  122       CONTINUE
+         DO 121 J=1,3
+            KK=KK+1
+            BTT(1,KK)=ST(1)*V3(1,J,K)
+            BTT(2,KK)=ST(2)*V3(2,J,K)
+            BTT(3,KK)=ST(3)*V3(3,J,K)
+            BTT(4,KK)=ST(1)*V3(2,J,K)+ST(2)*V3(1,J,K)
+            BTT(5,KK)=ST(2)*V3(3,J,K)+ST(3)*V3(2,J,K)
+            BTT(6,KK)=ST(3)*V3(1,J,K)+ST(1)*V3(3,J,K)
+  121    CONTINUE
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE GRGS09(XJ,D,HK,COR,VITL,V3,VR,R,VS,S,NCVE,NCVS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO CALCULATE DERIVATION CARTESIAN BY NATURAL COORDINATES
+CE.      COVARIANT BASIS VECTORS - JACOBIAN MATRIX
+CS.   P R O G R A M
+CS.      ZA RACUNANJE IZVODA DEKARTOVIH PO PRIRODNIM KOORDINATAMA
+CS.      KOVARIJANTNI BAZNI VEKTORI - JAKOBIJEVA MATRICA
+C .
+C ......................................................................
+C
+      DIMENSION XJ(3,*),D(*),HK(3,*),COR(3,*),VITL(3,NCVS,*),
+     1          V3(3,3,*),XJJ(3,3),ST(3),VR(3,NCVS,*),VS(3,NCVS,*)
+C
+         CALL CLEAR(D,3)
+         CALL CLEAR(XJ,9)
+         DO 111 K=1,NCVE
+            CALL CLEAR(XJJ,9)
+            DO 112 J=1,3
+               ST(1)=VR(J,1,K)
+               ST(2)=VS(J,1,K)
+               ST(3)=VITL(J,1,K)+R*VR(J,1,K)+S*VS(J,1,K)
+C            CALL WRR(ST,3,'ST  ')
+            DO 112 I=1,3
+            DO 112 M=1,3
+               XJJ(I,M)=XJJ(I,M)+V3(I,J,K)*ST(M)
+  112       CONTINUE
+C            CALL WRR(XJJ,9,'XJJJ')
+         DO 111 I=1,3
+            XJ(1,I)=XJ(1,I)+HK(K,1)*XJJ(I,1)
+            XJ(2,I)=XJ(2,I)+HK(K,1)*XJJ(I,2)
+            XJ(3,I)=XJ(3,I)+HK(K,2)*(XJJ(I,3)+COR(K,I))
+            D(I)=D(I)+HK(K,1)*(XJJ(I,3)+COR(K,I))
+  111    CONTINUE
+C         CALL WRR(VITL,3*NCVS*NCVE,'VITL')
+C         CALL WRR(COR,3*NCVE,'COR ')
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE UKDEF9(COR,VITL,V3,CON,VIT0,V0,UEL,H,HK,HM,VR,R,VS,S,
+     1                  STRAIN,TRLN,TSS,IATYP,NCVE,NCVS,IPODT)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO CALCULATE TOTAL STRAIN FOR T.L. AND U.L.
+CS.   P R O G R A M
+CS.      ZA RACUNANJE UKUPNIH DEFORMACIJA ZA T.L. I U.L.
+C .
+C ......................................................................
+C
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /SRPSKI/ ISRPS
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /CUVAJN/ TAUCEN(6,5),INDSEL,NGAUSU
+C
+      DIMENSION COR(3,*),VITL(3,NCVS,*),V3(3,3,*),H(9,*),HK(3,*),UEL(*),
+     1          CON(3,*),VIT0(3,NCVS,*),V0(3,3,*),TRLN(6,*),TSS(6,*),
+     1          STRAIN(*),STRAIK(6),D(3),
+     1          HM(3,*),VR(3,NCVS,*),VS(3,NCVS,*)
+      DIMENSION XT(3,3),X0(3,3),XJJ(3,3),GRAD(3,3)
+C
+      CALL CLEAR(CON,9)
+      IST=1
+      IGRA=0
+      IF(IATYP.EQ.2) THEN
+C
+CS       ZA T.L. KOORDINATE U TRENUTKU - T+DT
+CE       FOR T.L. COORDINATE IN TIME - T+DT
+C
+         DO 6 I=1,NCVE
+               II=(I-1)*6
+         DO 6 K=1,3
+            CON(I,K)=COR(I,K)+UEL(II+K)
+    6    CONTINUE
+C
+CS       KOVARIJANTNI BAZNI VEKTORI U KONFIGURACIJI - 0
+CE       COVARIANT BASIS VECTORS IN CONFIGURATION - 0
+C
+      IF(IPODT.EQ.0)CALL GRGS09(X0,D,HK,COR,VITL,V3,VR,R,VS,S,NCVE,NCVS)
+       IF(IPODT.EQ.1) CALL GRGS19(X0,D,HM,HK,COR,VITL,V3,VR,R,NCVE,NCVS)
+       IF(IPODT.EQ.2) CALL GRGSG9(X0,D,H,HK,COR,VITL,V3,NCVE,NCVS)
+C         CALL GRGSG3(COR,X0,H,NCVE)
+C
+CS       KOVARIJANTNI BAZNI VEKTORI U KONFIGURACIJI - T+DT
+CE       COVARIANT BASIS VECTORS IN CONFIGURATION - T+DT
+C
+      IF(IPODT.EQ.0)CALL GRGS09(XT,D,HK,CON,VIT0,V0,VR,R,VS,S,NCVE,NCVS)
+       IF(IPODT.EQ.1) CALL GRGS19(XT,D,HM,HK,CON,VIT0,V0,VR,R,NCVE,NCVS)
+       IF(IPODT.EQ.2) CALL GRGSG9(XT,D,H,HK,CON,VIT0,V0,NCVE,NCVS)
+C         CALL GRGSG3(CON,XT,H,NCVE)
+         CALL JEDNA1(XJJ,XT,9)
+C
+CS       MATRICA TRANSF. DEFORMACIJA - TSS (GLOBALNI - LOKALNI DEKARTOV)
+CE       STRAIN TRANSFORMATION MATRIX - TSS (GLOBAL - LOCAL CARTESIAN) 
+C
+         CALL TRANA9(XJJ,TSS,0)
+C
+      ELSE
+C
+CS       KOORDINATE U TRENUTKU - 0
+CE       COORDINATE IN TIME - 0
+C
+         DO 7 I=1,NCVE
+               II=(I-1)*6
+         DO 7 K=1,3
+            CON(I,K)=COR(I,K)-UEL(II+K)
+    7    CONTINUE
+C         IF(IST.EQ.0) CALL WRR(CON,9,'CON ')
+C
+CS       KOVARIJANTNI BAZNI VEKTORI U KONFIGURACIJI - 0
+CE       COVARIANT BASIS VECTORS IN CONFIGURATION - 0
+C
+      IF(IPODT.EQ.0)CALL GRGS09(X0,D,HK,CON,VIT0,V0,VR,R,VS,S,NCVE,NCVS)
+       IF(IPODT.EQ.1) CALL GRGS19(X0,D,HM,HK,CON,VIT0,V0,VR,R,NCVE,NCVS)
+       IF(IPODT.EQ.2) CALL GRGSG9(X0,D,H,HK,CON,VIT0,V0,NCVE,NCVS)
+C            IF(IST.EQ.0) CALL WRR(X0,9,'X0 ')
+C         CALL GRGSG3(CON,X0,H,NCVE)
+C
+CS       KOVARIJANTNI BAZNI VEKTORI U KONFIGURACIJI - T+DT
+CE       COVARIANT BASIS VECTORS IN CONFIGURATION - T+DT
+C
+      IF(IPODT.EQ.0)CALL GRGS09(XT,D,HK,COR,VITL,V3,VR,R,VS,S,NCVE,NCVS)
+       IF(IPODT.EQ.1) CALL GRGS19(XT,D,HM,HK,COR,VITL,V3,VR,R,NCVE,NCVS)
+       IF(IPODT.EQ.2) CALL GRGSG9(XT,D,H,HK,COR,VITL,V3,NCVE,NCVS)
+C            IF(IST.EQ.0) CALL WRR(XT,9,'XT ')
+C         CALL GRGSG3(COR,XT,H,NCVE)
+C
+CCCCCCC
+         IF(IGRA.EQ.1) THEN
+            CALL MINV3(XT,DET)
+            IF(DET.LT.1.D-10) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) DET
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) DET
+               STOP
+            ENDIF
+C            IF(IST.EQ.0) CALL WRR(XT,9,'XT-1')
+            CALL MNOZM1(GRAD,XT,X0,3,3,3)
+C            IF(IST.EQ.0) CALL WRR(GRAD,9,'GRAD')
+            CALL MNOZM3(XJJ,GRAD,GRAD,3,3,3)
+C            IF(IST.EQ.0) CALL WRR(XJJ,9,'XJJ ')
+            STRAIN(1)=.5*(1.-XJJ(1,1))
+            STRAIN(2)=.5*(1.-XJJ(2,2))
+            STRAIN(3)=.5*(1.-XJJ(3,3))
+            STRAIN(5)=-XJJ(2,3)
+            STRAIN(4)=-XJJ(1,2)
+            STRAIN(6)=-XJJ(1,3)
+            RETURN
+         ENDIF
+CCCCCCC
+      ENDIF
+C
+CS    IZOPARAMETARSKE UKUPNE KOVARIJANTNE DEFORMACIJE U GAUSOVOJ TACKI
+CE    ISOPARAMETRIC TOTAL COVARIANT STRAIN IN GAUS POINT 
+C
+      CALL CLEAR(STRAIK,6)
+      IF(INDSEL.EQ.1.AND.NGAUSU.LT.NGS12) GO TO 991
+      STRAIK(1)=.5D0*(XT(1,1)*XT(1,1)+XT(1,2)*XT(1,2)+XT(1,3)*XT(1,3)
+     1               -X0(1,1)*X0(1,1)-X0(1,2)*X0(1,2)-X0(1,3)*X0(1,3))
+      STRAIK(2)=.5D0*(XT(2,1)*XT(2,1)+XT(2,2)*XT(2,2)+XT(2,3)*XT(2,3)
+     1               -X0(2,1)*X0(2,1)-X0(2,2)*X0(2,2)-X0(2,3)*X0(2,3))
+      STRAIK(3)=.5D0*(XT(3,1)*XT(3,1)+XT(3,2)*XT(3,2)+XT(3,3)*XT(3,3)
+     1               -X0(3,1)*X0(3,1)-X0(3,2)*X0(3,2)-X0(3,3)*X0(3,3))
+      STRAIK(5)=XT(3,1)*XT(2,1)+XT(3,2)*XT(2,2)+XT(3,3)*XT(2,3)
+     1         -X0(3,1)*X0(2,1)-X0(3,2)*X0(2,2)-X0(3,3)*X0(2,3) 
+  991 IF(INDSEL.EQ.1.AND.NGAUSU.EQ.NGS12) GO TO 992
+      STRAIK(4)=XT(1,1)*XT(2,1)+XT(1,2)*XT(2,2)+XT(1,3)*XT(2,3)
+     1         -X0(1,1)*X0(2,1)-X0(1,2)*X0(2,2)-X0(1,3)*X0(2,3) 
+      STRAIK(6)=XT(1,1)*XT(3,1)+XT(1,2)*XT(3,2)+XT(1,3)*XT(3,3)
+     1         -X0(1,1)*X0(3,1)-X0(1,2)*X0(3,2)-X0(1,3)*X0(3,3) 
+C      CALL WRR(STRAIK,6,'STRA')
+      IF(IPODT.EQ.0.OR.IPODT.EQ.1) STRAIK(1)=0.D0
+      IF(IPODT.EQ.0) STRAIK(2)=0.D0 
+      IF(IPODT.EQ.0) STRAIK(4)=0.D0 
+C
+CS    TRANSFORMACIJA DEFORMACIJA (KOVARIJANTNE - GLOBALNI DEKARTOV)
+CE    TRANSFORM STRAIN (COVARIANT - GLOBAL CARTESIAN) 
+C
+  992 CALL MNOZI1(STRAIN,TRLN,STRAIK,6,6)
+      RETURN
+C-----------------------------------------------------------------------
+ 2000 FORMAT(//
+     1' DETERMINANTA GRADIJENTA DEFORMACIJE MANJA ILI JEDNAKA NULI, DET 
+     1= ',1PD10.3)
+C-----------------------------------------------------------------------
+ 6000 FORMAT(/
+     1' ZERO OR NEGATIVE DEFORMATION GRADIENT DETERMINANTE, DET = ',
+     11PD10.3)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE BE90TE(TAU,TA,GRAD,DEF,ISN)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R  O G R A M
+CE.      TO UPDATE ELASTIC LEFT CAUCHY - GREEN DEFORMATION TENSOR
+CS.   P R O G R A M
+CS.      ZA PROMENU ELASTICNOG LEVOG KOSI - GRINOVOG TENZORA DEFORMACIJE
+C .
+C ......................................................................
+C
+      COMMON /MATIZO/ E,V
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+C
+      DIMENSION TAU(*),TA(*),GRAD(3,*),STRAIN(6),DEF(*)
+C
+CS    TACNE ELASTICNE DEFORMACIJE U LOKALNOM DEKARTOVOM SISTEMU
+CE    EXACT ELASTIC STRAIN IN LOCAL CARTESIAN SYSTEM
+C     
+      AE=2.D0*(1.D0+V)/E
+      STRAIN(1)=(TA(1)-V*(TA(2)+TA(3)))/E
+      STRAIN(2)=(TA(2)-V*(TA(1)+TA(3)))/E
+      STRAIN(3)=(TA(3)-V*(TA(1)+TA(2)))/E
+      STRAIN(4)=AE*TA(4)
+      STRAIN(5)=AE*TA(5)
+      STRAIN(6)=AE*TA(6)
+      CALL JEDNA1(DEF,STRAIN,6)
+C
+CS    TRANSFORMACIJA DEFORMACIJA (ALMANSI - GREEN LAGRANGE)
+CE    TRANSFORM STRAIN (ALMANSI - GREEN LAGRANGE) 
+C
+      IF(ISN.EQ.4) CALL ALMGRL(GRAD,STRAIN,1)
+C
+CS    TRANSFORMACIJA DEFORMACIJA (GREEN - ROTIRANA GREEN)
+CE    TRANSFORM STRAIN (GREEN  LAGRANGE - ROTI GREEN LAGRANGE) 
+C
+      IF(ISN.EQ.4) CALL ROTGRL(GRAD,STRAIN,0)
+C
+      TAU(1)=2.D0*STRAIN(1)+1.D0
+      TAU(2)=2.D0*STRAIN(2)+1.D0
+      TAU(3)=2.D0*STRAIN(3)+1.D0
+      TAU(4)=STRAIN(4)
+      TAU(5)=STRAIN(5)
+      TAU(6)=STRAIN(6)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE TRAV9(V1,V2,V3,T)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C...  TRANSFORMACIJA ZA LOKALNI SISTEM CVORA
+      DIMENSION V1(*),V2(*),V3(*),T(3,*),P(3,3),P1(3,3)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' TRAV9  '
+      DO 10 I=1,3
+       P(1,I)=V1(I)
+       P(2,I)=V2(I)
+       P(3,I)=V3(I)
+   10 CONTINUE
+      DO 30 I=1,3
+       DO 20 J=1,3
+        P1(I,J)=0.D0
+        DO 15 K=1,3
+   15   P1(I,J)=P1(I,J)+T(I,K)*P(K,J)
+   20  CONTINUE
+   30 CONTINUE
+      DO 40 I=1,3
+       V1(I)=P1(1,I)
+       V2(I)=P1(2,I)
+       V3(I)=P1(3,I)
+   40 CONTINUE
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE TRAB9(B,ICD,TTR,NCVE,NCVJJ)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C...  TRANSFORMACIJA MATRICE   B   ZA LOKALNI SISTEM CVORA
+      DIMENSION B(ICD,*),TTR(3,3,*),P(3)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' TRAB9  '
+      KB0=NCVJJ-3
+      DO 50 N=1,NCVE
+         KB0=KB0+6
+         DO 20 I=1,ICD
+            DO 10 J=1,3
+               P(J)=0.D0
+               KB=KB0
+            DO 10 K=1,3
+               KB=KB+1
+   10       P(J)=P(J)+B(I,KB)*TTR(K,J,N)
+            KB=KB0
+            DO 30 J=1,3
+               KB=KB+1
+   30       B(I,KB)=P(J)
+   20    CONTINUE
+   50 CONTINUE
+      RETURN
+      END
+C=======================================================================
+C
+C======================================================================
+      SUBROUTINE TRANA9 (XJJ,TSG,IND)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO CALCULATE BASIS UNIT VECTORS AND STRAIN TRANSFORMATION 
+CE.      MATRIX BETWEEN GLOBAL AND LOCAL CARTESIAN SISTEM
+CS.   P R O G R A M
+CS.      ZA RACUNANJE JEDINICNIH BAZNIH VEKTORA I MATRICE TRANSFORMACIJE
+CS.      DEFORMACIJA IZMEDJU GLOBALNOG I LOKALNOG DEKARTOVOG SISTEMA
+C .
+C ......................................................................
+C
+      COMMON /PODTIP/ IPODT
+      DIMENSION XJJ(3,*),TSG(6,*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' TRANA9'
+C
+CS    JEDINICNI BAZNI VEKTORI
+CE    BASIS UNIT VECTORS
+C
+      IF(IND.NE.2) THEN
+        IVAR=2
+C       DA BI REZULTATI ZA NAPONE BILI ISTI SA 3D
+        IF(IPODT.EQ.2) IVAR=3
+C
+C       PRVA VARIJANTA
+C
+        IF(IVAR.EQ.1) THEN
+        XB1=DSQRT(XJJ(1,1)*XJJ(1,1)+XJJ(1,2)*XJJ(1,2)+XJJ(1,3)*XJJ(1,3))
+        DO 3 I=1,3
+    3   XJJ(1,I)=XJJ(1,I)/XB1
+        XJJ(3,1)=XJJ(1,2)*XJJ(2,3)-XJJ(2,2)*XJJ(1,3)
+        XJJ(3,2)=XJJ(2,1)*XJJ(1,3)-XJJ(1,1)*XJJ(2,3)
+        XJJ(3,3)=XJJ(1,1)*XJJ(2,2)-XJJ(2,1)*XJJ(1,2)
+        XB1=DSQRT(XJJ(3,1)*XJJ(3,1)+XJJ(3,2)*XJJ(3,2)+XJJ(3,3)*XJJ(3,3))
+        DO 4 I=1,3
+    4   XJJ(3,I)=XJJ(3,I)/XB1
+        XJJ(2,1)=XJJ(3,2)*XJJ(1,3)-XJJ(1,2)*XJJ(3,3)
+        XJJ(2,2)=XJJ(1,1)*XJJ(3,3)-XJJ(3,1)*XJJ(1,3)
+        XJJ(2,3)=XJJ(3,1)*XJJ(1,2)-XJJ(1,1)*XJJ(3,2)
+        ENDIF
+C
+C       DRUGA VARIJANTA
+C
+        IF(IVAR.EQ.2) THEN
+C       INTEZITET G3
+        XB1=DSQRT(XJJ(3,1)*XJJ(3,1)+XJJ(3,2)*XJJ(3,2)+XJJ(3,3)*XJJ(3,3))
+C       VEKTOR 3 
+        DO 7 I=1,3
+    7   XJJ(3,I)=XJJ(3,I)/XB1
+C       GR=GS X 3
+        XJJ(1,1)=XJJ(2,2)*XJJ(3,3)-XJJ(3,2)*XJJ(2,3)
+        XJJ(1,2)=XJJ(3,1)*XJJ(2,3)-XJJ(2,1)*XJJ(3,3)
+        XJJ(1,3)=XJJ(2,1)*XJJ(3,2)-XJJ(3,1)*XJJ(2,2)
+C       INTEZITET G1
+        XB1=DSQRT(XJJ(1,1)*XJJ(1,1)+XJJ(1,2)*XJJ(1,2)+XJJ(1,3)*XJJ(1,3))
+C       VEKTOR 1 
+        DO 8 I=1,3
+    8   XJJ(1,I)=XJJ(1,I)/XB1
+C       2=3 X 1
+        XJJ(2,1)=XJJ(3,2)*XJJ(1,3)-XJJ(1,2)*XJJ(3,3)
+        XJJ(2,2)=XJJ(1,1)*XJJ(3,3)-XJJ(3,1)*XJJ(1,3)
+        XJJ(2,3)=XJJ(3,1)*XJJ(1,2)-XJJ(1,1)*XJJ(3,2)
+        ENDIF
+C
+C
+C       TRECA VARIJANTA
+C
+        IF(IVAR.EQ.3) THEN
+C       INTEZITET G3
+        XB1=DSQRT(XJJ(3,1)*XJJ(3,1)+XJJ(3,2)*XJJ(3,2)+XJJ(3,3)*XJJ(3,3))
+C       VEKTOR 3 
+        DO 17 I=1,3
+   17   XJJ(3,I)=XJJ(3,I)/XB1
+C       GS=3 X GR
+        XJJ(2,1)=XJJ(3,2)*XJJ(1,3)-XJJ(1,2)*XJJ(3,3)
+        XJJ(2,2)=XJJ(1,1)*XJJ(3,3)-XJJ(3,1)*XJJ(1,3)
+        XJJ(2,3)=XJJ(3,1)*XJJ(1,2)-XJJ(1,1)*XJJ(3,2)
+C       INTEZITET GS
+        XB1=DSQRT(XJJ(2,1)*XJJ(2,1)+XJJ(2,2)*XJJ(2,2)+XJJ(2,3)*XJJ(2,3))
+C       VEKTOR 2 
+        DO 18 I=1,3
+   18   XJJ(2,I)=XJJ(2,I)/XB1
+C       1=2 X 3
+        XJJ(1,1)=XJJ(2,2)*XJJ(3,3)-XJJ(3,2)*XJJ(2,3)
+        XJJ(1,2)=XJJ(3,1)*XJJ(2,3)-XJJ(2,1)*XJJ(3,3)
+        XJJ(1,3)=XJJ(2,1)*XJJ(3,2)-XJJ(3,1)*XJJ(2,2)
+        ENDIF
+C       DO 145 I=1,3
+C       DO 145 J=1,3
+C          IF(DABS(XJJ(I,J)).LT.1.D-6) XJJ(I,J)=0.D0
+C 145   CONTINUE
+      ENDIF
+C
+CS    FORMIRANJE MATRICE TRANSFORMACIJE - TSG
+CE    FORM TRANSFORMATION MATRIX - TSG
+C
+      IF(IND.NE.1) CALL TRANSE(TSG,XJJ)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE MDMAT4(DEF,TAU,NMODM,IRAC,LPLAS,LPLA1,IND3D,TGT,INTGL)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PODPROGRAM ZA POZIVANJE PODPROGRAMA INTEGRACIJU KONSTITUTIVNIH
+C     RELACIJA
+C
+      COMMON /PODTIP/ IPODT
+C
+      GO TO (   999,999,999,999,  5,  6,999,999,999, 10,
+     1          999,999, 13, 14, 15, 16, 17, 18, 19, 20,
+     2           21,999,999,999,999,999,999,999,999,999,
+     3          999,999,999,999,999,999,999,999,999,999,
+     4          999,999,999,999,999,999,999,999,999,999,
+     5          999,999,999,999,999,999,999,999,999,999,
+     6          999,999,999,999,999,999,999,999,999,999,
+     7          999,999,999,999,999,999,999,999,999,999,
+     8          999,999,999,999,999,999,999,999,999,999,
+     9          999,999,999,999,999,999,999,999,999,999),NMODM
+C
+    5 CONTINUE
+      IF(IPODT.EQ.1) CALL D8M5 (TAU,DEF,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M5 (TAU,DEF,IRAC,LPLAS,LPLA1)
+      RETURN
+CE    STRESS INTEGRATION FOR MATERIAL MODEL 6, SEE /11/ USER MANUAL
+    6 CONTINUE
+      IF(IPODT.EQ.0) CALL D4M6 (TAU,DEF,IRAC,LPLAS,LPLA1,IND3D)
+      IF(IPODT.EQ.1) CALL D8M6 (TAU,DEF,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2.AND.INTGL.EQ.0) CALL D3M6 (TAU,DEF,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2.AND.INTGL.EQ.1) CALL D3M6D(TAU,DEF,IRAC,LPLAS,LPLA1)
+      RETURN
+   10 CONTINUE
+      IF(IPODT.EQ.1) CALL D8M10(TAU,DEF,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M10(TAU,DEF,IRAC,LPLAS,LPLA1)
+      RETURN
+   13 CONTINUE
+      IF(IPODT.EQ.2) CALL D3M13(TAU,DEF,IRAC,LPLAS,LPLA1)
+      RETURN
+   14 IF(IPODT.EQ.1) CALL D8M14(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M14(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.0) CALL D4M14(TAU,DEF,TGT,IRAC,LPLAS,LPLA1,IND3D)
+      RETURN
+   15 IF(IPODT.EQ.1) CALL D8M15(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M15(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      RETURN
+   16 IF(IPODT.EQ.1) CALL D8M16(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M16(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      RETURN
+   17 IF(IPODT.EQ.1) CALL D8M17(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M17(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      RETURN
+   18 IF(IPODT.EQ.1) CALL D8M18(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M18(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      RETURN
+   19 IF(IPODT.EQ.1) CALL D8M19(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      IF(IPODT.EQ.2) CALL D3M19(TAU,DEF,TGT,IRAC,LPLAS,LPLA1)
+      RETURN
+   20 IF(IPODT.EQ.1) CALL D8M20(TAU,DEF,IRAC,LPLAS,LPLA1)
+      RETURN
+   21 IF(IPODT.EQ.1) CALL D8M21(TAU,DEF,IRAC,LPLAS,LPLA1)
+  999 RETURN
+      END

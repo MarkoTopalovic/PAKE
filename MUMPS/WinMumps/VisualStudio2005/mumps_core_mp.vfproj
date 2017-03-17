@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectType="typeStaticLibrary" ProjectCreator="Intel Fortran" Keyword="Static Library" Version="11.0" ProjectIdGuid="{3D52DB52-ED7C-4158-B16A-DE6567AD60E1}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\..\MPICH2x86\include" PreprocessorDefinitions="pord" EnableRecursion="true" SuppressUsageMessages="true" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool" AdditionalLibraryDirectories="..\..\..\MPICH2x86\lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeDisabled" InlineFunctionExpansion="expandAnySuitable" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\..\MPICH2x86\include" PreprocessorDefinitions="pord" EnableRecursion="true" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool" AdditionalLibraryDirectories="..\..\..\MPICH2x86\lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Profile|Win32" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeFull" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;C:\Program Files\MPICH\SDK\Include" PreprocessorDefinitions="metis;pord" EnableRecursion="true" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/></Configuration>
+		<Configuration Name="Debug|x64" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\..\MPICH2x64\include" EnableRecursion="true" WarnTruncateSource="true" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool" AdditionalLibraryDirectories="..\..\..\MPICH2x64\lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;..\..\..\MPICH2x64\include" EnableRecursion="true" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool" AdditionalLibraryDirectories="..\..\..\MPICH2x64\lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Profile|x64" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeFull" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\..\include;C:\fft\bin\mpich2x64\include" EnableRecursion="true" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLibrarianTool"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="core" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath="..\..\src\dmumps_bloc2.F"/>
+		<File RelativePath="..\..\src\dmumps_buffer.F"/>
+		<File RelativePath="..\..\src\dmumps_cv.F"/>
+		<File RelativePath="..\..\src\dmumps_cv_load.F"/>
+		<File RelativePath="..\..\src\dmumps_ooc.F"/>
+		<File RelativePath="..\..\src\dmumps_part1.F"/>
+		<File RelativePath="..\..\src\dmumps_part2.F"/>
+		<File RelativePath="..\..\src\dmumps_part3.F"/>
+		<File RelativePath="..\..\src\dmumps_part4.F"/>
+		<File RelativePath="..\..\src\dmumps_part5.F"/>
+		<File RelativePath="..\..\src\dmumps_part6.F"/>
+		<File RelativePath="..\..\src\dmumps_part7.F"/>
+		<File RelativePath="..\..\src\dmumps_part8.F"/>
+		<File RelativePath="..\..\src\dmumps_part9.F"/>
+		<File RelativePath="..\..\src\dmumps_struc_def.F"/></Filter></Files>
+	<Globals/></VisualStudioProject>

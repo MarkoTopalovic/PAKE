@@ -1,0 +1,1956 @@
+C=======================================================================
+C
+C   TERMO-ELASTO-PLASTICNOST             -  2/D ELEMENT     (02.09.1994)
+C          (ANIZOTROPAN MATERIJAL SA MESOVITIM OJACANJEM)
+C
+C=======================================================================
+      SUBROUTINE D2M17(TAU,DEF,TGT,IRAC,LPOCG,LPOC1)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PROGRAM ZA ODREDIVANJE LOKACIJA VELICINA KOJE SE CUVAJU
+C     NA NIVOU INTEGRACIONE TACKE
+C
+      include 'paka.inc'
+      
+      COMMON /REPERM/ MREPER(4)
+      COMMON /DUPLAP/ IDVA
+C
+      LFUN=MREPER(1)
+      LNTA=MREPER(2)
+      LTEM=MREPER(3)
+      MATE=MREPER(4)
+C
+      LTAU  =LPOCG
+      LDEFT =LTAU   + 4*IDVA
+      LDEFPT=LDEFT  + 4*IDVA
+      LALFAT=LDEFPT + 4*IDVA
+      LTEQT =LALFAT + 4*IDVA
+      LDQPT =LTEQT  + 1*IDVA
+      LIPL  =LDQPT  + 1*IDVA
+C
+      LTAU1 =LPOC1
+      LDEF1 =LTAU1  + 4*IDVA
+      LDEFP1=LDEF1  + 4*IDVA
+      LALFA1=LDEFP1 + 4*IDVA
+      LTEQ1 =LALFA1 + 4*IDVA
+      LDQP1 =LTEQ1  + 1*IDVA
+      LIPL1 =LDQP1  + 1*IDVA
+C
+      CALL TI217 (A(LIPL) ,A(LDEFPT),A(LALFAT),A(LDQPT) ,A(LTEQT),
+     &            A(LIPL1),A(LDEFP1),A(LALFA1),A(LDQP1) ,A(LTEQ1),
+     &            A(LTAU1),A(LDEF1) ,
+     &            A(LFUN),MATE,TAU,DEF,TGT,A(LTEM),A(LNTA),IRAC)
+C
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE TI217 (PL  ,DEFPT,ALFPT,DEFQPT,TEQT  ,
+     &                  PL1 ,DEFP ,ALFP ,DEFQP ,TEQ   ,
+     &                  TAU1,DEF1 ,
+     &                  FUN,MATE,TAU,DEF,TGT,TREF,NTFUN,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE   THERMO-ELASTIC-PLASTIC WITH CREEP - ANISOTROPIC MATERIAL
+C
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TAUD3/ TAUD(6),DEFDPR(6),DEFDS(6),DDEFP(6),
+     1                DETAU(6),DDEF(6)
+      COMMON /SRPSKI/ ISRPS
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      COMMON /UGAOVL/ TE(4,4)
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /VELIKE/ LCOR0,LGM0,JG,NGR,NGS,NGT,NGS4
+      DIMENSION SHATP(4),SGI(4),DEFL(4),TAUL(4),ETHERM(4)
+      DIMENSION CE(4,4),CPE(3,3),CM(3)
+      DIMENSION CHPM(3,3),CHPV(1),GBP(1),EPL(6)
+      DIMENSION Y0(6),CY(6),AN(6),AN1(6)
+      DIMENSION TAU(*),DEF(*),TAU1(*),DEF1(*),
+     &          DEFPT(*),DEFP(*),ALFPT(*),ALFP(*)
+      DIMENSION FUN(4,MATE*18,*),TREF(*),NTFUN(*)
+      DATA ITMAX/100/,EPSIL/1.0D-10/
+      KDIM = 4
+C
+CE  INITIAL DATA
+C
+      IPL   = PL
+      DVA   = 2.D0
+      DVT   = DVA/3.
+C
+CE  MATERIAL CONSTANTS FOR GIVEN TEMPERATURE TGT
+C
+      CALL PEL219(FUN,CE,CYQ,ANQ,Y0,CY,AN,AN1,CPE,CM,EM,EMC,
+     &            TGT,MATE,NTFUN,TREF)
+      ANQ1  = ANQ-1.
+      IF (ANQ1.LT.1.D-8) ANQ1=1.D-8
+      EM1   = 1.-EM
+      IMIX  = 1
+      IF (DABS(EM1).LT.EPSIL) IMIX=0
+C
+C     THERMAL STRAIN
+C
+      CALL STERM2(ETHERM,TGT)
+C
+      DO 4 I=1,3
+        DO 4 J=1,3
+    4     CHPM(I,J)=0.D0
+      CHPV(1)=0.D0
+C
+CE    YIELD STRESS
+C
+      CALL ENTY(TEQY,EPL,Y0,CY,AN,EM,DEFQPT,DEFQPT,KDIM)
+C
+C... TRANSFORM STRAIN INTO MATERIAL AXES DIRECTION
+C
+      CALL CLEAR(DEFL,4)
+      CALL CLEAR(TAUL,4)
+      IF(DABS(BETA).GT.1.0D-10) THEN
+         CALL MNOZI1(DEFL,TE,DEF,4,4)
+      ELSE
+         CALL JEDNA1(DEFL,DEF,4)
+      ENDIF
+      IF (IRAC.EQ.2) THEN
+        DO 5 I=1,4
+        DO 5 J=1,4
+    5   ELAST(I,J)=CE(I,J)
+C
+CS.... TRANSFORMACIJA MATRICE  ELAST()
+CE     TRANSFORM ELAST MATRIX
+C
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.NE.1)
+     &  CALL TRAEL(ELAST,TE,4,3,3,ELAST)
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.EQ.1)
+     &  CALL TRAEL(ELAST,TE,4,4,4,ELAST)
+        GO TO 700
+      END IF
+C
+C... TRANSFORM ENGENEER. SHEAR STRAIN INTO TENSORIAL
+C
+      DEFPT(3) = 0.5*DEFPT(3)
+C
+      DEFDS(1)=DEFL(1)
+      DEFDS(2)=DEFL(2)
+      DEFDS(4)=DEFL(4)
+      DEFDS(3)=0.5*DEFL(3)
+      IF (IATYP.NE.4) THEN
+        DEFDS(1)  = DEFDS(1)-DEFPT(1)-ETHERM(1)
+        DEFDS(2)  = DEFDS(2)-DEFPT(2)-ETHERM(2)
+        DEFDS(4)  = DEFDS(4)-DEFPT(4)-ETHERM(4)
+        DEFDS(3)  = DEFDS(3)-DEFPT(3)
+      END IF
+C
+CE   1)  ELASTIC DEVIATORIC STRESS SOLUTION  (TAUD)
+C
+      DUM      = CPE(1,1)*DEFDS(1)+CPE(1,2)*DEFDS(2)+CPE(1,3)*DEFDS(4)
+      TAUD(1)  = DUM
+      SHATP(1) = DUM-ALFPT(1)
+      DUM      = CPE(2,1)*DEFDS(1)+CPE(2,2)*DEFDS(2)+CPE(2,3)*DEFDS(4)
+      TAUD(2)  = DUM
+      SHATP(2) = DUM-ALFPT(2)
+      DUM      = DVA*DEFDS(3)*CE(3,3)
+      TAUD(3)  = DUM
+      SHATP(3) = DUM-ALFPT(3)
+      TAUD(4)  =-TAUD(1)-TAUD(2)
+      SHATP(4) =-SHATP(1)-SHATP(2)
+      DO 40 I=1,4
+        SGI(I) = SHATP(I)
+   40 CONTINUE
+      TEQ=DSQRT(1.5*TDOTA2(SHATP,EPL))
+C
+CE   2)  CHECK FOR YIELDING
+C
+      IF((TEQ-TEQY)/TEQY.LT.1.D-5)THEN
+        DEFQP=DEFQPT
+        CALL JEDNA1(DEFP,DEFPT,4)
+        GO TO 500
+      ENDIF
+C
+CE   3)    OBTAIN ZERO OF THE ESF (BISECTION)
+C
+      PL1=1.0D0
+C
+CE    FINDING THE RADIUS OF THE YIELD SURFACE (TEQ)
+C
+      DEFQP = DEFQPT
+      IF (DEFQP.LT.1.D-8) DEFQP=1.D-8
+      EP2=ANQ*CYQ*DEFQP**ANQ1
+      IF (EP2.LT.1.D-8) EP2=1.D-8
+C
+      AF    = 3.D0
+      KB    = 0
+      KT    = 0
+      DQMIN = 0.D0
+      DQTOL = 1.D-10
+      DEPL  = 0.D0
+      FHETL = TEQ-TEQY
+      DDEP  = 0.1*FHETL/EP2
+      DDEFQP= DDEP
+C
+      TOLD = TEQY
+      DOLD = DEFQPT
+      EP   = EP2
+C
+  250   KT  = KT+1
+        KB1 = KB
+C
+        IF(KT.GT.ITMAX) THEN
+          IF (ISRPS.EQ.0) WRITE(IZLAZ,2015)
+          IF (ISRPS.EQ.1) WRITE(IZLAZ,6015)
+          WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+          STOP
+        END IF
+C
+        DEFQP = DEFQPT+DDEFQP
+C
+        CALL ENTY(TEQY,EPL,Y0,CY,AN,EM,DEFQP,DEFQPT,KDIM)
+        DLAM = 1.5*DDEFQP/TEQY
+        IF(IMIX.EQ.1)
+     &    CALL CHATP(CHPM,CHPV,EPL,DEFQP,EM1,DVT,CY,AN,AN1,KDIM)
+        CALL INIOR(SGI,EPL,CE,CPE,GBP,CXXP,CYYP,CXYP,CYXP,DXXP,DYYP,
+     &              CEDP,CHPM,CHPV,DLAM,KDIM)
+        CALL DEV2(SHATP,SGI,GBP,CXXP,CYYP,DXXP,DYYP,CEDP,DLAM,DL)
+        TEQ  = DSQRT(1.5*TDOTA2(SHATP,EPL))
+C
+        FHET = TEQ-TEQY
+C
+        CALL BISECB(DDEFQP,DEPL,DEPD,DDEP,
+     &              FHET,FHETL,FHETD,AF,KB,DQMIN,DQTOL)
+      IF (KB.EQ.-1) GO TO 255
+      IF (KB1.EQ.0) GO TO 250
+C
+      DDF    = DEFQP-DOLD
+      IF (DABS(DDF).GE.1.D-10) THEN
+        EP   = DABS((TEQY-TOLD)/DDF)
+        TOLD = TEQY
+        DOLD = DEFQP
+      END IF
+C
+      IF ((DABS(DDEP)/(DEPL+DEPD)).GT.EPSIL) GO TO 250
+C
+  255 CALL INDEF2(DDEFP,EPL,SHATP,DLAM)
+C
+CE   4)  DETERMINE SOLUTION
+C
+C
+CE     E L A S T I C - P L A S T I C - C R E E P   M A T R I X   CEPC
+C
+      IF (ISKNP.NE.2) THEN
+        CALL CEP2O(SHATP,EPL,CE,CPE,CM,GBP,CEDP,CXXP,CYYP,CXYP,CYXP,
+     &             DL,DXXP,DYYP,DLAM,TEQY,CHPM,CHPV,EP,AN1,DEFQP)
+C
+CS.... TRANSFORMACIJA MATRICE  ELAST()
+CE     TRANSFORM ELAST MATRIX
+C
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.NE.1)
+     &  CALL TRAEL(ELAST,TE,4,3,3,ELAST)
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.EQ.1)
+     &  CALL TRAEL(ELAST,TE,4,4,4,ELAST)
+      END IF
+C
+CE      ...   ( BACK STRESS )
+C
+      DO 51 I=1,4
+        TAUD(I) = SHATP(I)
+   51   DEFP(I) = DEFPT(I)+DDEFP(I)
+C
+      IF (IMIX.EQ.1) THEN
+        CALL ABACK2(ALFP,ALFPT,DDEFP,CHPM,CHPV)
+        DO 160 I=1,4
+  160     TAUD(I) = TAUD(I)+ALFP(I)
+      END IF
+C
+CE   5)    CALCULATE STRESS
+C
+  500 CONTINUE
+      TAUM=CM(1)*(DEFL(1)-DEFP(1)-ETHERM(1))+
+     &     CM(2)*(DEFL(2)-DEFP(2)-ETHERM(2))+
+     &     CM(3)*(DEFL(4)-DEFP(4)-ETHERM(4))
+      TAUL(1)=TAUD(1)+TAUM
+      TAUL(2)=TAUD(2)+TAUM
+      TAUL(4)=TAUD(4)+TAUM
+      IF(IETYP.EQ.0.OR.IETYP.EQ.3) TAUL(4)=0.D0
+      TAUL(3)=TAUD(3)
+      DEFP(3)=2.*DEFP(3)
+C
+C... TRANSFORM STRESS INTO GLOBAL AXES DIRECTION
+C
+      IF(DABS(BETA).GT.1.0D-10) THEN
+         CALL CLEAR(TAU,4)
+         CALL MNOZI2(TAU,TE,TAUL,4,4)
+      ELSE
+         CALL JEDNA1(TAU,TAUL,4)
+      ENDIF
+C
+CE  UPDATE FROM PREVIOUS STEP
+C
+  700 IF(IETYP.EQ.0.OR.IETYP.EQ.3)THEN
+        DEFL(4)=-VZX/EZ*TAUL(1)-VYZ/EY*TAUL(2)+DEFP(4)+ETHERM(4)
+      ELSE
+        DEFL(4)=0.D0
+      ENDIF
+      DO 290 I=1,4
+      DEF1(I)=DEFL(I)
+  290 TAU1(I)=TAU(I)
+      RETURN
+C-----------------------------------------------------------------------
+ 2001 FORMAT( ' ELEMENT =',I6,'  IR =',I2,'  IS =',I2,'  IT =',I2)
+ 2015 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TI217 ',
+     &        '( RADIJUS POVRSI TECENJA )')
+C-----------------------------------------------------------------------
+ 6015 FORMAT(/' MAXIMUM NUMBER OF BISECTION IS REACHED IN TI217 ',
+     &        '( THE RADIUS OF YIELD SURFACE )')
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C   PUZANJE  2/D ELEMENT  -  ANIZOTROPNI MATERIJAL
+C
+C=======================================================================
+      SUBROUTINE D2M18(TAU,DEF,TGT,IRAC,LPOCG,LPOC1)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PROGRAM ZA ODREDIVANJE LOKACIJA VELICINA KOJE SE CUVAJU
+C     NA NIVOU INTEGRACIONE TACKE
+C
+      include 'paka.inc'
+      
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /REPERM/ MREPER(4)
+      COMMON /DUPLAP/ IDVA
+C
+      LFUN=MREPER(1)
+      LNTA=MREPER(2)
+      LTEM=MREPER(3)
+      MATE=MREPER(4)
+C
+      LTAU  =LPOCG
+      LDEFT =LTAU   + 4*IDVA
+      LDEFCT=LDEFT  + 4*IDVA
+      LOPLUT=LDEFCT + 4*IDVA
+      LOMINT=LOPLUT + 4*IDVA
+      LALFCT=LOMINT + 4*IDVA
+      LTECT =LALFCT + 4*IDVA
+      LDQCT =LTECT  + 1*IDVA
+      LIOR  =LDQCT  + 1*IDVA
+      LPTAUT=LIOR   + 1*IDVA
+      LA2CT =LPTAUT + 1*IDVA
+      LCCFT =LA2CT  + 1*IDVA
+C
+      LTAU1 =LPOC1
+      LDEF1 =LTAU1  + 4*IDVA
+      LDEFC1=LDEF1  + 4*IDVA
+      LOPLU1=LDEFC1 + 4*IDVA
+      LOMIN1=LOPLU1 + 4*IDVA
+      LALFC1=LOMIN1 + 4*IDVA
+      LTEC1 =LALFC1 + 4*IDVA
+      LDQC1 =LTEC1  + 1*IDVA
+      LIOR1 =LDQC1  + 1*IDVA
+      LPTAU1=LIOR1  + 1*IDVA
+      LA2C1 =LPTAU1 + 1*IDVA
+      LCCF1 =LA2C1  + 1*IDVA
+C
+      CALL TI218 (A(LIOR) ,A(LDEFCT),A(LOPLUT),A(LOMINT),A(LDQCT) ,
+     &            A(LIOR1),A(LDEFC1),A(LOPLU1),A(LOMIN1),A(LDQC1) ,
+     &            A(LTAU1),A(LDEF1) ,A(LTECT) ,A(LTEC1) ,A(LALFCT),
+     &            A(LA2CT),A(LA2C1) ,A(LPTAUT),A(LPTAU1),A(LALFC1),
+     &            A(LCCFT),A(LCCF1) ,
+     &            A(LFUN),MATE,TAU,DEF,TGT,A(LTEM),A(LNTA),IRAC)
+C
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE TI218 (ORI ,DEFCT,OPLUT,OMINT ,DEFQCT,
+     &                  ORI1,DEFC ,OPLUS,OMINS ,DEFQC ,
+     &                  TAU1,DEF1 ,TECT ,TEC   ,ALFCT ,
+     &                  A2CT,A2C  ,PTAUT,PTAU  ,ALFC  ,
+     &                  CCFT,CCF  ,
+     &                  FUN,MATE,TAU,DEF,TGT,TREF,NTFUN,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE   ELASTIC-CREEP ANISOTROPIC MATERIAL
+C
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TAUD3/ TAUD(6),DEFDPR(6),DEFDS(6),DDEFP(6),
+     1                DETAU(6),DDEF(6)
+      COMMON /ITERBR/ ITER
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /CREEPI/ ICELAW,ICLAW,ISG1,ITI1,ITH1,ISG2,ITI2,ITH2
+      COMMON /SRPSKI/ ISRPS
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      COMMON /ECOEF/ ECR(6)
+      COMMON /UGAOVL/ TE(4,4)
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /VELIKE/ LCOR0,LGM0,JG,NGR,NGS,NGT,NGS4
+      DIMENSION SE(4),DEFL(4),TAUL(4),ETHERM(4),DDEFC(4)
+      DIMENSION CE(4,4),CPE(3,3),CM(3),GB(1),CHCM(3,3),CHCV(3)
+      DIMENSION DEFCT(*),TAU(*),DEF(*),TAU1(*),DEF1(*),DEFC(*),
+     1          OPLUT(*),OMINT(*),OPLUS(*),OMINS(*),ALFCT(*),ALFC(*)
+      DIMENSION FUN(2,MATE*13,*),TREF(*),NTFUN(*)
+      DATA ITMAX/100/,EPSIL/1.0D-10/
+      KDIM = 4
+C
+CE  INITIAL DATA
+C
+      IOR =ORI
+      IOR1=IOR
+      DVA = 2.D0
+      DVT = DVA/3.
+      TRIPO =3.D0/2.
+C
+CE  MATERIAL CONSTANTS FOR GIVEN TEMPERATURE TGT
+C
+      CALL PEL218(FUN,CE,CPE,CM,EMC,TGT,MATE,NTFUN,TREF)
+      EMC1   = 1.-EMC
+      IMIXC  = 1
+      IF (DABS(EMC1).LT.EPSIL) IMIXC=0
+C
+C     THERMAL STRAIN
+C
+      CALL STERM2(ETHERM,TGT)
+C
+      DO 4 I=1,3
+        DO 4 J=1,3
+    4     CHCM(I,J)=0.D0
+      CHCV(1)=0.D0
+C
+C... TRANSFORM STRAIN INTO MATERIAL AXES DIRECTION
+C
+      CALL CLEAR(DEFL,4)
+      CALL CLEAR(TAUL,4)
+      IF(DABS(BETA).GT.1.0D-10) THEN
+         CALL MNOZI1(DEFL,TE,DEF,4,4)
+      ELSE
+         CALL JEDNA1(DEFL,DEF,4)
+      ENDIF
+      IF (IRAC.EQ.2) THEN
+        DO 5 I=1,4
+        DO 5 J=1,4
+    5   ELAST(I,J)=CE(I,J)
+C
+CS.... TRANSFORMACIJA MATRICE  ELAST()
+CE     TRANSFORM ELAST MATRIX
+C
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.NE.1)
+     &  CALL TRAEL(ELAST,TE,4,3,3,ELAST)
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.EQ.1)
+     &  CALL TRAEL(ELAST,TE,4,4,4,ELAST)
+        GO TO 700
+      END IF
+C
+C... TRANSFORM ENGENEER. SHEAR STRAIN INTO TENSORIAL
+C
+      DEFCT(3) = 0.5*DEFCT(3)
+C
+      DEFDS(1)=DEFL(1)
+      DEFDS(2)=DEFL(2)
+      DEFDS(4)=DEFL(4)
+      DEFDS(3)=0.5*DEFL(3)
+      IF (IATYP.NE.4) THEN
+        DEFDS(1)  = DEFDS(1)-DEFCT(1)-ETHERM(1)
+        DEFDS(2)  = DEFDS(2)-DEFCT(2)-ETHERM(2)
+        DEFDS(4)  = DEFDS(4)-DEFCT(4)-ETHERM(4)
+        DEFDS(3)  = DEFDS(3)-DEFCT(3)
+      END IF
+C
+CE   1)  ELASTIC DEVIATORIC STRESS SOLUTION  (TAUD)
+C
+      TAUD(1) =CPE(1,1)*DEFDS(1)+CPE(1,2)*DEFDS(2)+CPE(1,3)*DEFDS(4)
+      TAUD(2) =CPE(2,1)*DEFDS(1)+CPE(2,2)*DEFDS(2)+CPE(2,3)*DEFDS(4)
+      TAUD(3) =2.*DEFDS(3)*CE(3,3)
+      TAUD(4) =-TAUD(1)-TAUD(2)
+      SE(1)=TAUD(1)-ALFCT(1)
+      SE(2)=TAUD(2)-ALFCT(2)
+      SE(3)=TAUD(3)-ALFCT(3)
+      SE(4)   =-SE(1)-SE(2)
+      TEC=DSQRT(1.5*TDOTA2(SE,E))
+C
+      LPU=0
+      IF (TEC.LT.1.D-12) THEN
+        LPU=-1
+        DEFQC=DEFQCT
+        CALL JEDNA1(DEFC,DEFCT,4)
+        GO TO 500
+      END IF
+C
+CE   1)    OBTAIN ZERO OF THE ESF (BISECTION)
+C
+      AF    = 3.D0
+      IB    = 0
+      IT    = 0
+      DQTOL = 1.D-10
+      DCMIN = 1.D-10
+      TECL  = 1.D-10
+      IF (ITER.EQ.0) TECL=TECT
+      IF (TECL.LT.1.D-10) TECL=1.D-10
+      TECP  = TECL
+      DTEC  = 0.1*TECT
+      IF (DTEC.LT.1.D-8) DTEC=0.1*TEC
+C
+      PTAU=PTAUT+DT
+      IF (ICLAW.EQ.1) THEN
+        GAMP   = TRIPO*(ECTAU(TECL,DEFQCT)-DEFQCT)/(DT*TECL)
+      ELSE
+        GAMP   = TRIPO*ECDOT(TECL,PTAU,TGT)/TECL
+      END IF
+      GAMDT  = DT*GAMP
+      A2C    = A2CT
+      CCF    = CCFT
+      IF (CCF.LT.1.D-8) CCF=1.D-8
+C
+      IF(IMIXC.EQ.1) CALL CHATC(CHCM,CHCV,ECR,EMC1,DVT,CCF,KDIM)
+      CALL INIOR(SE,ECR,CE,CPE,GB,CXX,CYY,CXY,CYX,DXX,DYY,CED,
+     &           CHCM,CHCV,GAMDT,KDIM)
+      CALL DEV2(TAUD,SE,GB,CXX,CYY,DXX,DYY,CED,GAMDT,DG)
+      ETEC = DSQRT(1.5*TDOTA2(TAUD,E))
+      FL   = ETEC-TECL
+C
+      IF (ITER.EQ.0) GO TO 50
+      TEC  = TECL+DTEC
+C
+  100 IT  = IT+1
+      IB1 = IB
+C
+      IF(IT.GT.ITMAX) THEN
+        IF (ISRPS.EQ.0) WRITE(IZLAZ,2000)
+        IF (ISRPS.EQ.1) WRITE(IZLAZ,6000)
+        WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+        STOP
+      END IF
+C
+CE    FINDING THE PSEUDO TIME (PTAU)
+C
+        IF (DT.LE.1.D-3.OR.ICLAW.EQ.1) THEN
+          PTAU=PTAUT+DT
+          GO TO 195
+        END IF
+        JB    = 0
+        JT    = 0
+        PTL   = 1.D-10
+        DPT   = 0.1*(PTAUT+DT)
+        GL    = DEFQCT+DT*ECDOT(TEC,PTL,TGT)-EC(TEC,PTL,TGT)
+        PTAU  = PTL+DPT
+C
+  200   JT    = JT+1
+        JB1   = JB
+C
+        IF(JT.GT.ITMAX) THEN
+          IF (ISRPS.EQ.0) WRITE(IZLAZ,2010)
+          IF (ISRPS.EQ.1) WRITE(IZLAZ,6010)
+          WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+          STOP
+        END IF
+C
+        G    = DEFQCT+DT*ECDOT(TEC,PTAU,TGT)-EC(TEC,PTAU,TGT)
+C
+        CALL BISECB(PTAU,PTL,PD,DPT,G,GL,GD,AF,JB,DCMIN,DQTOL)
+        IF (JB.EQ.-1) GO TO 195
+        IF (JB1.EQ.0) GO TO 200
+        IF ((DABS(DPT)/(PTL+PD)).GT.EPSIL) GO TO 200
+C
+  195 IF (ICLAW.EQ.1) THEN
+        GAMAC  = TRIPO*(ECTAU(TEC,DEFQCT)-DEFQCT)/(DT*TEC)
+      ELSE
+        GAMAC  = TRIPO*ECDOT(TEC,PTAU,TGT)/TEC
+      END IF
+      GAMDT  = DT*GAMAC
+C
+      EEE    = EC(TEC,PTAU,TGT)-EC(TECP,PTAU,TGT)
+      DDD    = TEC-TECP
+      IF (DABS(DDD).GE.1.D-10) THEN
+        A2C  = (GAMAC-GAMP)/DDD
+        GAMP = GAMAC
+        TECP = TEC
+      END IF
+      IF (DABS(EEE).GE.1.D-10) CCF=DDD/EEE
+C
+      IF(IMIXC.EQ.1) CALL CHATC(CHCM,CHCV,ECR,EMC1,DVT,CCF,KDIM)
+      CALL INIOR(SE,ECR,CE,CPE,GB,CXX,CYY,CXY,CYX,DXX,DYY,CED,
+     &           CHCM,CHCV,GAMDT,KDIM)
+      CALL DEV2(TAUD,SE,GB,CXX,CYY,DXX,DYY,CED,GAMDT,DG)
+      ETEC = DSQRT(1.5*TDOTA2(TAUD,E))
+C
+      F    = ETEC-TEC
+C
+      CALL BISECB(TEC,TECL,TECD,DTEC,F,FL,FD,AF,IB,DCMIN,DQTOL)
+      IF (IB.EQ.-1) GO TO 105
+      IF (IB1.EQ.0) GO TO 100
+      IF ((DABS(DTEC)/(TECL+TECD)).GT.EPSIL) GO TO 100
+C
+CE   2)  DETERMINE SOLUTION
+C
+C
+CE     E L A S T I C  -  C R E E P   M A T R I X   CEC
+C
+  105 IF (ISKNP.NE.2) THEN
+        CALL CEC2O(TAUD,ECR,CE,CPE,CM,GB,CED,CXX,CYY,CXY,CYX,
+     &             DG,DXX,DYY,GAMAC,GAMDT,A2C,TEC,CHCM,CHCV)
+C
+CS.... TRANSFORMACIJA MATRICE  ELAST()
+CE     TRANSFORM ELAST MATRIX
+C
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.NE.1)
+     &  CALL TRAEL(ELAST,TE,4,3,3,ELAST)
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.EQ.1)
+     &  CALL TRAEL(ELAST,TE,4,4,4,ELAST)
+      ENDIF
+C
+CE      ...   ( CREEP STRAIN ), ( BACK STRESS )
+C
+   50 CALL INDEF2(DDEFC,ECR,TAUD,GAMDT)
+      DO 51 I=1,4
+   51   DEFC(I) = DEFCT(I)+DDEFC(I)
+C
+      IF(IMIXC.EQ.1)THEN
+        CALL ABACK2(ALFC,ALFCT,DDEFC,CHCM,CHCV)
+        DO 160 I=1,4
+  160   TAUD(I) = TAUD(I)+ALFC(I)
+      ENDIF
+C
+CE   3)    CALCULATE STRESS
+C
+  500 CONTINUE
+      TAUM=CM(1)*(DEFL(1)-DEFC(1)-ETHERM(1))+
+     &     CM(2)*(DEFL(2)-DEFC(2)-ETHERM(2))+
+     &     CM(3)*(DEFL(4)-DEFC(4)-ETHERM(4))
+      TAUL(1)=TAUD(1)+TAUM
+      TAUL(2)=TAUD(2)+TAUM
+      TAUL(4)=TAUD(4)+TAUM
+      IF(IETYP.EQ.0.OR.IETYP.EQ.3) TAUL(4)=0.D0
+      TAUL(3)=TAUD(3)
+      DEFC(3)=2.*DEFC(3)
+C
+CE     THE MODIFIED EFFECTIVE CREEP STRAIN (DEFQC)
+C
+      IF (LPU.NE.-1) THEN
+        DO 410 I=1,4
+          OPLUS(I)=OPLUT(I)
+  410     OMINS(I)=OMINT(I)
+        CALL ORNL2(TAU,DEFC,DEFQC,OPLUS,OMINS,IOR1)
+        ORI1=IOR1
+      END IF
+C
+C... TRANSFORM STRESS INTO GLOBAL AXES DIRECTION
+C
+      IF(DABS(BETA).GT.1.0D-10) THEN
+         CALL CLEAR(TAU,4)
+         CALL MNOZI2(TAU,TE,TAUL,4,4)
+      ELSE
+         CALL JEDNA1(TAU,TAUL,4)
+      ENDIF
+C
+CE  UPDATE FROM PREVIOUS STEP
+C
+  700 IF(IETYP.EQ.0.OR.IETYP.EQ.3)THEN
+        DEFL(4)=-VZX/EZ*TAUL(1)-VYZ/EY*TAUL(2)+DEFC(4)+ETHERM(4)
+      ELSE
+        DEFL(4)=0.D0
+      ENDIF
+      DO 290 I=1,4
+      DEF1(I)=DEFL(I)
+  290 TAU1(I)=TAU(I)
+      RETURN
+C-----------------------------------------------------------------------
+ 2001 FORMAT( ' ELEMENT =',I6,'  IR =',I2,'  IS =',I2,'  IT =',I2)
+ 2000 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TI218')
+ 2010 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TI218 ',
+     &        '( PSEUDO-TIME )')
+C-----------------------------------------------------------------------
+ 6000 FORMAT(/' MAXIMUM NUMBER OF BISECTION IS REACHED IN TI218')
+ 6010 FORMAT(/' MAXIMUM NUMBER OF BISECTION IS REACHED IN TI218 ',
+     &        '( PSEUDO-TIME )')
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+      SUBROUTINE PEL218(FUN,CE,CPE,CM,EMC,TGT,MATE,NTFUN,TREF)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C     EVALUATE MATERIAL CONSTANTS
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /SRPSKI/ ISRPS
+      DIMENSION FUN(2,MATE*13,*),TREF(*),NTFUN(*),FC(6)
+      DIMENSION CE(4,*),CPE(3,*),CM(*)
+C
+      D13 =1.D0/3.
+      ONE =1.D0
+      DVA =2.D0
+      ZER =0.D0
+C
+      MAT13=(MAT-1)*13
+      MATE13=MATE*13
+      DO 60 J=1,12
+        NFE=MAT13+J
+        CALL BTAB(FUN,NTFUN,NFE,MATE13,TGT,NL,IND,2)
+        IF (IND.EQ.2) GO TO 300
+        IF (IND.EQ.1) THEN
+          EVA=FUN(2,NFE,1)
+        ELSE
+          AMU=TGT-FUN(1,NFE,NL)
+          DEN=FUN(1,NFE,NL+1)-FUN(1,NFE,NL)
+          EVA=((FUN(2,NFE,NL+1)-FUN(2,NFE,NL))/DEN)*AMU+FUN(2,NFE,NL)
+        END IF
+        GO TO (1,2,3,4,5,6,7,8,9,10,11,12) J
+C
+    1   EX      = EVA
+        GO TO 60
+    2   EY      = EVA
+        GO TO 60
+    3   EZ      = EVA
+        GO TO 60
+C
+    4   VXY     = EVA
+        GO TO 60
+    5   VYZ     = EVA
+        GO TO 60
+    6   VZX     = EVA
+        GO TO 60
+C
+    7   GXY     = EVA
+        GO TO 60
+    8   GYZ     = EVA
+        GO TO 60
+    9   GZX     = EVA
+        GO TO 60
+C
+   10   ALFA(1) = EVA
+        GO TO 60
+   11   ALFA(2) = EVA
+        GO TO 60
+   12   ALFA(3) = EVA
+        GO TO 60
+C
+   60 CONTINUE
+C
+      TEMP0 = TREF(MAT)
+      EMC   = FUN(2,MAT13+13,1)
+C
+C... CHECK MATERIAL CONSTANTS
+C
+      FC(1) = EX
+      FC(2) = EY
+      FC(3) = EZ
+      FC(4) = VXY
+      FC(5) = VYZ
+      FC(6) = VZX
+      CALL ANICHK(FC,IZLAZ,ISRPS)
+C
+      CALL CLEAR(CE,16)
+C
+C     MATRICA CE
+C
+      POM=(ONE-DVA*VXY*VYZ*VZX-EX/EZ*VZX*VZX-EY/EX*VXY*VXY
+     1-EZ/EY*VYZ*VYZ)/(EX*EY*EZ)
+      CE(1,1)=(ONE/EZ-VYZ*VYZ/EY)/(EY*POM)
+      CE(2,2)=(ONE/EX-VZX*VZX/EZ)/(EZ*POM)
+      CE(4,4)=(ONE/EY-VXY*VXY/EX)/(EX*POM)
+      CE(1,2)=(VZX*VYZ/EY+VXY/EX)/(EZ*POM)
+      CE(1,4)=(VXY*VYZ/EX+VZX/EZ)/(EY*POM)
+      CE(2,4)=(VXY*VZX/EZ+VYZ/EY)/(EX*POM)
+      CE(3,3)=GXY
+C
+C  PLANE STRESS
+C
+      IF(IETYP.EQ.0.OR.IETYP.EQ.3)THEN
+        CE(1,1)=CE(1,1)-CE(1,4)*CE(1,4)/CE(4,4)
+        CE(1,2)=CE(1,2)-CE(2,4)*CE(1,4)/CE(4,4)
+        CE(2,2)=CE(2,2)-CE(2,4)*CE(2,4)/CE(4,4)
+        CE(1,4)=ZER
+        CE(2,4)=ZER
+        CE(4,4)=ZER
+      ENDIF
+      DO 50 I=1,4
+      DO 50 J=I,4
+   50 CE(J,I)=CE(I,J)
+C
+C...   VECTOR   CM
+C
+      CM(1)=D13*(CE(1,1)+CE(1,2)+CE(1,4))
+      CM(2)=D13*(CE(1,2)+CE(2,2)+CE(2,4))
+      CM(3)=D13*(CE(1,4)+CE(2,4)+CE(4,4))
+C
+C...   MATRIX  C'E
+C
+      DO 61 I=1,2
+        DO 61 J=1,2
+   61       CPE(I,J)=CE(I,J)-CM(J)
+      CPE(1,3)=CE(1,4)-CM(3)
+      CPE(2,3)=CE(2,4)-CM(3)
+      CPE(3,3)=CE(4,4)-CM(3)
+      CPE(3,1)=CE(4,1)-CM(1)
+      CPE(3,2)=CE(4,2)-CM(2)
+      RETURN
+  300 CONTINUE
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2005) NFE,TGT
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6005) NFE,TGT
+      STOP
+C-----------------------------------------------------------------------
+ 2005 FORMAT(///' ARGUMENT VAN OPSEGA ZADATE KRIVE U PEL218'/
+     1' TEMPERATURSKA FUNKCIJA BROJ =',I5/
+     2' ARGUMENT TEMPERATURA =',1PD12.4)
+C-----------------------------------------------------------------------
+ 6005 FORMAT(///' ARGUMENT IS OUT OF RANGE IN PEL218'/
+     1' TEMPERATURE FUNCTION  =',I5/
+     2' ARGUMENT TEMPERATURE  =',1PD12.4)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C   TERMO-ELASTO-PLASTICNOST SA PUZANJEM -  2/D ELEMENT     (02.09.1994)
+C          (ANIZOTROPAN MATERIJAL SA MESOVITIM OJACANJEM)
+C
+C=======================================================================
+      SUBROUTINE D2M19(TAU,DEF,TGT,IRAC,LPOCG,LPOC1)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PROGRAM ZA ODREDIVANJE LOKACIJA VELICINA KOJE SE CUVAJU
+C     NA NIVOU INTEGRACIONE TACKE
+C
+      include 'paka.inc'
+      
+      COMMON /REPERM/ MREPER(4)
+      COMMON /DUPLAP/ IDVA
+C
+      LFUN=MREPER(1)
+      LNTA=MREPER(2)
+      LTEM=MREPER(3)
+      MATE=MREPER(4)
+C
+      LTAU  =LPOCG
+      LDEFT =LTAU   + 4*IDVA
+      LDEFPT=LDEFT  + 4*IDVA
+      LALFAT=LDEFPT + 4*IDVA
+      LDEFCT=LALFAT + 4*IDVA
+      LOPLUT=LDEFCT + 4*IDVA
+      LOMINT=LOPLUT + 4*IDVA
+      LALFCT=LOMINT + 4*IDVA
+      LTEQT =LALFCT + 4*IDVA
+      LTECT =LTEQT  + 1*IDVA
+      LDQPT =LTECT  + 1*IDVA
+      LDQCT =LDQPT  + 1*IDVA
+      LIPL  =LDQCT  + 1*IDVA
+      LIOR  =LIPL   + 1*IDVA
+      LPTAUT=LIOR   + 1*IDVA
+      LA2CT =LPTAUT + 1*IDVA
+      LCCFT =LA2CT  + 1*IDVA
+C
+      LTAU1 =LPOC1
+      LDEF1 =LTAU1  + 4*IDVA
+      LDEFP1=LDEF1  + 4*IDVA
+      LALFA1=LDEFP1 + 4*IDVA
+      LDEFC1=LALFA1 + 4*IDVA
+      LOPLU1=LDEFC1 + 4*IDVA
+      LOMIN1=LOPLU1 + 4*IDVA
+      LALFC1=LOMIN1 + 4*IDVA
+      LTEQ1 =LALFC1 + 4*IDVA
+      LTEC1 =LTEQ1  + 1*IDVA
+      LDQP1 =LTEC1  + 1*IDVA
+      LDQC1 =LDQP1  + 1*IDVA
+      LIPL1 =LDQC1  + 1*IDVA
+      LIOR1 =LIPL1  + 1*IDVA
+      LPTAU1=LIOR1  + 1*IDVA
+      LA2C1 =LPTAU1 + 1*IDVA
+      LCCF1 =LA2C1  + 1*IDVA
+C
+      CALL TI219 (A(LIOR) ,A(LDEFCT),A(LOPLUT),A(LOMINT),A(LDQCT) ,
+     &            A(LIPL) ,A(LDEFPT),A(LALFAT),A(LDQPT) ,A(LTEQT),
+     &            A(LIOR1),A(LDEFC1),A(LOPLU1),A(LOMIN1),A(LDQC1) ,
+     &            A(LIPL1),A(LDEFP1),A(LALFA1),A(LDQP1) ,A(LTEQ1),
+     &            A(LTAU1),A(LDEF1) ,A(LTECT) ,A(LTEC1) ,A(LALFCT),
+     &            A(LA2CT),A(LA2C1) ,A(LPTAUT),A(LPTAU1),A(LALFC1),
+     &            A(LCCFT),A(LCCF1) ,
+     &            A(LFUN),MATE,TAU,DEF,TGT,A(LTEM),A(LNTA),IRAC)
+C
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE TI219 (ORI ,DEFCT,OPLUT,OMINT ,DEFQCT,
+     &                  PL  ,DEFPT,ALFPT,DEFQPT,TEQT  ,
+     &                  ORI1,DEFC ,OPLUS,OMINS ,DEFQC ,
+     &                  PL1 ,DEFP ,ALFP ,DEFQP ,TEQ   ,
+     &                  TAU1,DEF1 ,TECT ,TEC   ,ALFCT ,
+     &                  A2CT,A2C  ,PTAUT,PTAU  ,ALFC  ,
+     &                  CCFT,CCF  ,
+     &                  FUN,MATE,TAU,DEF,TGT,TREF,NTFUN,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE   THERMO-ELASTIC-PLASTIC WITH CREEP - ANISOTROPIC MATERIAL
+C
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TAUD3/ TAUD(6),DEFDPR(6),DEFDS(6),DDEFP(6),
+     1                DETAU(6),DDEF(6)
+      COMMON /ITERBR/ ITER
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /CREEPI/ ICELAW,ICLAW,ISG1,ITI1,ITH1,ISG2,ITI2,ITH2
+      COMMON /SRPSKI/ ISRPS
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      COMMON /UGAOVL/ TE(4,4)
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /ECOEF/ ECR(6)
+      COMMON /VELIKE/ LCOR0,LGM0,JG,NGR,NGS,NGT,NGS4
+      DIMENSION SHATP(4),SHATC(4),SGAM(4),SLAM(4),SGI(4),SLI(4),
+     &          DEFL(4),TAUL(4),ETHERM(4)
+      DIMENSION CE(4,4),CPE(3,3),CM(3)
+      DIMENSION CHCM(3,3),CHCV(1),GBC(1),DDEFC(4)
+      DIMENSION CHPM(3,3),CHPV(1),GBP(1),EPL(6)
+      DIMENSION Y0(6),CY(6),AN(6),AN1(6)
+      DIMENSION TAU(*),DEF(*),TAU1(*),DEF1(*),
+     &          DEFCT(*),DEFC(*),OPLUT(*),OMINT(*),OPLUS(*),OMINS(*),
+     &          DEFPT(*),DEFP(*),ALFPT(*),ALFP(*),ALFCT(*),ALFC(*)
+      DIMENSION FUN(4,MATE*18,*),TREF(*),NTFUN(*)
+      DIMENSION TAUS(4),PEP(4,4),DEFLS(4),DEFPS(4),ALFPS(4),DEFCS(4),
+     &          ALFCS(4)
+      DATA ITMAX/100/,EPSIL/1.0D-10/
+      KDIM = 4
+C
+CE  INITIAL DATA
+C
+      IOR   = ORI
+      IOR1  = IOR
+      IPL   = PL
+      DVA   = 2.D0
+      DVT   = DVA/3.
+      TRIPO = 3.D0/2.
+      IPERT = 0
+C
+CE  MATERIAL CONSTANTS FOR GIVEN TEMPERATURE TGT
+C
+      CALL PEL219(FUN,CE,CYQ,ANQ,Y0,CY,AN,AN1,CPE,CM,EM,EMC,
+     &            TGT,MATE,NTFUN,TREF)
+      ANQ1  = ANQ-1.
+      IF (ANQ1.LT.1.D-8) ANQ1=1.D-8
+      EM1   = 1.-EM
+      IMIX  = 1
+      IF (DABS(EM1).LT.EPSIL) IMIX=0
+C
+      EMC1   = 1.-EMC
+      IMIXC  = 1
+      IF (DABS(EMC1).LT.EPSIL) IMIXC=0
+C
+C     THERMAL STRAIN
+C
+      CALL STERM2(ETHERM,TGT)
+C
+      DO 4 I=1,3
+        DO 4 J=1,3
+          CHPM(I,J)=0.D0
+    4     CHCM(I,J)=0.D0
+      CHPV(1)=0.D0
+      CHCV(1)=0.D0
+C
+CE    YIELD STRESS
+C
+      CALL ENTY(TEQY,EPL,Y0,CY,AN,EM,DEFQPT,DEFQPT,KDIM)
+C
+C... TRANSFORM STRAIN INTO MATERIAL AXES DIRECTION
+C
+      CALL CLEAR(DEFL,4)
+      CALL CLEAR(TAUL,4)
+      IF(DABS(BETA).GT.1.0D-10) THEN
+         CALL MNOZI1(DEFL,TE,DEF,4,4)
+      ELSE
+         CALL JEDNA1(DEFL,DEF,4)
+      ENDIF
+      IF (IRAC.EQ.2) THEN
+        DO 5 I=1,4
+        DO 5 J=1,4
+    5   ELAST(I,J)=CE(I,J)
+C
+CS.... TRANSFORMACIJA MATRICE  ELAST()
+CE     TRANSFORM ELAST MATRIX
+C
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.NE.1)
+     &  CALL TRAEL(ELAST,TE,4,3,3,ELAST)
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.EQ.1)
+     &  CALL TRAEL(ELAST,TE,4,4,4,ELAST)
+        GO TO 700
+      END IF
+C
+C... TRANSFORM ENGENEER. SHEAR STRAIN INTO TENSORIAL
+C
+      DEFPT(3) = 0.5*DEFPT(3)
+      DEFCT(3) = 0.5*DEFCT(3)
+C
+      KBROJ=0
+  800 CONTINUE
+C
+      DEFDS(1)=DEFL(1)
+      DEFDS(2)=DEFL(2)
+      DEFDS(4)=DEFL(4)
+      DEFDS(3)=0.5*DEFL(3)
+      IF (IATYP.NE.4) THEN
+        DEFDS(1)  = DEFDS(1)-DEFPT(1)-DEFCT(1)-ETHERM(1)
+        DEFDS(2)  = DEFDS(2)-DEFPT(2)-DEFCT(2)-ETHERM(2)
+        DEFDS(4)  = DEFDS(4)-DEFPT(4)-DEFCT(4)-ETHERM(4)
+        DEFDS(3)  = DEFDS(3)-DEFPT(3)-DEFCT(3)
+      END IF
+C
+CE   1)  ELASTIC DEVIATORIC STRESS SOLUTION  (TAUD)
+C
+      DUM      = CPE(1,1)*DEFDS(1)+CPE(1,2)*DEFDS(2)+CPE(1,3)*DEFDS(4)
+      SHATP(1) = DUM-ALFPT(1)
+      SHATC(1) = DUM-ALFCT(1)
+      DUM      = CPE(2,1)*DEFDS(1)+CPE(2,2)*DEFDS(2)+CPE(2,3)*DEFDS(4)
+      SHATP(2) = DUM-ALFPT(2)
+      SHATC(2) = DUM-ALFCT(2)
+      DUM      = DVA*DEFDS(3)*CE(3,3)
+      SHATP(3) = DUM-ALFPT(3)
+      SHATC(3) = DUM-ALFCT(3)
+      SHATP(4) =-SHATP(1)-SHATP(2)
+      SHATC(4) =-SHATC(1)-SHATC(2)
+      DO 40 I=1,4
+        SGI(I) = SHATP(I)
+        SLI(I) = SHATC(I)
+   40 CONTINUE
+      TEC=DSQRT(1.5*TDOTA2(SHATC,ECR))
+      TEQ=DSQRT(1.5*TDOTA2(SHATP,EPL))
+      TEQE=TEQ
+C
+CE   2)  CHECK FOR YIELDING
+C
+      LPU=0
+      IF ((TEQ-TEQY)/TEQY.LT.1.D-5) THEN
+        IPL1=0
+        DEFQP=DEFQPT
+        IF (TEC.LT.1.D-10) THEN
+          LPU=-1
+          DEFQC=DEFQCT
+          CALL JEDNA1(DEFC,DEFCT,4)
+          GO TO 500
+        END IF
+      ELSE
+        PL1  = 1.0D0
+        IPL1 = 1
+      END IF
+C
+CE   3)    OBTAIN ZERO OF THE ESF (BISECTION)
+C
+      AF    = 3.D0
+      IB    = 0
+      IT    = 0
+      DQTOL = 1.D-10
+      DCMIN = 1.D-10
+      DQMIN = 0.D0
+      TECL  = 1.D-10
+      IF (ITER.EQ.0) TECL=TECT
+      IF (TECL.LT.1.D-10) TECL=1.D-10
+      TECP  = TECL
+      DTEC  = 0.1*TECT
+      IF (DTEC.LT.1.D-8) DTEC=0.1*TEC
+C
+      PTAU=PTAUT+DT
+      IF (ICLAW.EQ.1) THEN
+        GAMP   = TRIPO*(ECTAU(TECL,DEFQCT)-DEFQCT)/(DT*TECL)
+      ELSE
+        GAMP   = TRIPO*ECDOT(TECL,PTAU,TGT)/TECL
+      END IF
+      GAMDT  = DT*GAMP
+      A2C    = A2CT
+      CCF    = CCFT
+      IF (CCF.LT.1.D-10) CCF=1.D-10
+C
+      IF(IMIXC.EQ.1) CALL CHATC(CHCM,CHCV,ECR,EMC1,DVT,CCF,KDIM)
+      CALL INIOR(SLI,ECR,CE,CPE,GBC,CXXC,CYYC,CXYC,CYXC,DXXC,DYYC,CEDC,
+     &            CHCM,CHCV,GAMDT,KDIM)
+      CALL DEV2(SHATC,SLI,GBC,CXXC,CYYC,DXXC,DYYC,CEDC,GAMDT,DG)
+      ETEC = DSQRT(1.5*TDOTA2(SHATC,ECR))
+      FL   = ETEC-TECL
+C
+      IF (ITER.EQ.0) GO TO 50
+      TEC  = TECL+DTEC
+C
+  100 IT  = IT+1
+      IB1 = IB
+C
+      IF(IT.GT.ITMAX) THEN
+        IF (ISRPS.EQ.0) WRITE(IZLAZ,2000)
+        IF (ISRPS.EQ.1) WRITE(IZLAZ,6000)
+        WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+        STOP
+      END IF
+C
+CE    FINDING THE PSEUDO TIME (PTAU)
+C
+        IF (DT.LE.1.D-3.OR.ICLAW.EQ.1) THEN
+          PTAU=PTAUT+DT
+          GO TO 195
+        END IF
+        JB    = 0
+        JT    = 0
+        PTL   = 1.D-10
+        DPT   = 0.1*(PTAUT+DT)
+        GL    = DEFQCT+DT*ECDOT(TEC,PTL,TGT)-EC(TEC,PTL,TGT)
+        PTAU  = PTL+DPT
+C
+  200   JT    = JT+1
+        JB1   = JB
+C
+        IF(JT.GT.ITMAX) THEN
+          IF (ISRPS.EQ.0) WRITE(IZLAZ,2010)
+          IF (ISRPS.EQ.1) WRITE(IZLAZ,6010)
+          WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+          STOP
+        END IF
+C
+        G    = DEFQCT+DT*ECDOT(TEC,PTAU,TGT)-EC(TEC,PTAU,TGT)
+C
+        CALL BISECB(PTAU,PTL,PD,DPT,G,GL,GD,AF,JB,DCMIN,DQTOL)
+        IF (JB.EQ.-1) GO TO 195
+        IF (JB1.EQ.0) GO TO 200
+        IF ((DABS(DPT)/(PTL+PD)).GT.EPSIL) GO TO 200
+C
+  195 IF (ICLAW.EQ.1) THEN
+        GAMAC  = TRIPO*(ECTAU(TEC,DEFQCT)-DEFQCT)/(DT*TEC)
+      ELSE
+        GAMAC  = TRIPO*ECDOT(TEC,PTAU,TGT)/TEC
+      END IF
+      GAMDT  = DT*GAMAC
+C
+CE    FINDING THE RADIUS OF THE YIELD SURFACE (TEQ)
+C
+      DEFQP = DEFQPT
+      CALL ENTY(TEQY,EPL,Y0,CY,AN,EM,DEFQP,DEFQPT,KDIM)
+      IF (DEFQP.LT.1.D-8) DEFQP=1.D-8
+      EP2=ANQ*CYQ*DEFQP**ANQ1
+      IF (EP2.LT.1.D-8) EP2=1.D-8
+C
+      KB    = 0
+      KT    = 0
+      DEPL  = 0.D0
+      CALL INDEF2(DDEFC,ECR,SHATC,GAMDT)
+      SGAM(1) = SGI(1)-
+     &          (CPE(1,1)*DDEFC(1)+CPE(1,2)*DDEFC(2)+CPE(1,3)*DDEFC(4))
+      SGAM(2) = SGI(2)-
+     &          (CPE(2,1)*DDEFC(1)+CPE(2,2)*DDEFC(2)+CPE(2,3)*DDEFC(4))
+      SGAM(3) = SGI(3)-2.*DDEFC(3)*CE(3,3)
+      SGAM(4) =-SGAM(1)-SGAM(2)
+      DO 97 L=1,4
+   97   SHATP(L)=SGAM(L)
+      TEQ   = DSQRT(1.5*TDOTA2(SHATP,EPL))
+      FHETL = TEQ-TEQY
+      IF (FHETL.LE.0.D0) THEN
+        IPL1 = 0
+        GO TO 260
+      END IF
+      IPL1 = 1
+      DDEP  = 0.1*FHETL/EP2
+      DDEFQP= DDEP
+C
+      TOLD = TEQY
+      DOLD = DEFQPT
+      EP   = EP2
+C
+  250   KT  = KT+1
+        KB1 = KB
+C
+        IF(KT.GT.ITMAX) THEN
+          IF (ISRPS.EQ.0) WRITE(IZLAZ,2015)
+          IF (ISRPS.EQ.1) WRITE(IZLAZ,6015)
+          WRITE(IZLAZ,2001)NLM,NGR,NGS,NGT
+          STOP
+        END IF
+C
+        DEFQP = DEFQPT+DDEFQP
+C
+        CALL ENTY(TEQY,EPL,Y0,CY,AN,EM,DEFQP,DEFQPT,KDIM)
+        DLAM = 1.5*DDEFQP/TEQY
+        IF(IMIX.EQ.1)
+     &    CALL CHATP(CHPM,CHPV,EPL,DEFQP,EM1,DVT,CY,AN,AN1,KDIM)
+        CALL INIOR(SGAM,EPL,CE,CPE,GBP,CXXP,CYYP,CXYP,CYXP,DXXP,DYYP,
+     &              CEDP,CHPM,CHPV,DLAM,KDIM)
+        CALL DEV2(SHATP,SGAM,GBP,CXXP,CYYP,DXXP,DYYP,CEDP,DLAM,DL)
+        TEQ  = DSQRT(1.5*TDOTA2(SHATP,EPL))
+C
+        FHET = TEQ-TEQY
+C
+        CALL BISECB(DDEFQP,DEPL,DEPD,DDEP,
+     &              FHET,FHETL,FHETD,AF,KB,DQMIN,DQTOL)
+      IF (KB.EQ.-1) GO TO 255
+      IF (KB1.EQ.0) GO TO 250
+C
+      DDF    = DEFQP-DOLD
+      IF (DABS(DDF).GT.1.D-10) THEN
+        EP   = DABS((TEQY-TOLD)/DDF)
+        TOLD = TEQY
+        DOLD = DEFQP
+      END IF
+C
+      IF ((DABS(DDEP)/(DEPL+DEPD)).GT.EPSIL) GO TO 250
+C
+  255 CALL INDEF2(DDEFP,EPL,SHATP,DLAM)
+      SLAM(1) = SLI(1)-
+     &          (CPE(1,1)*DDEFP(1)+CPE(1,2)*DDEFP(2)+CPE(1,3)*DDEFP(4))
+      SLAM(2) = SLI(2)-
+     &          (CPE(2,1)*DDEFP(1)+CPE(2,2)*DDEFP(2)+CPE(2,3)*DDEFP(4))
+      SLAM(3) = SLI(3)-2.*DDEFP(3)*CE(3,3)
+      SLAM(4) =-SLAM(1)-SLAM(2)
+  260 IF (IPL1.NE.1) THEN
+        DO 256 I=1,4
+  256     SLAM(I)=SLI(I)
+      END IF
+C
+      IF (IB1.NE.0) THEN
+        EEE    = EC(TEC,PTAU,TGT)-EC(TECP,PTAU,TGT)
+        DDD    = TEC-TECP
+        IF (DABS(DDD).GE.1.D-10) THEN
+          A2C  = (GAMAC-GAMP)/DDD
+          GAMP = GAMAC
+          TECP = TEC
+        END IF
+        IF (DABS(EEE).GE.1.D-10) CCF=DDD/EEE
+      END IF
+C
+      IF(IMIXC.EQ.1) CALL CHATC(CHCM,CHCV,ECR,EMC1,DVT,CCF,KDIM)
+      CALL INIOR(SLAM,ECR,CE,CPE,GBC,CXXC,CYYC,CXYC,CYXC,DXXC,DYYC,
+     &            CEDC,CHCM,CHCV,GAMDT,KDIM)
+      CALL DEV2(SHATC,SLAM,GBC,CXXC,CYYC,DXXC,DYYC,CEDC,GAMDT,DG)
+      ETEC = DSQRT(1.5*TDOTA2(SHATC,ECR))
+C
+      F    = ETEC-TEC
+C
+      CALL BISECB(TEC,TECL,TECD,DTEC,F,FL,FD,AF,IB,DCMIN,DQTOL)
+      IF (IB.EQ.-1) GO TO 105
+      IF (IB1.EQ.0) GO TO 100
+      IF ((DABS(DTEC)/(TECL+TECD)).GT.EPSIL) GO TO 100
+C
+CE   4)  DETERMINE SOLUTION
+C
+C
+CE     E L A S T I C - P L A S T I C - C R E E P   M A T R I X   CEPC
+C
+  105 IF (ISKNP.NE.2) THEN
+        IF (KBROJ.EQ.0) THEN
+          IF (IPL1.EQ.1) THEN
+            IF (DABS(EC(TEC,PTAU,TGT)-DEFQCT).GT.1.D-6) THEN
+              IPERT=1
+              GO TO 50
+            ELSE
+              CALL CEP2O(SHATP,EPL,CE,CPE,CM,GBP,CEDP,CXXP,CYYP,CXYP,
+     &                   CYXP,DL,DXXP,DYYP,DLAM,TEQY,CHPM,CHPV,EP,
+     &                   AN1,DEFQP)
+            END IF
+          ELSE
+            CALL CEC2O(SHATC,ECR,CE,CPE,CM,GBC,CEDC,CXXC,CYYC,CXYC,
+     &                 CYXC,DG,DXXC,DYYC,GAMAC,GAMDT,A2C,TEC,CHCM,CHCV)
+          END IF
+C
+CS.... TRANSFORMACIJA MATRICE  ELAST()
+CE     TRANSFORM ELAST MATRIX
+C
+          IF(DABS(BETA).GT.1.0D-10.AND.IETYP.NE.1)
+     &    CALL TRAEL(ELAST,TE,4,3,3,ELAST)
+          IF(DABS(BETA).GT.1.0D-10.AND.IETYP.EQ.1)
+     &    CALL TRAEL(ELAST,TE,4,4,4,ELAST)
+        END IF
+      END IF
+C
+CE      ...   ( CREEP STRAIN ), ( BACK STRESS )
+C
+   50 CALL INDEF2(DDEFC,ECR,SHATC,GAMDT)
+      DO 51 I=1,4
+        DEFC(I) = DEFCT(I)+DDEFC(I)
+        TAUD(I) = SHATC(I)
+   51   IF (IPL1.EQ.1) DEFP(I) = DEFPT(I)+DDEFP(I)
+C
+      IF (IMIXC.EQ.1) THEN
+        CALL ABACK2(ALFC,ALFCT,DDEFC,CHCM,CHCV)
+        DO 160 I=1,4
+  160     TAUD(I) = TAUD(I)+ALFC(I)
+      END IF
+      IF (IMIX.EQ.1.AND.IPL1.EQ.1) CALL ABACK2(ALFP,ALFPT,DDEFP,CHPM,
+     &                                         CHPV)
+C
+CE   5)    CALCULATE STRESS
+C
+  500 CONTINUE
+      IF (IPL1.NE.1) THEN
+        TEQ = TEQE
+        CALL JEDNA1(DEFP,DEFPT,4)
+        DEFQP=DEFQPT
+      END IF
+      TAUM=CM(1)*(DEFL(1)-DEFP(1)-DEFC(1)-ETHERM(1))+
+     &     CM(2)*(DEFL(2)-DEFP(2)-DEFC(2)-ETHERM(2))+
+     &     CM(3)*(DEFL(4)-DEFP(4)-DEFC(4)-ETHERM(4))
+      TAUL(1)=TAUD(1)+TAUM
+      TAUL(2)=TAUD(2)+TAUM
+      TAUL(4)=TAUD(4)+TAUM
+      IF(IETYP.EQ.0.OR.IETYP.EQ.3) TAUL(4)=0.D0
+      TAUL(3)=TAUD(3)
+      DEFP(3)=2.*DEFP(3)
+      DEFC(3)=2.*DEFC(3)
+C
+CE     THE MODIFIED EFFECTIVE CREEP STRAIN (DEFQC)
+C
+      IF (KBROJ.EQ.0) THEN
+        IF (LPU.NE.-1) THEN
+          DO 410 I=1,4
+            OPLUS(I)=OPLUT(I)
+  410       OMINS(I)=OMINT(I)
+          CALL ORNL2(TAU,DEFC,DEFQC,OPLUS,OMINS,IOR1)
+          ORI1=IOR1
+        END IF
+      END IF
+C
+C     CEPC BY PERTURBATION METHOD
+C
+      IF (IPERT.EQ.1) THEN
+        IF (KBROJ.NE.5) THEN
+          KBROJ=KBROJ+1
+          IF (KBROJ.EQ.1) THEN
+            DEFQPS = DEFQP
+            DEFQCS = DEFQC
+            A2CS   = A2C
+            PTAUS  = PTAU
+            CCFS   = CCF
+            TEQS   = TEQ
+            TECS   = TEC
+            DO 71 I=1,4
+              DEFLS(I) = DEFL(I)
+              DEFPS(I) = DEFP(I)
+              ALFPS(I) = ALFP(I)
+              DEFCS(I) = DEFC(I)
+              ALFCS(I) = ALFC(I)
+   71         TAUS(I)  = TAUL(I)
+            DD=1.D-7
+            IF (DEFL(KBROJ).LT.0.D0) DD=-DD
+            DEFL(KBROJ)=DEFL(KBROJ)+DD
+          ELSE
+            DO 72 I=1,4
+              DEFL(I)=DEFLS(I)
+   72         PEP(I,KBROJ-1)=(TAUL(I)-TAUS(I))/DD
+            DD=1.D-7
+            IF (DEFL(KBROJ).LT.0.D0) DD=-DD
+            IF (KBROJ.NE.5) DEFL(KBROJ)=DEFL(KBROJ)+DD
+          END IF
+          GO TO 800
+        END IF
+        DO 77 I=1,4
+        DO 77 J=I,4
+          PEP(I,J)=.5*(PEP(I,J)+PEP(J,I))
+   77     PEP(J,I)=PEP(I,J)
+        DO 78 I=1,4
+        DO 78 J=1,4
+   78     ELAST(I,J)=PEP(I,J)
+C
+CS.... TRANSFORMACIJA MATRICE  ELAST()
+CE     TRANSFORM ELAST MATRIX
+C
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.NE.1)
+     &  CALL TRAEL(ELAST,TE,4,3,3,ELAST)
+        IF(DABS(BETA).GT.1.0D-10.AND.IETYP.EQ.1)
+     &  CALL TRAEL(ELAST,TE,4,4,4,ELAST)
+C
+        DEFQP = DEFQPS
+        DEFQC = DEFQCS
+        A2C   = A2CS
+        PTAU  = PTAUS
+        CCF   = CCFS
+        TEQ   = TEQS
+        TEC   = TECS
+        DO 79 I=1,4
+          DEFL(I) = DEFLS(I)
+          DEFP(I) = DEFPS(I)
+          ALFP(I) = ALFPS(I)
+          DEFC(I) = DEFCS(I)
+          ALFC(I) = ALFCS(I)
+   79     TAUL(I) = TAUS(I)
+      END IF
+C
+C... TRANSFORM STRESS INTO GLOBAL AXES DIRECTION
+C
+      IF(DABS(BETA).GT.1.0D-10) THEN
+         CALL CLEAR(TAU,4)
+         CALL MNOZI2(TAU,TE,TAUL,4,4)
+      ELSE
+         CALL JEDNA1(TAU,TAUL,4)
+      ENDIF
+C
+CE  UPDATE FROM PREVIOUS STEP
+C
+  700 IF(IETYP.EQ.0.OR.IETYP.EQ.3)THEN
+        DEFL(4)=-VZX/EZ*TAUL(1)-VYZ/EY*TAUL(2)+DEFP(4)+DEFC(4)+ETHERM(4)
+      ELSE
+        DEFL(4)=0.D0
+      ENDIF
+      DO 290 I=1,4
+      DEF1(I)=DEFL(I)
+  290 TAU1(I)=TAU(I)
+      RETURN
+C-----------------------------------------------------------------------
+ 2000 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TI219')
+ 2001 FORMAT( ' ELEMENT =',I6,'  IR =',I2,'  IS =',I2,'  IT =',I2)
+ 2010 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TI219 ',
+     &        '( PSEUDO-TIME )')
+ 2015 FORMAT(/' DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TI219 ',
+     &        '( RADIJUS POVRSI TECENJA )')
+C-----------------------------------------------------------------------
+ 6000 FORMAT(/' MAXIMUM NUMBER OF BISECTION IS REACHED IN TI219')
+ 6010 FORMAT(/' MAXIMUM NUMBER OF BISECTION IS REACHED IN TI219 ',
+     &        '( PSEUDO-TIME )')
+ 6015 FORMAT(/' MAXIMUM NUMBER OF BISECTION IS REACHED IN TI219 ',
+     &        '( THE RADIUS OF YIELD SURFACE )')
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+      SUBROUTINE PEL219(FUN,CE,CYQ,ANQ,Y0,CY,AN,AN1,CPE,CM,EM,EMC,
+     &                  TGT,MATE,NTFUN,TREF)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C     EVALUATE MATERIAL CONSTANTS
+C
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /SRPSKI/ ISRPS
+      DIMENSION FUN(4,MATE*18,*),TREF(*),NTFUN(*),FC(6)
+      DIMENSION CE(4,*),CPE(3,*),CM(*)
+      DIMENSION Y0(*),CY(*),AN(*),AN1(*)
+C
+      D13 =1.D0/3.
+      ONE =1.D0
+      DVA =2.D0
+      ZER =0.D0
+C
+      MAT18=(MAT-1)*18
+      MATE18=MATE*18
+      DO 60 J=1,18
+        NFE=MAT18+J
+        CALL BTAB(FUN,NTFUN,NFE,MATE18,TGT,NL,IND,4)
+        IF (IND.EQ.2) GO TO 300
+        IF (IND.EQ.1) THEN
+          EVA=FUN(2,NFE,1)
+        ELSE
+          AMU=TGT-FUN(1,NFE,NL)
+          DEN=FUN(1,NFE,NL+1)-FUN(1,NFE,NL)
+          EVA=((FUN(2,NFE,NL+1)-FUN(2,NFE,NL))/DEN)*AMU+FUN(2,NFE,NL)
+        END IF
+        IF (J.LE.12) THEN
+          GO TO (1,2,3,4,5,6,7,8,9,10,11,12) J
+C
+    1     EX      = EVA
+          GO TO 60
+    2     EY      = EVA
+          GO TO 60
+    3     EZ      = EVA
+          GO TO 60
+C
+    4     VXY     = EVA
+          GO TO 60
+    5     VYZ     = EVA
+          GO TO 60
+    6     VZX     = EVA
+          GO TO 60
+C
+    7     GXY     = EVA
+          GO TO 60
+    8     GYZ     = EVA
+          GO TO 60
+    9     GZX     = EVA
+          GO TO 60
+C
+   10     ALFA(1) = EVA
+          GO TO 60
+   11     ALFA(2) = EVA
+          GO TO 60
+   12     ALFA(3) = EVA
+          GO TO 60
+C
+        ELSE
+          K=J-12
+          Y0(K)   = EVA
+          IF (IND.EQ.1) THEN
+            CY(K) = FUN(3,NFE,1)
+            AN(K) = FUN(4,NFE,1)
+          ELSE
+            CY(K) = ((FUN(3,NFE,NL+1)-FUN(3,NFE,NL))/DEN)*AMU+
+     &              FUN(3,NFE,NL)
+            AN(K) = ((FUN(4,NFE,NL+1)-FUN(4,NFE,NL))/DEN)*AMU+
+     &              FUN(4,NFE,NL)
+          END IF
+          AN1(K) = AN(K)-ONE
+        END IF
+   60 CONTINUE
+      TEMP0 = TREF(MAT)
+      EM    = FUN(3,MAT18+1,1)
+      IF (NMODM.EQ.19) EMC   = FUN(4,MAT18+1,1)
+C
+C... CHECK MATERIAL CONSTANTS
+C
+      FC(1) = EX
+      FC(2) = EY
+      FC(3) = EZ
+      FC(4) = VXY
+      FC(5) = VYZ
+      FC(6) = VZX
+      CALL ANICHK(FC,IZLAZ,ISRPS)
+C
+      CYQ   = CY(1)
+      ANQ   = AN(1)
+C
+      CALL CLEAR(CE,16)
+C
+C     MATRICA CE
+C
+      POM=(ONE-DVA*VXY*VYZ*VZX-EX/EZ*VZX*VZX-EY/EX*VXY*VXY
+     1-EZ/EY*VYZ*VYZ)/(EX*EY*EZ)
+      CE(1,1)=(ONE/EZ-VYZ*VYZ/EY)/(EY*POM)
+      CE(2,2)=(ONE/EX-VZX*VZX/EZ)/(EZ*POM)
+      CE(4,4)=(ONE/EY-VXY*VXY/EX)/(EX*POM)
+      CE(1,2)=(VZX*VYZ/EY+VXY/EX)/(EZ*POM)
+      CE(1,4)=(VXY*VYZ/EX+VZX/EZ)/(EY*POM)
+      CE(2,4)=(VXY*VZX/EZ+VYZ/EY)/(EX*POM)
+      CE(3,3)=GXY
+C
+C  PLANE STRESS
+C
+      IF(IETYP.EQ.0.OR.IETYP.EQ.3)THEN
+        CE(1,1)=CE(1,1)-CE(1,4)*CE(1,4)/CE(4,4)
+        CE(1,2)=CE(1,2)-CE(2,4)*CE(1,4)/CE(4,4)
+        CE(2,2)=CE(2,2)-CE(2,4)*CE(2,4)/CE(4,4)
+        CE(1,4)=ZER
+        CE(2,4)=ZER
+        CE(4,4)=ZER
+      ENDIF
+      DO 50 I=1,4
+      DO 50 J=I,4
+   50 CE(J,I)=CE(I,J)
+C
+C...   VECTOR   CM
+C
+      CM(1)=D13*(CE(1,1)+CE(1,2)+CE(1,4))
+      CM(2)=D13*(CE(1,2)+CE(2,2)+CE(2,4))
+      CM(3)=D13*(CE(1,4)+CE(2,4)+CE(4,4))
+C
+C...   MATRIX  C'E
+C
+      DO 61 I=1,2
+        DO 61 J=1,2
+   61       CPE(I,J)=CE(I,J)-CM(J)
+      CPE(1,3)=CE(1,4)-CM(3)
+      CPE(2,3)=CE(2,4)-CM(3)
+      CPE(3,3)=CE(4,4)-CM(3)
+      CPE(3,1)=CE(4,1)-CM(1)
+      CPE(3,2)=CE(4,2)-CM(2)
+      RETURN
+  300 CONTINUE
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2005) NFE,TGT
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6005) NFE,TGT
+      STOP
+C-----------------------------------------------------------------------
+ 2005 FORMAT(///' ARGUMENT VAN OPSEGA ZADATE KRIVE U PEL219'/
+     1' TEMPERATURSKA FUNKCIJA BROJ =',I5/
+     2' ARGUMENT TEMPERATURA =',1PD12.4)
+C-----------------------------------------------------------------------
+ 6005 FORMAT(///' ARGUMENT IS OUT OF RANGE IN PEL219'/
+     1' TEMPERATURE FUNCTION  =',I5/
+     2' ARGUMENT TEMPERATURE  =',1PD12.4)
+C-----------------------------------------------------------------------
+      END
+C======================================================================
+      SUBROUTINE CEC2O(SHATC,ECR,CE,CPE,CM,GBC,CEDC,CXXC,CYYC,CXYC,CYXC,
+     &                 DG,DXXC,DYYC,GAMAC,GAMDT,A2C,TEC,CHCM,CHCV)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE CEC ( ELAST )
+CE     ELASTO-CREEP  CEC MATRIX
+C
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      DIMENSION ECR(*),CE(4,*),CPE(3,*),SHATC(*),CM(*),GBC(*)
+      DIMENSION T(4),DDG(4),XEN(4,4),CP(4,4),CHCM(3,*),CHCV(*)
+C
+      ZERO  =0.D0
+      ONE   =1.D0
+      DVA   =2.D0
+      PO    =0.5D0
+      DVT   =DVA/3.
+C
+      CALL CLEAR(ELAST,36)
+C
+      DS12 = SHATC(1) - SHATC(2)
+      DS13 = SHATC(1) - SHATC(4)
+      DS23 = SHATC(2) - SHATC(4)
+      AXX = ECR(1)*DS12 + DVA*ECR(2)*DS13 + ECR(3)*DS23
+      AYY = DVA*ECR(3)*DS23 - ECR(1)*DS12 + ECR(2)*DS13
+      P11 = (CPE(1,1) + GAMDT*(CYYC*CPE(1,1) + CXYC*CPE(2,1)))/DG
+      P12 = (CPE(1,2) + GAMDT*(CYYC*CPE(1,2) + CXYC*CPE(2,2)))/DG
+      P14 = (CPE(1,3) + GAMDT*(CYYC*CPE(1,3) + CXYC*CPE(2,3)))/DG
+      P21 = (CPE(2,1) + GAMDT*(CXXC*CPE(2,1) + CYXC*CPE(1,1)))/DG
+      P22 = (CPE(2,2) + GAMDT*(CXXC*CPE(2,2) + CYXC*CPE(1,2)))/DG
+      P24 = (CPE(2,3) + GAMDT*(CXXC*CPE(2,3) + CYXC*CPE(1,3)))/DG
+      P41 = -P11-P21
+      P42 = -P12-P22
+      P44 = -P14-P24
+      DGG = DT*(CXXC + CYYC + DVA*GAMDT*CEDC)
+      Q1 = (DXXC*DT - DGG*SHATC(1))/DG
+      Q2 = (DYYC*DT - DGG*SHATC(2))/DG
+      Q4 = -Q1-Q2
+C
+      R3 = DVA*CE(3,3)/GBC(1)
+      T3 = SHATC(3)*(GBC(1)-ONE)/GAMAC/GBC(1)
+C
+      W1 = AXX*P11 + AYY*P21
+      W2 = AXX*P12 + AYY*P22
+      W3 = DVA*ECR(4)*SHATC(3)*R3
+      W4 = AXX*P14 + AYY*P24
+C
+      W0 = A2C*(AXX*Q1 + AYY*Q2 - DVA*ECR(4)*SHATC(3)*T3) - DVT*TEC
+      DUM  =  -A2C/W0
+      DDG(1) = DUM*W1
+      DDG(2) = DUM*W2
+      DDG(3) = DUM*W3
+      DDG(4) = DUM*W4
+C
+      ELAST(1,1) = P11 + Q1*DDG(1)
+      ELAST(1,2) = P12 + Q1*DDG(2)
+      ELAST(1,3) =       Q1*DDG(3)
+      ELAST(1,4) = P14 + Q1*DDG(4)
+      ELAST(2,1) = P21 + Q2*DDG(1)
+      ELAST(2,2) = P22 + Q2*DDG(2)
+      ELAST(2,3) =       Q2*DDG(3)
+      ELAST(2,4) = P24 + Q2*DDG(4)
+      ELAST(3,1) =     - T3*DDG(1)
+      ELAST(3,2) =     - T3*DDG(2)
+      ELAST(3,3) = R3  - T3*DDG(3)
+      ELAST(3,4) =     - T3*DDG(4)
+      ELAST(4,1) = P41 + Q4*DDG(1)
+      ELAST(4,2) = P42 + Q4*DDG(2)
+      ELAST(4,3) =       Q4*DDG(3)
+      ELAST(4,4) = P44 + Q4*DDG(4)
+C
+      IF(IETYP.NE.0.AND.IETYP.NE.3)THEN
+        AXX =  (ECR(1)+ECR(2))*CM(1)-ECR(1)*CM(2)-ECR(2)*CM(3)
+        AYY = -ECR(1)*CM(1)+(ECR(1)+ECR(3))*CM(2)-ECR(3)*CM(3)
+        AZZ = -ECR(2)*CM(1)-ECR(3)*CM(2)+(ECR(2)+ECR(3))*CM(3)
+      ELSE
+        AXX = (ECR(1)+DVA*ECR(2))*CM(1)-(ECR(1)-ECR(3))*CM(2)
+        AYY = (ECR(2)-ECR(1))*CM(1)+(ECR(1)+DVA*ECR(3))*CM(2)
+        AZZ = 0.D0
+      ENDIF
+      DUM = AXX*SHATC(1)+AYY*SHATC(2)+AZZ*SHATC(4)
+      PM1 = AXX*ELAST(1,1) + AYY*ELAST(2,1) + AZZ*ELAST(4,1)
+      PM2 = AXX*ELAST(1,2) + AYY*ELAST(2,2) + AZZ*ELAST(4,2)
+      PM3 = AXX*ELAST(1,3) + AYY*ELAST(2,3) + AZZ*ELAST(4,3)
+      PM4 = AXX*ELAST(1,4) + AYY*ELAST(2,4) + AZZ*ELAST(4,4)
+      QM1 = DUM*DT*DDG(1)
+      QM2 = DUM*DT*DDG(2)
+      QM3 = DUM*DT*DDG(3)
+      QM4 = DUM*DT*DDG(4)
+C
+      CM1 = CM(1) - GAMDT*PM1 - QM1
+      CM2 = CM(2) - GAMDT*PM2 - QM2
+      CM3 =       - GAMDT*PM3 - QM3
+      CM4 = CM(3) - GAMDT*PM4 - QM4
+C
+      CALL CLEAR(XEN,16)
+      XEN(1,1)= CHCM(1,1)*(ECR(1)+ECR(2))-CHCM(1,2)*ECR(1)-
+     &          CHCM(1,3)*ECR(2)
+      XEN(1,2)=-CHCM(1,1)*ECR(1)+CHCM(1,2)*(ECR(1)+ECR(3))-
+     &          CHCM(1,3)*ECR(3)
+      XEN(1,4)=-CHCM(1,1)*ECR(2)-CHCM(1,2)*ECR(3)+CHCM(1,3)*
+     &         (ECR(2)+ECR(3))
+      XEN(2,1)= CHCM(2,1)*(ECR(1)+ECR(2))-CHCM(2,2)*ECR(1)-
+     &          CHCM(2,3)*ECR(2)
+      XEN(2,2)=-CHCM(2,1)*ECR(1)+CHCM(2,2)*(ECR(1)+ECR(3))-
+     &          CHCM(2,3)*ECR(3)
+      XEN(2,4)=-CHCM(2,1)*ECR(2)-CHCM(2,2)*ECR(3)+CHCM(2,3)*
+     &         (ECR(2)+ECR(3))
+      XEN(4,1)= CHCM(3,1)*(ECR(1)+ECR(2))-CHCM(3,2)*ECR(1)-
+     &          CHCM(3,3)*ECR(2)
+      XEN(4,2)=-CHCM(3,1)*ECR(1)+CHCM(3,2)*(ECR(1)+ECR(3))-
+     &          CHCM(3,3)*ECR(3)
+      XEN(4,4)=-CHCM(3,1)*ECR(2)-CHCM(3,2)*ECR(3)+CHCM(3,3)*
+     &         (ECR(2)+ECR(3))
+      XEN(3,3)= CHCV(1)*ECR(4)
+C
+C... (A)  ,  T  DOBIJA NOVE VREDNOSTI
+C
+      T(1)=XEN(1,1)*SHATC(1)+XEN(1,2)*SHATC(2)+XEN(1,4)*SHATC(4)
+      T(2)=XEN(2,1)*SHATC(1)+XEN(2,2)*SHATC(2)+XEN(2,4)*SHATC(4)
+      T(3)=XEN(3,3)*SHATC(3)
+      T(4)=XEN(4,1)*SHATC(1)+XEN(4,2)*SHATC(2)+XEN(4,4)*SHATC(4)
+C... (B)
+      DO 78 I=1,4
+      DO 77 J=1,4
+   77 XEN(I,J)=GAMDT*XEN(I,J)
+      XEN(I,I)=XEN(I,I)+ONE
+   78 CONTINUE
+C
+      DO 85 I=1,4
+      DO 85 J=I,4
+       DUM=ZERO
+        DO 83 K=1,4
+   83   DUM=DUM+XEN(I,K)*ELAST(K,J)
+       CP(I,J)=DUM+T(I)*DT*DDG(J)
+   85 CONTINUE
+      ELAST(1,1) = CP(1,1) + CM1
+      ELAST(1,2) = CP(1,2) + CM2
+      ELAST(1,3) = PO*(CP(1,3) + CM3)
+      ELAST(1,4) = CP(1,4) + CM4
+      ELAST(2,2) = CP(2,2) + CM2
+      ELAST(2,3) = PO*(CP(2,3) + CM3)
+      ELAST(2,4) = CP(2,4) + CM4
+      ELAST(3,3) = PO*CP(3,3)
+      ELAST(3,4) = PO*(CP(3,4) + CM4)
+      ELAST(4,4) = CP(4,4) + CM4
+      IF (IETYP.EQ.0.OR.IETYP.EQ.3) THEN
+        DO 86 I=1,4
+   86     ELAST(I,4)=0.D0
+      END IF
+C
+      DO 90 I=1,4
+      DO 90 J=I,4
+        ELAST(J,I)=ELAST(I,J)
+   90 CONTINUE
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE CEP2O(SHATP,EPL,CE,CPE,CM,GBP,CEDP,CXXP,CYYP,CXYP,CYXP,
+     &                 DL,DXXP,DYYP,DLAM,TAUY,CHPM,CHPV,EP,AN1,DEFQP)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE CEP ( ELAST )
+CE     ELASTO-PLASTIC  CEP MATRIX
+C
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      DIMENSION EPL(*),CE(4,*),CPE(3,*),SHATP(*),CM(*),GBP(*)
+      DIMENSION T(4),DDL(4),XEN(4,4),CP(4,4),CHPM(3,*),CHPV(*),AN1(*),
+     &          EHPM(3,3),EHPV(1)
+C
+      KDIM  =4
+      ZERO  =0.D0
+      ONE   =1.D0
+      DVA   =2.D0
+      PO    =0.5D0
+      DVT   =DVA/3.
+C
+      ELP = (1.5 - EP*DLAM)/TAUY
+      CALL CLEAR(ELAST,36)
+C
+      CALL EHATP2(CHPM,CHPV,EHPM,EHPV,EPL,DEFQP,AN1,
+     &            KDIM,C11P,C12P,C21P,C22P)
+      DS12 = SHATP(1) - SHATP(2)
+      DS13 = SHATP(1) - SHATP(4)
+      DS23 = SHATP(2) - SHATP(4)
+      AXX = EPL(1)*DS12 + DVA*EPL(2)*DS13 + EPL(3)*DS23
+      AYY = DVA*EPL(3)*DS23 - EPL(1)*DS12 + EPL(2)*DS13
+      P11 = (CPE(1,1) + DLAM*(CYYP*CPE(1,1) + CXYP*CPE(2,1)))/DL
+      P12 = (CPE(1,2) + DLAM*(CYYP*CPE(1,2) + CXYP*CPE(2,2)))/DL
+      P14 = (CPE(1,3) + DLAM*(CYYP*CPE(1,3) + CXYP*CPE(2,3)))/DL
+      P21 = (CPE(2,1) + DLAM*(CXXP*CPE(2,1) + CYXP*CPE(1,1)))/DL
+      P22 = (CPE(2,2) + DLAM*(CXXP*CPE(2,2) + CYXP*CPE(1,2)))/DL
+      P24 = (CPE(2,3) + DLAM*(CXXP*CPE(2,3) + CYXP*CPE(1,3)))/DL
+      P41 = -P11-P21
+      P42 = -P12-P22
+      P44 = -P14-P24
+C
+      R3 = DVA*CE(3,3)/GBP(1)
+      T3 = SHATP(3)*(ELP*(CE(3,3)*DVA+CHPV(1))+DLAM*EHPV(1))
+     &    *EPL(4)/GBP(1)
+C
+      W1 = AXX*P11 + AYY*P21
+      W2 = AXX*P12 + AYY*P22
+      W3 = DVA*EPL(4)*SHATP(3)*R3
+      W4 = AXX*P14 + AYY*P24
+C
+      D11P = C22P*SHATP(1)+C12P*SHATP(2)
+      D22P = C21P*SHATP(1)+C11P*SHATP(2)
+      DLL = CXXP + CYYP + DVA*DLAM*CEDP
+      DLP = DLAM*(C11P + C22P) + DLAM*DLAM*(C11P*CYYP+CXXP*C22P
+     &     -C12P*CYXP-CXYP*C21P)
+      Q1 = (ELP*DXXP+DLAM*D11P-(ELP*DLL+DLP)*SHATP(1))/DL
+      Q2 = (ELP*DYYP+DLAM*D22P-(ELP*DLL+DLP)*SHATP(2))/DL
+      Q4 = -Q1-Q2
+      W0 = AXX*Q1 + AYY*Q2 - DVA*EPL(4)*SHATP(3)*T3 - DVT*EP*TAUY
+      DUM    =-ONE/W0
+      DDL(1) = DUM*W1
+      DDL(2) = DUM*W2
+      DDL(3) = DUM*W3
+      DDL(4) = DUM*W4
+C
+      ELAST(1,1) = P11 + Q1*DDL(1)
+      ELAST(1,2) = P12 + Q1*DDL(2)
+      ELAST(1,3) =       Q1*DDL(3)
+      ELAST(1,4) = P14 + Q1*DDL(4)
+      ELAST(2,1) = P21 + Q2*DDL(1)
+      ELAST(2,2) = P22 + Q2*DDL(2)
+      ELAST(2,3) =       Q2*DDL(3)
+      ELAST(2,4) = P24 + Q2*DDL(4)
+      ELAST(3,1) =     - T3*DDL(1)
+      ELAST(3,2) =     - T3*DDL(2)
+      ELAST(3,3) = R3  - T3*DDL(3)
+      ELAST(3,4) =     - T3*DDL(4)
+      ELAST(4,1) = P41 + Q4*DDL(1)
+      ELAST(4,2) = P42 + Q4*DDL(2)
+      ELAST(4,3) =       Q4*DDL(3)
+      ELAST(4,4) = P44 + Q4*DDL(4)
+C
+      IF(IETYP.NE.0.AND.IETYP.NE.3)THEN
+        AXX =  (EPL(1)+EPL(2))*CM(1)-EPL(1)*CM(2)-EPL(2)*CM(3)
+        AYY = -EPL(1)*CM(1)+(EPL(1)+EPL(3))*CM(2)-EPL(3)*CM(3)
+        AZZ = -EPL(2)*CM(1)-EPL(3)*CM(2)+(EPL(2)+EPL(3))*CM(3)
+      ELSE
+        AXX = (EPL(1)+DVA*EPL(2))*CM(1)-(EPL(1)-EPL(3))*CM(2)
+        AYY = (EPL(2)-EPL(1))*CM(1)+(EPL(1)+DVA*EPL(3))*CM(2)
+        AZZ = 0.D0
+      ENDIF
+      DUM  = AXX*SHATP(1)+AYY*SHATP(2)+AZZ*SHATP(4)
+      PM1 = AXX*ELAST(1,1) + AYY*ELAST(2,1) + AZZ*ELAST(4,1)
+      PM2 = AXX*ELAST(1,2) + AYY*ELAST(2,2) + AZZ*ELAST(4,2)
+      PM3 = AXX*ELAST(1,3) + AYY*ELAST(2,3) + AZZ*ELAST(4,3)
+      PM4 = AXX*ELAST(1,4) + AYY*ELAST(2,4) + AZZ*ELAST(4,4)
+      QM1 = DUM*DDL(1)*ELP
+      QM2 = DUM*DDL(2)*ELP
+      QM3 = DUM*DDL(3)*ELP
+      QM4 = DUM*DDL(4)*ELP
+C
+      CM1 = CM(1) - DLAM*PM1 - QM1
+      CM2 = CM(2) - DLAM*PM2 - QM2
+      CM3 =       - DLAM*PM3 - QM3
+      CM4 = CM(3) - DLAM*PM4 - QM4
+C
+      CALL CLEAR(XEN,16)
+      XEN(1,1)= CHPM(1,1)*(EPL(1)+EPL(2))-CHPM(1,2)*EPL(1)-
+     &          CHPM(1,3)*EPL(2)
+      XEN(1,2)=-CHPM(1,1)*EPL(1)+CHPM(1,2)*(EPL(1)+EPL(3))-
+     &          CHPM(1,3)*EPL(3)
+      XEN(1,4)=-CHPM(1,1)*EPL(2)-CHPM(1,2)*EPL(3)+CHPM(1,3)*
+     &         (EPL(2)+EPL(3))
+      XEN(2,1)= CHPM(2,1)*(EPL(1)+EPL(2))-CHPM(2,2)*EPL(1)-
+     &          CHPM(2,3)*EPL(2)
+      XEN(2,2)=-CHPM(2,1)*EPL(1)+CHPM(2,2)*(EPL(1)+EPL(3))-
+     &          CHPM(2,3)*EPL(3)
+      XEN(2,4)=-CHPM(2,1)*EPL(2)-CHPM(2,2)*EPL(3)+CHPM(2,3)*
+     &         (EPL(2)+EPL(3))
+      XEN(4,1)= CHPM(3,1)*(EPL(1)+EPL(2))-CHPM(3,2)*EPL(1)-
+     &          CHPM(3,3)*EPL(2)
+      XEN(4,2)=-CHPM(3,1)*EPL(1)+CHPM(3,2)*(EPL(1)+EPL(3))-
+     &          CHPM(3,3)*EPL(3)
+      XEN(4,4)=-CHPM(3,1)*EPL(2)-CHPM(3,2)*EPL(3)+CHPM(3,3)*
+     &         (EPL(2)+EPL(3))
+      XEN(3,3)= CHPV(1)*EPL(4)
+C
+      CALL CLEAR(CP,16)
+      CP(1,1)= (ELP*CHPM(1,1)+DLAM*EHPM(1,1))*(EPL(1)+EPL(2))-
+     &         (ELP*CHPM(1,2)+DLAM*EHPM(1,2))*EPL(1)-
+     &         (ELP*CHPM(1,3)+DLAM*EHPM(1,3))*EPL(2)
+      CP(1,2)=-(ELP*CHPM(1,1)+DLAM*EHPM(1,1))*EPL(1)+
+     &         (ELP*CHPM(1,2)+DLAM*EHPM(1,2))*(EPL(1)+EPL(3))-
+     &         (ELP*CHPM(1,3)+DLAM*EHPM(1,3))*EPL(3)
+      CP(1,4)=-(ELP*CHPM(1,1)+DLAM*EHPM(1,1))*EPL(2)-
+     &         (ELP*CHPM(1,2)+DLAM*EHPM(1,2))*EPL(3)+
+     &         (ELP*CHPM(1,3)+DLAM*EHPM(1,3))*(EPL(2)+EPL(3))
+      CP(2,1)= (ELP*CHPM(2,1)+DLAM*EHPM(2,1))*(EPL(1)+EPL(2))-
+     &         (ELP*CHPM(2,2)+DLAM*EHPM(2,2))*EPL(1)-
+     &         (ELP*CHPM(2,3)+DLAM*EHPM(2,3))*EPL(2)
+      CP(2,2)=-(ELP*CHPM(2,1)+DLAM*EHPM(2,1))*EPL(1)+
+     &         (ELP*CHPM(2,2)+DLAM*EHPM(2,2))*(EPL(1)+EPL(3))-
+     &         (ELP*CHPM(2,3)+DLAM*EHPM(2,3))*EPL(3)
+      CP(2,4)=-(ELP*CHPM(2,1)+DLAM*EHPM(2,1))*EPL(2)-
+     &         (ELP*CHPM(2,2)+DLAM*EHPM(2,2))*EPL(3)+
+     &         (ELP*CHPM(2,3)+DLAM*EHPM(2,3))*(EPL(2)+EPL(3))
+      CP(4,1)= (ELP*CHPM(3,1)+DLAM*EHPM(3,1))*(EPL(1)+EPL(2))-
+     &         (ELP*CHPM(3,2)+DLAM*EHPM(3,2))*EPL(1)-
+     &         (ELP*CHPM(3,3)+DLAM*EHPM(3,3))*EPL(2)
+      CP(4,2)=-(ELP*CHPM(3,1)+DLAM*EHPM(3,1))*EPL(1)+
+     &         (ELP*CHPM(3,2)+DLAM*EHPM(3,2))*(EPL(1)+EPL(3))-
+     &         (ELP*CHPM(3,3)+DLAM*EHPM(3,3))*EPL(3)
+      CP(4,4)=-(ELP*CHPM(3,1)+DLAM*EHPM(3,1))*EPL(2)-
+     &         (ELP*CHPM(3,2)+DLAM*EHPM(3,2))*EPL(3)+
+     &         (ELP*CHPM(3,3)+DLAM*EHPM(3,3))*(EPL(2)+EPL(3))
+      CP(3,3)= (ELP*CHPV(1)+DLAM*EHPV(1))*EPL(4)
+C
+C... (A)  ,  T  DOBIJA NOVE VREDNOSTI
+C
+      T(1)=CP(1,1)*SHATP(1)+CP(1,2)*SHATP(2)+CP(1,4)*SHATP(4)
+      T(2)=CP(2,1)*SHATP(1)+CP(2,2)*SHATP(2)+CP(2,4)*SHATP(4)
+      T(4)=CP(4,1)*SHATP(1)+CP(4,2)*SHATP(2)+CP(4,4)*SHATP(4)
+      T(3)=CP(3,3)*SHATP(3)
+      CALL CLEAR(CP,16)
+C... (B)
+      DO 78 I=1,4
+      DO 77 J=1,4
+   77 XEN(I,J)=DLAM*XEN(I,J)
+      XEN(I,I)=XEN(I,I)+ONE
+   78 CONTINUE
+C
+      DO 85 I=1,4
+      DO 85 J=I,4
+       DUM=ZERO
+        DO 83 K=1,4
+   83   DUM=DUM+XEN(I,K)*ELAST(K,J)
+       CP(I,J)=DUM+T(I)*DDL(J)
+   85 CONTINUE
+      ELAST(1,1) = CP(1,1) + CM1
+      ELAST(1,2) = CP(1,2) + CM2
+      ELAST(1,3) = PO*(CP(1,3) + CM3)
+      ELAST(1,4) = CP(1,4) + CM4
+      ELAST(2,2) = CP(2,2) + CM2
+      ELAST(2,3) = PO*(CP(2,3) + CM3)
+      ELAST(2,4) = CP(2,4) + CM4
+      ELAST(3,3) = PO*CP(3,3)
+      ELAST(3,4) = PO*(CP(3,4) + CM4)
+      ELAST(4,4) = CP(4,4) + CM4
+      IF (IETYP.EQ.0.OR.IETYP.EQ.3) THEN
+        DO 86 I=1,4
+   86     ELAST(I,4)=0.D0
+      END IF
+C
+      DO 90 I=1,4
+      DO 90 J=I,4
+        ELAST(J,I)=ELAST(I,J)
+   90 CONTINUE
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE EHATP2(CHPM,CHPV,EHPM,EHPV,EPL,DEFQP,AN1,
+     &                  KDIM,C11P,C12P,C21P,C22P)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     IZVOD MATRICE CHATP
+C
+      DIMENSION CHPM(3,*),CHPV(*),EHPM(3,*),EHPV(*),EPL(*),XMX(4)
+      DIMENSION AN1(*)
+      DVA=2.D0
+      DO 10 I=1,6
+   10 XMX(I)=AN1(I)/DEFQP
+      DO 15 I=1,3
+        DO 15 J=1,3
+   15     EHPM(I,J)=XMX(J)*CHPM(I,J)
+      DO 20 I=1,KDIM-3
+   20   EHPV(I)=XMX(I+3)*CHPV(I)
+      XX1 = EPL(1)+DVA*EPL(2)
+      XX2 = EPL(1)-EPL(3)
+      XX3 = DVA*EPL(2)+EPL(3)
+      C11P =  XX1*EHPM(1,1)-XX2*EHPM(1,2)-XX3*EHPM(1,3)
+      C21P = -XX1*EHPM(2,1)+XX2*EHPM(2,2)+XX3*EHPM(2,3)
+      XX1 = EPL(1)-EPL(2)
+      XX2 = EPL(1)+DVA*EPL(3)
+      XX3 = EPL(2)+DVA*EPL(3)
+      C22P = -XX1*EHPM(2,1)+XX2*EHPM(2,2)-XX3*EHPM(2,3)
+      C12P =  XX1*EHPM(1,1)-XX2*EHPM(1,2)+XX3*EHPM(1,3)
+      RETURN
+      END

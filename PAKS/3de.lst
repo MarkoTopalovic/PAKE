@@ -1,0 +1,1202 @@
+1
+
+
+
+
+
+
+
+
+                            FINITE ELEMENT PROGRAM
+                  FOR STATIC AND DYNAMIC NONLINEAR ANALYSIS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    PPPPPPPPP         AAAA        KK      KK
+                    PPPPPPPPPP       AAAAAA       KK     KK
+                    PP      PP      AA    AA      KK    KK
+                    PP      PP     AA      AA     KK   KK
+                    PPPPPPPPPP     AA      AA     KK  KK
+                    PPPPPPPPP      AA      AA     KKKKK
+                    PP             AAAAAAAAAA     KKKKKKK
+                    PP             AAAAAAAAAA     KK    KK
+                    PP             AA      AA     KK     KK
+                    PP             AA      AA     KK      KK
+
+
+
+
+
+
+     ---------------------------  VERSION  8.00  ---------------------------
+
+
+
+
+
+
+
+
+
+
+
+                    "SVETOZAR MARKOVIC" UNIVERSITY
+                    FAKULTY OF MECHANICAL ENGINEERING
+                    SOFTWARE LABORATORY
+                    34000 KRAGUJEVAC
+                    YUGOSLAVIA
+
+
+
+
+
+
+
+
+
+
+1
+ A   C A R D   I M A G E   L I S T I N G   O F   T H E   I N P U T   D A T A
+                            C O L U M N   N U M B E R
+ CARD          1         2         3         4         5         6         7
+ NUMB 1234567890123456789012345678901234567890123456789012345678901234567890
+ ---- ----------------------------------------------------------------------
+    1 C /1/ HEADING CARD (80A1)                                             
+    2 C NASLOV                                                              
+    3   Untitled                                                            
+    4 C /2/ FORMAT FOR INPUT DATA (free format)                             
+    5 C INDFOR                                                              
+    6     2   0                                                             
+    7 C /3/ BASIC DATA FOR THE PROBLEM (5I5)                                
+    8 C NP,NGELEM,NMATM,NPER,NKRT                                           
+    9    16    1    1    1                                                  
+   10 C /4/ BASIC DATA FOR THE PROBLEM (6I2,3X,3I5)                         
+   11 C (IOPGL(I),I=1,6),NDIN,ISOPS,ICVEL                                   
+   12  0 0 0 1 1 1       1    0    1                                        
+   13 C /5/ DATA FOR POST-PROCESSING (10I5)                                 
+   14 C NULAZ,NBLPR,NBLGR,ISTKO,NCVPR,ISTEM,ISTVN,ISTSI,ISTDE,ISTNA,IDEAS   
+   15     0    1    1    0    0    0    0    0    0    0    0               
+   16 C /6/ CARD WITH DATA FOR BLOCKS (5I5)                                 
+   17 C NBL,(NPRGR(NBL,I),I=1,4)                                            
+   18     1    1    1 9000    0                                             
+   19     1    1    1 9000    0                                             
+   20 C /7/ DATA FOR RESTART (I5,10X,2I5,2F10.0)                            
+   21 C IREST,       NMODS,ICCGG,    TOLG,    ALFAG                         
+   22     0              0    0  0.000000  0.000000                         
+   23 C /8/ DATA FOR TIME STEPS (2I5,F10.0)                                 
+   24 C   I,NKDT(I),DTDT(I)    (I=1,NPER)                                   
+   25     1   12  0.280000                                                  
+   26 C /8-1/ DATA FOR DYNAMIC ANALYSIS (2I5)                               
+   27 C   IMASS,IDAMP                                                       
+   28     2                                                                 
+   29 C /8-2/ DATA FOR TIME INTEGRATION METHOD (I5,2F10.0)                  
+   30 C   MDVI,      PIP,      DIP                                          
+   31     3                                                                 
+   32 C /9/ DATA FOR EQULIBRIUM ITERATIONS (5I5,3F10.0,10X,I5)              
+   33 C METOD,MAXIT,KONVE,KONVS,KONVM,TOLE,    TOLS,     TOLM,     TOLA,NBRC
+   34     4   30    1    0    0  0.001000  0.000000  0.000000  0.000000    2
+   35 C /10/ INPUT NODAL DATA (I5,A1,6I2,2X,3F10.0,2I5)   (K=1,NP)          
+   36 C  N,CH,(ID(N,I),I=1,6),   (CORD(N,J),J=1,3),      KORC,INDS          
+   37     1  1 1 0 1 1 1   3.0000e+0 0.0000e+0 1.0000e+0    0    0          
+   38     2  1 1 1 0 0 0   3.0000e+0 0.0000e+0 0.0000e+0    0    0          
+   39     3  1 0 1 0 0 0   3.0000e+0 1.0000e+0 0.0000e+0    0    0          
+   40     4  1 0 0 1 1 1   3.0000e+0 1.0000e+0 1.0000e+0    0    0          
+   41     5  0 1 0 1 1 1   2.0000e+0 0.0000e+0 1.0000e+0    0    0          
+   42     6  0 1 1 0 0 0   2.0000e+0 0.0000e+0 0.0000e+0    0    0          
+   43     7  0 0 1 0 0 0   2.0000e+0 1.0000e+0 0.0000e+0    0    0          
+   44     8  0 0 0 1 1 1   2.0000e+0 1.0000e+0 1.0000e+0    0    0          
+   45     9  0 1 0 1 1 1   1.0000e+0 0.0000e+0 1.0000e+0    0    0          
+   46    10  0 1 1 0 0 0   1.0000e+0 0.0000e+0 0.0000e+0    0    0          
+   47    11  0 0 1 0 0 0   1.0000e+0 1.0000e+0 0.0000e+0    0    0          
+   48    12  0 0 0 1 1 1   1.0000e+0 1.0000e+0 1.0000e+0    0    0          
+   49    13  1 1 0 1 1 1   0.0000e+0 0.0000e+0 1.0000e+0    0    0          
+   50    14  1 1 1 0 0 0   0.0000e+0 0.0000e+0 0.0000e+0    0    0          
+ ---- ----------------------------------------------------------------------
+ CARD          1         2         3         4         5         6         7
+ NUMB 1234567890123456789012345678901234567890123456789012345678901234567890
+                            C O L U M N   N U M B E R
+
+
+
+1
+ A   C A R D   I M A G E   L I S T I N G   O F   T H E   I N P U T   D A T A
+                            C O L U M N   N U M B E R
+ CARD          1         2         3         4         5         6         7
+ NUMB 1234567890123456789012345678901234567890123456789012345678901234567890
+ ---- ----------------------------------------------------------------------
+   51    15  1 0 1 0 0 0   0.0000e+0 1.0000e+0 0.0000e+0    0    0          
+   52    16  1 0 0 1 1 1   0.0000e+0 1.0000e+0 1.0000e+0    0    0          
+   53               4                                                       
+   54     5    0    10.                                                     
+   55     6    0    10.                                                     
+   56     7    0    10.                                                     
+   57     8    0    10.                                                     
+   58 C /11/ DATA FOR MATERIAL MODELS (3I5)                                 
+   59 C (MODEL(I,K),I=1,3)    (K=1,NMATM)                                   
+   60     1    2   20                                                       
+   61 C /12/ DATA FOR MATERIAL (2I5,F10.0)                                  
+   62 C MOD  MAT     GUST                                                   
+   63     1    13.                                                          
+   64 C /12-1/ MATERIAL MODEL 1 (ELASTIC-ISOTROPIC)                         
+   65 C YOUNGS MODULUS (F10.0)                                              
+   66 C        E                                                            
+   67 4.0000e+00                                                            
+   68 C POISSONS RATIO (F10.0)                                              
+   69 C        V                                                            
+   70 0.0000e-01                                                            
+   71 C /12/ DATA FOR MATERIAL (2I5,F10.0)                                  
+   72 C MOD  MAT     GUST                                                   
+   73     1    21.                                                          
+   74 C /12-1/ MATERIAL MODEL 1 (ELASTIC-ISOTROPIC)                         
+   75 C YOUNGS MODULUS (F10.0)                                              
+   76 C        E                                                            
+   77 2.0000e+00                                                            
+   78 C POISSONS RATIO (F10.0)                                              
+   79 C        V                                                            
+   80 0.0000e-01                                                            
+   81 C /13/ INPUT DATA FOR ELEMENT GROUP (8I5,3F10.0)    (I=1,NGELEM)      
+   82 C NETIP,NE,IATYP,NMODM,INDBTH,INDDTH,INDKOV,ICOEF,COEF1,COEF2,   COEF3
+   83     3    3    0    1    0    0    0    0  0.000000  0.000000  0.000000
+   84 C /13-3/ DATA FOR 3/D ISOPARAMETRIC ELEMENTS                          
+   85 C Card with basic data about 3D elements (3I5,5X,F10.0,35X,I5         
+   86 C NGAUSX,NGAUSY,NGARSZ,BETA,IALFA                                     
+   87     2    2    2     0.000000                                        -1
+   88 C Card with data about the current element (^I5,10X,2F10.0)           
+   89 C NN,NMAT,IPRCO,ISNA,IPGS,KORC,BTH,DTH                                
+   90 C Card with nodal data (1 to K) of the element (8I5)                  
+   91 C (NEL(NN,I),I=1,8)                                                   
+   92     1    1    0    0    0    0            0.000000  0.000000          
+   93     9   10   11   12   13   14   15   16                              
+   94                                                                       
+   95     2    2    0    0    0    0            0.000000  0.000000          
+   96     5    6    7    8    9   10   11   12                              
+   97                                                                       
+   98     3    2    0    0    0    0            0.000000  0.000000          
+   99     1    2    3    4    5    6    7    8                              
+  100                                                                       
+ ---- ----------------------------------------------------------------------
+ CARD          1         2         3         4         5         6         7
+ NUMB 1234567890123456789012345678901234567890123456789012345678901234567890
+                            C O L U M N   N U M B E R
+
+
+
+1
+ A   C A R D   I M A G E   L I S T I N G   O F   T H E   I N P U T   D A T A
+                            C O L U M N   N U M B E R
+ CARD          1         2         3         4         5         6         7
+ NUMB 1234567890123456789012345678901234567890123456789012345678901234567890
+ ---- ----------------------------------------------------------------------
+  101 C /14/ DATA ABOUT TIME FUNCTIONS (2I5)                                
+  102 C NTABFT,MAXTFT                                                       
+  103     1  100                                                            
+  104 C a) data about function in a table form (2I5)                        
+  105 C IBR,IMAX    (IMAX.LE.MAXTFT)                                        
+  106     1    2                                                            
+  107 C b) values for argument - function (2F10.0)                          
+  108 C ((FN(I,IBR,J),I=1,2),J=1,IMAX)                                      
+  109  0.0000e+0 1.0000e+0                                                  
+  110  1.0000e+4 1.0000e+0                                                  
+  111 C /15/ GENERAL DATA ABOUT LOADS (4I5,5X,5I5)                          
+  112 C NCF,NPP2,NPP3, NPGR,    NPLJ,NTEMP,NZADP,INDZS,ICERNE               
+  113     4    0    0    0         0    0    0    0    0                    
+  114 C /15-1/ CONCENTRATED LOADS DATA (3I5,F10.0,I5,F10.0)                 
+  115 C    N   IP   NC   FAK     KORC    FPOM                               
+  116     5    1    1  2.500000    0  0.000000                              
+  117     6    1    1  2.500000    0  0.000000                              
+  118     7    1    1  2.500000    0  0.000000                              
+  119     8    1    1  2.500000    0  0.000000                              
+  120 C /16/ FINAL CARD (A4)                                                
+  121 STOP                                                                  
+ ---- ----------------------------------------------------------------------
+ CARD          1         2         3         4         5         6         7
+ NUMB 1234567890123456789012345678901234567890123456789012345678901234567890
+                            C O L U M N   N U M B E R
+
+
+ ******************* E N D   O F   I N P U T   L I S T I N G ***************
+
+
+
+1
+ CARD NUMBER    3
+
+
+
+ ****************************************************************************
+
+   Untitled                                                                  
+
+ ****************************************************************************
+
+
+
+
+
+
+ CARD NUMBER    6
+
+
+
+           FORMAT FOR INPUT DATA ......................... INDFOR =    2
+                EQ.0; INDFOR = 1
+                EQ.1; FREE FORMAT
+                EQ.2; FIXED FORMAT
+
+
+
+
+
+
+ CARD NUMBER    9
+
+
+
+      B A S I C   D A T A   F O R   T H E   P R O B L E M
+      ---------------------------------------------------
+
+
+           TOTAL NUMBER OF NODAL POINTS ................. NP =        16
+                LE.0; PROGRAM STOP
+
+
+           TOTAL NUMBER OF DIFFERENT ELEMENT GROUPS ...... NGELEM =    1
+                EQ.0; DEFAULT SET "1"
+
+
+           TOTAL NUMBER OF DIFFERENT MATERIAL MODELS ...... NMATM =    1
+                EQ.0; DEFAULT SET "1"
+
+
+           NUMBER OF PERIODS WITH CONSTANT TIME STEPS ...... NPER =    1
+                EQ.0; DEFAULT SET TO "1"
+
+
+           TOTAL NUMBER SUBSTRUCTURES ......................  JPS =    1
+                EQ.0; JPS = 1
+
+
+           TOTAL NUMBER OF RIGID BODIES .................... NKRT =    0
+                EQ.0; NO RIGID BODIES
+
+
+           DISPLACEMENT-STRESS MIXED METHOD ............... MIXED =    0
+                EQ.0; NO
+                EQ.1; YES
+
+
+           NUMBER OF CRACKS FOR J INTEGRAL ............... NCRACK =    0
+                EQ.0; NO CRACKS
+
+
+           NUMBER OF CRACKS FOR XFEM METHOD .............. NCXFEM =    0
+                EQ.0; NO CRACKS
+
+
+           NUMBER OF CRACKS FOR MESLESS (GBM) .............. IGBM =    0
+                EQ.0; NO CRACKS
+
+
+
+
+
+
+ CARD NUMBER   12
+
+
+
+           INDICATORS FOR GLOBAL CONSTRAINTS OF TRANSLATIONS AND ROTATIONS
+                EQ.0; FREE
+                EQ.1; RESTRAINED
+                      GLOBAL TRANSLATION IN X DIRECTION  IOPGL(1) =    0
+                      GLOBAL TRANSLATION IN Y DIRECTION  IOPGL(2) =    0
+                      GLOBAL TRANSLATION IN Z DIRECTION  IOPGL(3) =    0
+                      GLOBAL ROTATION AROUND X/V1 AXIS . IOPGL(4) =    1
+                      GLOBAL ROTATION AROUND Y/V2 AXIS . IOPGL(5) =    1
+                      GLOBAL ROTATION AROUND Z/VN AXIS . IOPGL(6) =    1
+
+
+           TYPE OF ANALYSIS ................................ NDIN =    1
+                EQ.0; STATICS
+                EQ.1; DYNAMICS
+
+
+           INDICATOR FOR EIGENVALUE COMPUTATIONS .......... ISOPS =    0
+                EQ.0; NO COMPUTATIONS
+                EQ.1; YES
+
+
+           INDICATOR FOR NUMERATION OF NODES AND ELEMENTS . ICVEL =    1
+                EQ.0; INCREASING
+                EQ.1; FREE
+
+
+           INDICATORS FOR GLOBAL CONSTRAINTS OF NODAL STRESSES
+                EQ.0; NO CONSTRAINTS
+                EQ.1; CONSTRAINT EXISTS
+                      NORMAL STRESS IN X DIRECTION ..... IOPGS(1) =    0
+                      NORMAL STRESS IN Y DIRECTION ..... IOPGS(2) =    0
+                      NORMAL STRESS IN Z DIRECTION ..... IOPGS(3) =    0
+                      SHEAR STRESS IN XY PLANE ......... IOPGS(4) =    0
+                      SHEAR STRESS IN YZ PLANE ......... IOPGS(5) =    0
+                      SHEAR STRESS IN ZX PLANE ......... IOPGS(6) =    0
+
+
+
+
+
+
+ CARD NUMBER   15
+
+
+
+      D A T A   F O R   P O S T - P R O C E S S I N G
+      -----------------------------------------------
+
+
+           KIND OF PRINTOUT OF THE INPUT DATA ............. NULAZ =    1
+                LT.0; NO  PRINTOUT
+                EQ.0; NULAZ = 1
+                EQ.1; CARD IMAGE, INPUT DATA READ AND GENERATED ARE PRINTED
+                EQ.2; CARD IMAGE PRINTED
+                EQ.3; INPUT DATA READ AND GENERATED ARE PRINTED
+
+
+           NUMBER OF BLOCKS FOR RESULTS PRINTOUT .......... NBLPR =    1
+                EQ.0; RESULTS ARE PRINTED IN ALL TIME STEPS
+                LT.0; NO PRINTOUT OF RESULTS
+
+
+           NUMBER BLOCKS FOR PLOTTING OF RESULTS .......... NBLGR =    1
+                EQ.0; RESULTS ARE PLOTTED IN ALL TIME STEPS
+                LT.0; NO PLOTTING OF RESULTS
+
+
+           INDICATOR FOR PRINTING OUTPUT IN SEPARATE FILE . ISTKO =    0
+                EQ.0; ALL STEPS PRINTED IN ONE FILE
+                EQ.1; RESULTS PRINTED SEPARATELY
+
+
+
+           NUMBER OF NODES FOR RESULTS PRINTOUT ........... NCVPR =    0
+                EQ.0; PRINTING AT ALL NODES
+
+
+           INDICATOR FOR PLOTTING TEMPERATURES ............ ISTEM =    0
+                EQ.-1; NO PLOTTING
+
+
+           INDICATOR FOR PLOTTING NODAL NORMAL VECTORS .... ISTVN =    0
+                EQ.-1; NO PLOTTING
+
+
+           INDICATOR FOR PLOTTING NODAL FORCES  ........... ISTSI =    0
+                EQ.-1; NO PLOTTING
+
+
+           INDICATOR FOR PRINTING STRAINS ................. ISTDE =    0
+                EQ.-1; NO PRINTING
+
+
+           INDICATOR FOR PRINTING RESULTS WITHIN ELEMENT .. ISTNA =    0
+                EQ. 0; PRINTING AT INTEGRATION POINTS
+                EQ. 1; IN ELEMENT CENTER
+                EQ. 2; MAXIMUM VALUES
+
+
+
+
+
+
+ CARD NUMBER    18
+
+
+
+      DATA FOR BLOCKS USED FOR RESULTS PRINTOUT
+      -----------------------------------------
+
+
+           BLOCK NUMBER FIRST STEP    INCREMENT    LAST STEP       INDICATOR (=0-ALL;=1-DISPLACEMENT;=2-STRESSES)
+               1            1             1           9000             0
+
+
+
+
+
+
+ CARD NUMBER    19
+
+
+
+      DATA FOR BLOCKS USED IN PREPARING RESULTS FOR GRAPHICS
+      ------------------------------------------------------
+
+
+           BLOCK NUMBER FIRST STEP    INCREMENT    LAST STEP       INDICATOR (=0-ALL;=1-DISPLACEMENTS;=2-STRESSES)
+               1            1             1           9000             0
+
+
+
+
+
+
+ CARD NUMBER    22
+
+
+
+      D A T A    F O R    R E S T A R T 
+      ---------------------------------
+
+
+           INDICATOR FOR JOB EXECUTION  ................... IREST =    0
+                EQ.0; JOB EXECUTION
+                EQ.1; RESTART OF JOB
+                EQ.2; INPUT DATA CHECK
+
+
+           NUMBER OF EIGEN MODES USED FOR IMPERFECTION .... NMODS =    0
+                EQ.0; NO IMPERFECTION
+                GT.0; READ EIGEN VECTORS FROM I/O UNIT "ZMODES"
+
+
+           SOLVER TYPE .................................... ICCGG =    0
+                EQ. 0 ; DIRECT SOLUTION - SYMMETRIC
+                EQ.-11; MUMPS SYMMETRIC
+                EQ.-1 ; ITERATIVE ICCG SOLUTION
+                EQ. 1 ; ITERATIVE PCG SOLUTION
+                EQ. 2 ; DIRECT SOLUTION - NONSYMMETRIC
+
+
+           ICCG TOLERANCE ............................. TOLG = 1.000D-03
+
+
+           ICCG SHIFT VALUE .......................... ALFAG = 0.000D+00
+
+
+           INDICATOR FOR NUMBER OF PROCESSORS............... IPAR =    1
+
+
+           KORAK U KOME SE RESETUJU POMERANJA.............. KODUZ =    0
+
+
+
+
+
+
+
+ CARD NUMBER    25
+
+
+
+      D A T A   F O R   T I M E   S T E P S
+      -------------------------------------
+
+
+            SOLUTION PERIOD        NUM. OF TIME STEP          TIME STEP
+                    1                     12                 2.80000D-01
+            ------------------------------------------------------------
+            NUMBER OF TIME STEPS   NDT =  12    TOTAL TIME = 3.36000D+00
+
+
+
+
+
+
+ CARD NUMBER    28
+
+
+
+      D Y N A M I C   A N A L Y S I S
+      -------------------------------
+
+
+           MASS MATRIX CODE ............................... IMASS =    2
+                EQ.0; IMASS = 1
+                EQ.1; CONSISTENT
+                EQ.2; LUMPED (DIAGONAL)
+
+
+           DAMPING MATRIX CODE ............................ IDAMP =    0
+                EQ.0; NO DAMP MATRIX
+                EQ.1; COSISTENT
+                EQ.2; LUMPED (DIAGONAL)
+
+
+
+
+
+
+ CARD NUMBER    31
+
+
+
+
+
+
+           TIME INTEGRATION CODE ........................... MDVI =    3
+                EQ.0; MDVI = 2
+                EQ.1; WILSON THETA METHOD
+
+
+                EQ.2; NEWMARK METHOD
+
+
+                EQ.3; CENTRAL DIFFERENCE METHOD
+
+
+           FIRST INTEGRATION PARAMETER ................. PIP = 0.000D+00
+                EQ.0;
+                      MDVI=1 ----- TETA=1.4
+                      MDVI=2 ---- DELTA=0.5
+
+
+           SECOND INTEGRATION PARAMETER ................ DIP = 0.000D+00
+                EQ.0;
+                      MDVI=1 ----- NOT USED
+                      MDVI=2 ---- ALFA=.25*(DELTA+.5)**2
+
+
+
+
+
+
+ CARD NUMBER    34
+
+
+
+      D A T A    F O R    E Q U I L I B R I U M    I T E R A T I O N S
+      ----------------------------------------------------------------
+
+
+           ITERATION METHOD EMPLOYED ...................... METOD =    4
+                LT. 0; ITERATION WITH ELASTIC TANGENT MATRIX
+                EQ. 0; METOD = 1
+                EQ. 1; MODIFIED NEWTON
+                EQ. 2; MODIFIED NEWTON + AEITKEN ACCELERATION
+                EQ. 3; FULL NEWTON
+                EQ. 4; FULL NEWTON + LINE SEARCH
+                EQ. 5; BFGS
+
+                       AUTOMATIC LOADING - CONSTANT ARC LENGTH
+                EQ.61;                     COMBINED WITH (1)
+                EQ.63;                     COMBINED WITH (3)
+
+                       AUTOMATIC LOADING - DISPLACEMENT CONTROL
+                EQ.71;                     COMBINED WITH (1)
+                EQ.73;                     COMBINED WITH (3)
+
+
+           MAXIMUM NUMBER OF ITERATIONS IN A STEP ......... MAXIT =   30
+                EQ.0; MAXIT = 10
+
+
+           CONVERGENCE CRITERION  - ENERGY ................ KONVE =    1
+                EQ.0; NOT USED
+                EQ.1; USED
+
+
+           CONVERGENCE CRITERION  - FORCE ................. KONVS =    0
+                EQ.0; NOT USED
+                EQ.1; USED
+
+
+           CONVERGENCE CRITERION  - MOMENT ................ KONVM =    0
+                EQ.0; NOT USED
+                EQ.1; USED
+
+
+           TOLERANCE FOR UNBALANCED ENERGY ............ TOLE = 1.000D-03
+                EQ.0; TOLE = 0.01
+
+
+           TOLERANCE FOR UNBALANCED FORCE ............. TOLS = 1.000D-02
+
+
+           TOLERANCE FOR UNBALANCED MOMENT ............ TOLM = 1.000D-02
+
+
+           ABSOLUTE TOLERANCE FOR ENERGY .............. TOLA = 1.000D-10
+                EQ.0; TOLA = 1.D-10
+
+
+           NUMBER DISCRETE EVENTS ......................... NBRCR =    2
+                CONCRETE - NUMBER OF CRACKS PER ITERATION IN ELEMENT GROUP
+                CONTACT - NUMBER OF CHANGED CONTACT CONDITIONS
+
+
+
+
+
+
+ I N P U T   N O D A L   D A T A
+ -------------------------------
+
+
+  NODE COOR    CONSTRAINTS        C  O  O  R  D  I  N  A  T  E  S   STEP SKEW
+  NUMB SYST NX NY NZ WX WY WZ        X           Y           Z      GENE SYST
+          1       1  1  0  1  1  1      3.000000000    0.000000000    1.000000000    0    0
+          2       1  1  1  0  0  0      3.000000000    0.000000000    0.000000000    0    0
+          3       1  0  1  0  0  0      3.000000000    1.000000000    0.000000000    0    0
+          4       1  0  0  1  1  1      3.000000000    1.000000000    1.000000000    0    0
+          5       0  1  0  1  1  1      2.000000000    0.000000000    1.000000000    0    0
+          6       0  1  1  0  0  0      2.000000000    0.000000000    0.000000000    0    0
+          7       0  0  1  0  0  0      2.000000000    1.000000000    0.000000000    0    0
+          8       0  0  0  1  1  1      2.000000000    1.000000000    1.000000000    0    0
+          9       0  1  0  1  1  1      1.000000000    0.000000000    1.000000000    0    0
+         10       0  1  1  0  0  0      1.000000000    0.000000000    0.000000000    0    0
+         11       0  0  1  0  0  0      1.000000000    1.000000000    0.000000000    0    0
+         12       0  0  0  1  1  1      1.000000000    1.000000000    1.000000000    0    0
+         13       1  1  0  1  1  1      0.000000000    0.000000000    1.000000000    0    0
+         14       1  1  1  0  0  0      0.000000000    0.000000000    0.000000000    0    0
+         15       1  0  1  0  0  0      0.000000000    1.000000000    0.000000000    0    0
+         16       1  0  0  1  1  1      0.000000000    1.000000000    1.000000000    0    0
+
+
+
+1
+ CARD FROM NUMBER    37 TO   52
+
+
+
+ G E N E R A T E D   N O D A L   D A T A
+ ---------------------------------------
+
+
+
+  NODE  E Q U A T I O N  N U M B E R   C  O  O  R  D  I  N  A  T  E  S   SKEW
+  NUMB                                    X           Y           Z      SYST
+          1         0         0         1         0         0         0    3.000000    0.000000    1.000000    0
+          2         0         0         0         0         0         0    3.000000    0.000000    0.000000    0
+          3         0         2         0         0         0         0    3.000000    1.000000    0.000000    0
+          4         0         3         4         0         0         0    3.000000    1.000000    1.000000    0
+          5         5         0         6         0         0         0    2.000000    0.000000    1.000000    0
+          6         7         0         0         0         0         0    2.000000    0.000000    0.000000    0
+          7         8         9         0         0         0         0    2.000000    1.000000    0.000000    0
+          8        10        11        12         0         0         0    2.000000    1.000000    1.000000    0
+          9        13         0        14         0         0         0    1.000000    0.000000    1.000000    0
+         10        15         0         0         0         0         0    1.000000    0.000000    0.000000    0
+         11        16        17         0         0         0         0    1.000000    1.000000    0.000000    0
+         12        18        19        20         0         0         0    1.000000    1.000000    1.000000    0
+         13         0         0        21         0         0         0    0.000000    0.000000    1.000000    0
+         14         0         0         0         0         0         0    0.000000    0.000000    0.000000    0
+         15         0        22         0         0         0         0    0.000000    1.000000    0.000000    0
+         16         0        23        24         0         0         0    0.000000    1.000000    1.000000    0
+
+
+
+1
+ CARD NUMBER    53
+
+
+
+      D A T A    A B O U T    I N I T I A L    C O N D I T IO N
+      ----------------------------------------------------------
+
+
+           NUMBER OF NODES WITH NON-ZERO DISPLACEMENTS ..... IPUU =    0
+                EQ.0; ALL INITIAL DISPLACEMENTS EQUAL TO ZERO
+
+
+           NUMBER OF NODES WITH NON-ZERO VELOCITIES ........ IPUV =    0
+                EQ.0; ALL INITIAL VELOCITIES ARE EQUAL TO ZERO
+
+
+           NUMBER OF NODES WITH NON-ZERO ACCELERATIONS ..... IPUA =    4
+                EQ.0; ALL INITIAL ACCELERATIONS ARE EQUAL TO ZERO
+
+
+           PRINT DISPLACEMENT CODE ......................... ISUU =    0
+                LT.0; DISPLACEMENTS ARE PRINTED (PROGRAM KRSTAMP)
+                EQ.0; DISPLACEMENTS ARE PRINTED
+                GT.0; DISPLACEMENT ARE NOT PRINTED
+
+
+           PRINT VELOCITIES CODE ........................... ISUV =    0
+                LT.0; VELOCITIES ARE PRINTED (PROGRAM KRSTAMP)
+                EQ.0; VELOCITIES ARE PRINTED
+                GT.0; VELOCITIES ARE NOT PRINTED
+
+
+           PRINT ACCELERATIONS CODE ........................ ISUA =    0
+                LT.0; ACCELERATIONS ARE PRINTED (PROGRAM KRSTAMP)
+                EQ.0; ACCELERATIONS ARE PRINTED
+                GT.0; ACCELERATIONS ARE NOT PRINTED
+
+
+
+
+
+
+      D A T A   A B O U T   I N I T I A L   A C C E L E R A T I O N S
+      ---------------------------------------------------------------
+
+
+
+      I N P U T     D A T A
+      ---------------------
+
+
+           NODE NO    STEP          X           Y           Z          WX          WY          WZ
+               5         0      0.1000D+02  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00
+               6         0      0.1000D+02  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00
+               7         0      0.1000D+02  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00
+               8         0      0.1000D+02  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00  0.0000D+00
+
+
+
+1
+ CARD FROM NUMBER    54 TO   57
+
+
+
+      G E N E R A T E D    D A T A
+      ----------------------------
+
+
+              EQUATION NO             V A L U E
+                   5                 0.1000D+02
+                   7                 0.1000D+02
+                   8                 0.1000D+02
+                  10                 0.1000D+02
+
+
+
+1
+ CARD NUMBER    60
+
+
+
+      D A T A   F O R   M A T E R I A L   M O D E L S
+      -----------------------------------------------
+
+
+           MODEL   NUMBER OF MATERIALS   MAX NUMBER OF POINTS ON CURVE
+             1            2                      20
+
+
+
+
+
+
+      D  A  T  A     F  O  R     M  A  T  E  R  I  A  L  S
+      ----------------------------------------------------
+
+
+
+
+
+
+ CARD FROM NUMBER    63 TO   70
+
+
+
+      MATERIAL MODEL NUMBER =     1  (LINEAR ELASTIC ISOTROPIC)
+
+
+           MATERIAL NUMBER =    1
+
+
+                Y O U N G S    M O D U L U S ........... E = 4.00000D+00
+
+                P O I S S O N S    R A T I O ........... V = 0.00000D+00
+
+                D E N S I T Y ....................... GUST = 3.00000D+00
+
+
+
+
+
+
+ CARD FROM NUMBER    73 TO   80
+
+
+
+      MATERIAL MODEL NUMBER =     1  (LINEAR ELASTIC ISOTROPIC)
+
+
+           MATERIAL NUMBER =    2
+
+
+                Y O U N G S    M O D U L U S ........... E = 2.00000D+00
+
+                P O I S S O N S    R A T I O ........... V = 0.00000D+00
+
+                D E N S I T Y ....................... GUST = 1.00000D+00
+
+
+
+1
+      I N P U T    D A T A    F O R    E L E M E N T  G R O U P S
+      -------------------------------------------------------------
+
+
+
+
+
+
+ CARD NUMBER    83
+
+
+
+           ELEMENT TYPE FOR GROUP      1 .................. NETIP =    3
+                EQ.1 ; TRUSS                            (2    NODES)
+                EQ.11; ELASTIC SUPPORT                  (1    NODES)
+                EQ.12; GAP                              (2    NODES)
+                EQ.20; ELEMENT FREE GALERKIN 2/D                    
+                EQ.2 ; ISOPARAMETRIC 2/D                (4-9  NODES)
+                EQ.21; ISOPARAMETRIC TRIANGULAR 2/D     (3-6  NODES)
+                EQ.3 ; ISOPARAMETRIC 3/D                (8-21 NODES)
+                EQ.31; ISOPARAMETRIC PRISMATIC          (6-15 NODES)
+                EQ.32; ISOPARAMETRIC PYRAMIDAL          (5-13 NODES)
+                EQ.33; ISOPARAMETRIC TETRAHEDRONAL      (4-10 NODES)
+                EQ.5 ; TRIANGULAR PLATE - D K T         (3    NODES)
+                EQ.6 ; THIN-WALLED BEAM                 (2    NODES)
+                EQ.7 ; AXISYMMETRIC SHELL               (2-4  NODES)
+                EQ.8 ; ISOPARAMETRIC SHELL              (4-9  NODES)
+                EQ.81; ISOPARAMETRIC TRIANGULAR SHELL   (3-6  NODES)
+                EQ.82; SHELL - A C S PINSKY & JANG      (9    NODES)
+                EQ.83; SHELL - GELIN & BOISSE           (3    NODES)
+                EQ.84; SHELL - BATHE & DVORKIN          (4    NODES)
+                EQ.85; PLATE - SELECTIVE INTEGRATION    (4-9  NODES)
+                EQ.9 ; BEAM SUPERELEMENT                (2-3  NODES)
+                EQ.92; CONTACT 2/D                      (2    NODES)
+                EQ.93; CONTACT 3/D                      (4    NODES)
+
+
+           NUMBER OF ELEMENTS IN THE GROUP      1 ............ NE =    3
+                GT.0;
+
+
+           INDICATOR FOR TYPE OF ANALYSIS FOR GROUP     1 . IATYP =    0
+                EQ. 0; LINEAR ANALYSIS
+                EQ. 1; MATERIALLY NONLINEAR ANALYSIS
+                EQ. 2; TOTAL LAGRANGIAN
+                EQ. 3; UPDATED LAGRANGIAN
+                EQ.-4; LARGE STRAIN - GREEN LAGRANGE
+                EQ. 4; LARGE STRAIN - ROTATED GREEN LAGRANGE
+                EQ.-5; LARGE STRAIN - LOGARITHMIC STRAIN
+                EQ. 5; LARGE STRAIN - ROTATED LOGARITHMIC STRAIN
+
+
+           NUMBER OF MATERIAL MODELS FOR GROUP      1 ....  NMODM =    1
+                EQ.0; NMODM=1
+                EQ.1; ELASTIC ISOTROPIC
+                EQ.2; ELASTIC ANISOTROPIC
+                EQ.3; THERMO-ELASTIC ISOTROPIC
+                EQ.4; THERMO-ELASTIC ORTHOTROPIC
+                EQ.5; VON MISES ELASTIC-PLASTIC WITH ISOTROPIC HARDENING
+                EQ.6; VON MISES ELASTIC-PLASTIC WITH MIXED HARDENING
+                EQ.7; SOIL PLASTICITY - GENERAL CAP
+                EQ.8; SOIL ANISOTROPIC PLASTICITY (CAM-CLAY)
+                EQ.9; SOIL ISOTROPIC PLASTICITY (CAM-CLAY)
+               EQ.10; ELASTIC-PLASTIC ORTHOTROPIC
+               EQ.11; GAP - STRESS
+               EQ.12; GAP - FORCE
+               EQ.13; GENERAL ANISOTROPIC ELASTIC-PLASTIC
+               EQ.14; VON MISES THERMO-ELASTIC-PLASTIC WITH MIXED HARDENING
+               EQ.15; THERMO-ELASTIC WITH CREEP
+               EQ.16; VON MISES THERMO-ELASTIC-PLASTIC (WITH MIXED HARDENING)
+                      AND CREEP
+               EQ.17; VON MISES THERMO-ELASTIC-PLASTIC (WITH MIXED HARDENING)
+                      (ORTHOTROPIC)
+               EQ.18; THERMO-ELASTIC WITH CREEP (ORTHOTROPIC)
+               EQ.19; VON MISES THERMO-ELASTIC-PLASTIC (WITH MIXED HARDENING)
+                      AND CREEP (ORTHOTROPIC)
+               EQ.20; VON MISES VISCO-PLASTIC ISOTROPIC WITH MIXED HARDENING
+               EQ.21; VON MISES VISCO-PLASTIC ORTHOTROPIC WITH MIXED HARDENING
+               EQ.22; CAM-CLAY VISCOPLASTICITY
+               EQ.23; SOIL CAP MODEL - VISCOPLASTICITY
+               EQ.24; LINEAR VISCOELASTIC
+               EQ.25; ROCKS-CST / JOINT
+               EQ.27; CONCRETE
+               EQ.28; RUBBER
+               EQ.29; ANAND`S PLASTIC ISOTROPIC
+               EQ.30; ELASTIC MATERIAL WITH INTERNAL FRICTION
+               EQ.31; HILLS MUSCLE MODEL
+               EQ.32; BIOLOGICAL STRESS-STRETCH MODEL FOR PASSIVE STATE
+               EQ.33; BIOLOGICAL STRESS-STRETCH MODEL FOR PASSIVE STATE
+                      WITH CREEP
+               EQ.34; BIOLOGICAL STRESS-STRETCH MODEL FOR ACTIVE STATE
+               EQ.40; GURSON
+               EQ.61; ISOTROPIC DAMAGE MODEL (OLIVER)
+
+
+
+           ELEMENT BIRTH OPTION INDICATOR ................ INDBTH =    0
+                EQ.0; OPTION NOT USED
+                EQ.1; OPTION USED
+
+
+           ELEMENT DEATH OPTION INDICATOR ................ INDDTH =    0
+                EQ.0; OPTION NOT USED
+                EQ.1; OPTION USED
+
+
+           COORDINATE SYSTEM INDICATOR FOR MATRIX B ...... INDKOV =    0
+                EQ.-1; COVARIANT SYSTEM
+                EQ.-2; COVARIANT SYSTEM, WITHOUT BNL
+                EQ. 0; NOT USED
+                EQ. 1; CARTESIAN SYSTEM
+                EQ. 2; CARTESIAN SYSTEM, WITHOUT BNL
+
+           INDICATOR FOR INITIAL STRESS ................. ISTRESS =    0
+                EQ.-1; CALCULATION OF INITIAL STRESS AND DISPLACEMENT
+
+                EQ. 0; OPTION NOT USED
+                EQ. 1; INITIAL STRESS USED (COPY CONFIGURATION FROM LST)
+
+           CORECTION COEFFICIENT FOR SHEAR MODULUS GYZ-COEF1 = 8.333D-01
+                EQ.0.; COEF1=5./6
+
+           CORECTION COEFFICIENT FOR SHEAR MODULUS GZX-COEF2 = 8.333D-01
+                EQ.0.; COEF2=5./6
+
+           CORECTION COEFFICIENT FOR SHEAR MODULUS GXY-COEF3 = 1.000D+00
+                EQ.0.; COEF3=1. 
+
+
+
+
+
+
+ CARD NUMBER    87
+
+
+
+           NUMBER OF GAUSS POINTS IN R-DIRECTION ......... NGAUSX =    2
+                EQ.0; NGAUSX = 2
+
+
+           NUMBER OF GAUSS POINTS IN S-DIRECTION ......... NGAUSY =    2
+                EQ.0; NGAUSY = 2
+
+
+           NUMBER OF GAUSS POINTS IN T-DIRECTION ......... NGAUSZ =    2
+                EQ.0; NGAUSZ = 2
+
+
+           ANGLE OF FIBER TO REFERENT DIRECTION ....... BETA = 0.000D+00
+
+
+           METHOD OF INCOMPATIBLE MODES ................... IALFA =   -1
+                EQ.-1; NOT USED
+                EQ. 0; IALFA=2
+                EQ. 1;  9 PARAMETERS - TAYLOR
+                EQ. 2; 18 PARAMETERS
+                EQ. 3; 12 PARAMETERS
+                EQ. 6; 30 PARAMETERS
+
+
+
+ READING DATA ABOUT ISOPARAMETRIC 3/D ELEMENTS FOR GROUP     1
+ -------------------------------------------------------------
+
+
+ ELEME  NOD1 NOD2 NOD3 NOD4 NOD5 NOD6 NOD7 NOD8  MATER COORD STRES STRES  STEP
+ NUMBE                                            NUMB PRINT PRINT  NODE GENER
+       NOD9 NO10 NO11 NO12 NO13 NO14 NO15 NO16 NO17 NO18 NO19 NO20 NO21
+         1          9        10        11        12        13        14        15        16      1     0     0     0     0
+               0         0         0         0         0         0         0         0         0         0         0         0         0
+         2          5         6         7         8         9        10        11        12      2     0     0     0     0
+               0         0         0         0         0         0         0         0         0         0         0         0         0
+         3          1         2         3         4         5         6         7         8      2     0     0     0     0
+               0         0         0         0         0         0         0         0         0         0         0         0         0
+
+
+
+
+
+
+ CARD FROM NUMBER    92 TO  100
+
+
+
+ GENERATED DATA ABOUT TO ISOPARAMETRIC 3/D ELEMENTS FOR GROUP     1
+ ------------------------------------------------------------------
+
+
+ ELEME  NOD1 NOD2 NOD3 NOD4 NOD5 NOD6 NOD7 NOD8  MATER COORD STRES STRES
+ NUMBE                                            NUMB PRINT PRINT  NODE
+       NOD9 NO10 NO11 NO12 NO13 NO14 NO15 NO16 NO17 NO18 NO19 NO20 NO21
+         1          9        10        11        12        13        14        15        16      1     0     0     0
+         2          5         6         7         8         9        10        11        12      2     0     0     0
+         3          1         2         3         4         5         6         7         8      2     0     0     0
+
+
+ MINIMAL DISTANCE BETWEEN NODES       9 AND      10 IN ELEMENT       1 IS DISTANCE= 1.00000E+00
+
+
+
+           GROUP NUMBER    1  SPACE IN WORKING VECTOR ... NPROS =     2510
+
+  POSLE UCELE LMAX        1136
+
+
+
+1
+ CARD NUMBER   103
+
+
+
+      D A T A    F O R    T I M E    F U N C T I O N S
+      ------------------------------------------------
+
+
+           NUMBER OF DIFFERENT TIME FUNCTIONS ............ NTABFT =    1
+                EQ.0; THERE ARE NO TIME FUNCTIONS
+
+
+           MAX NO OF POINTS FOR DEFINITION OF TIME FUNCT . MAXTFT =  100
+                EQ.0; THERE ARE NO TIME FUNCTIONS
+                EQ.1; TIME FUNCTIONS ARE CONSTANT
+                GT.1; TIME FUNCTIONS ARE VARIABLE
+
+
+
+
+
+
+      T I M E    F U N C T I O N S
+      ----------------------------
+
+
+
+
+
+
+ CARD FROM NUMBER   106 TO  110
+
+
+
+      FUNCTION SEQUENCE NUMBER ....................... =    1
+      NUMBER OF POINTS FOR TIME FUNCTION DEFINITION .. =    2
+
+
+            ARGUMENT      FUNCTION
+          0.00000D+00   1.00000D+00
+          1.00000D+04   1.00000D+00
+
+
+
+1
+
+
+      G E N E R A L    D A T A    A B O U T    L O A D S
+      --------------------------------------------------
+
+
+
+
+
+
+ CARD NUMBER   113
+
+
+
+           NUMBER OF CONCENTRATED FORCES AND MOMENTS ........ NCF =        4
+                EQ.0; NO CONCENTARTED FORCES
+
+
+           NUMBER OF LINES UNDER PRESSURE .................. NPP2 =        0
+                EQ.0; NO LINES UNDER PRESSURE
+
+
+           NUMBER OF SURFACES UNDER PRESSURE ............... NPP3 =        0
+                EQ.0; NO SURFACES UNDER PRESSURE
+
+
+           NUMBER OF THIN-WALLED BEAM NODES UNDER PRESSURE . NPGR =        0
+                EQ.0; NO THIN-WALLED BEAMS UNDER PRESSURE
+
+
+           NUMBER OF AXISYMMETRIC SHELLS UNDER PRESSURE .... NPLJ =        0
+                EQ.0; NO AXISYMMETRIC SHELLS UNDER PRESSURE
+
+
+           NUMBER OF NODES WITH TEMPERATURE ............... NTEMP =        0
+                LT.0; TEMPERATURES ARE READ FROM UNIT 56
+                EQ.0; TEMPERATURES ARE NOT USED IN ANALYSIS
+
+
+           NUMBER OF PRESCRIBED DISPLACEMENTS ............. NZADP =        0
+                EQ.0; NO PRESCRIBED DISPLACEMENTS
+
+
+           INDICATOR FOR BODY FORCES ...................... INDZS =        0
+                EQ.0; NO BODY FORCES
+
+
+           NUMBER OF STEPS FOR FILTRATION FORCES ......... ICERNE =        0
+                EQ.0; NO FILTRATION FORCES
+
+
+
+1
+      C O N C E N T R A T E D    L O A D S    D A T A
+      -----------------------------------------------
+
+
+
+
+
+
+      I N P U T      D A T A
+
+
+      NODE NUMBER   DOF   FUNCTION NU.   PROP. FACTOR    STEP GEN.    SHIFT
+         5           1           1        2.50000D+00       0      0.00000D+00
+         6           1           1        2.50000D+00       0      0.00000D+00
+         7           1           1        2.50000D+00       0      0.00000D+00
+         8           1           1        2.50000D+00       0      0.00000D+00
+
+
+
+
+
+
+ CARD FROM NUMBER   116 TO  119
+
+
+
+      G E N E R A T E D     D A T A
+
+
+      EQUATIONS NUMBER   TIME FUNCTION NUMBER   MULTIPL. FACTOR       SHIFT
+             5                     1              2.50000D+00      0.00000D+00
+             7                     1              2.50000D+00      0.00000D+00
+             8                     1              2.50000D+00      0.00000D+00
+            10                     1              2.50000D+00      0.00000D+00
+
+
+
+1
+
+
+      DATA ABOUT DIMENSIONS OF THE SYSTEM MATRIX AND THE WORKING ARRAY A
+      ------------------------------------------------------------------
+
+
+
+           NUMBER OF EQUATIONS ......................... JEDN =        24
+
+           NUMBER OF ELEMENTS IN THE SYSTEM MATRIX ...... NWK =       220
+
+           MAXIMUM HEIGHT COLUMN IN THE SYSTEM MATRIX ... MHC =        16
+
+           REQUIRED DIMENSION IN THE WORKING ARRAY ..... LMAX =      4634
+
+           MAXIMUM TOTAL STORAGE AVAILABLE ............. MTOT = 400000000
+
+
+

@@ -1,0 +1,2257 @@
+C=======================================================================
+C
+C        STAMPANJE NAPONA IZOPARAMETARSKU LJUSKU
+C
+C   SUBROUTINE LU8NAP
+C              STAPR8
+C              STAGR8
+C              STA018
+C             * STA038
+C             * STA058
+C              STAG80
+C              WRIT81
+C              WRIT82
+C              WRIT85
+C
+C=======================================================================
+      SUBROUTINE LU8NAP
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.       TO PRINTOUT STRESS IN SHELL ELEMENTS
+CS.   P R O G R A M
+CS.       ZA POZIVANJE PROGRAMA ZA STAMPANJE NAPONA ELEMENATA LJUSKE
+C .
+C ......................................................................
+C
+      include 'paka.inc'
+      
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /POSTPR/ LNDTPR,LNDTGR,NBLPR,NBLGR,INDPR,INDGR
+      COMMON /ZAPISI/ LSTAZA(5)
+      COMMON /DUPLAP/ IDVA
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /DIREKT/ LSTAZZ(9),LDRV0,LDRV1,LDRV,IDIREK
+      COMMON /PODTIP/ IPODT
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' LU8NAP'
+      LAU=LMAX
+CS    UCITAVANJE PODATAKA O ELEMENTIMA I NAPONA SA DISKA
+CE    READ DATA FROM DISK 
+      CALL READL(A(LAU))
+CS    PODPROGRAM ZA STAMPANJE NAPONA
+CE    PRINT STRESS
+      IF(INDPR.EQ.0.OR.INDPR.EQ.2) CALL STAPR8(A(LAU))
+CS    PODPROGRAM ZA STAMPANJE NAPONA ZA POSTPROCESIRANJE
+CE    PRINT STRESS FOR POSTPROCESSING 
+      IF(INDGR.EQ.0.OR.INDGR.EQ.2) CALL STAGR8(A(LAU))
+      IF(IATYP.EQ.0) RETURN
+      IF(NMODM.LE.4) RETURN
+      NPROS=NE*NGS12*MXS*MODPRO( NMODM )*IDVA
+      IF(IATYP.GE.4.AND.IPODT.EQ.4) THEN
+         NGS4=NGAUSZ*4
+         NPRO1=NE*NGS4*MXS*MODPRO( NMODM )*IDVA
+         NPROS=NPROS+NPRO1
+      ENDIF
+      LMA8=LSTAZA(3)-1
+      CALL WRITDD(A(LPLAS1),NPROS/IDVA,IELEM,LMA8,LDUZI)
+      RETURN
+      END
+C=======================================================================
+C
+C======================================================================
+      SUBROUTINE STAPR8(AU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.       TO PRINTOUT STRESS IN SHELL ELEMENTS
+CS.   P R O G R A M
+CS.       ZA POZIVANJE PROGRAMA ZA STAMPANJE NAPONA ELEMENATA LJUSKE
+C .
+C ......................................................................
+C
+      include 'paka.inc'
+      
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /GAUSVR/ LTEMGT,LCORGT,ICORGT
+      COMMON /CVSILE/ NSILA,LESILA
+      COMMON /DUPLAP/ IDVA
+      DIMENSION AU(*)
+      REAL AU
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' STAPR8'
+C
+      N45=6
+      LDEFOR=LSIGMA
+      IF(NMODM.LE.4) LDEFOR=LSIGMA+NE*NGS12*N45*MXS*IDVA
+C
+      GO TO (     1,  1,  3,  3,  5,  5,999,999,999,  5,
+     1          999,999,999,  5,  5,  5,  5,  5,  5,  5,
+     2            5,999,999,999,999,999,999,999,999,999,
+     3          999,  5,  5,  5,999,999,999,999,999,999,
+     4          999,999,999,999,999,999,999,999,999,999,
+     5          999,999,999,999,999,999,999,999,999,999,
+     6            5,999,999,999,999,999,999,999,999,999,
+     7          999,999,999,999,999,999,999,999,999,999,
+     8          999,999,999,999,999,999,999,999,999,999,
+     9          999,999,999,999,999,999,999,999,999,999),NMODM
+C
+    1 CALL STA018(A(LSIGMA),A(LTEMGT),A(LCORGT),A(LAU),AU(LISNA),
+     &            AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LIPRC),AU(LCEL),
+     &            AU(LNEL),A(LCVEL),ICVEL,0,A(LDEFOR))
+      GO TO 100
+C
+    3 CALL STA018(A(LSIGMA),A(LTEMGT),A(LCORGT),A(LAU),AU(LISNA),
+     &            AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LIPRC),AU(LCEL),
+     &            AU(LNEL),A(LCVEL),ICVEL,1,A(LDEFOR))
+      GO TO 100
+C
+    5 CALL STAN85(A(LPLAS1),A(LAU),AU(LISNA),AU(LNMAT),
+     &            AU(LNSLOJ),AU(LIPRC),AU(LCEL),ICVEL)
+C
+  100 IF(NSILA.GT.0) CALL STSILA(A(LAU),AU(LESILA),AU(LIPGC),
+     1                           AU(LCEL),AU(LNEL),A(LCVEL),ICVEL)
+C
+  999 RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE STAGR8(AU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.       TO CALL ROUTINES FOR PRINTOUT STRESS IN SHELL ELEMENTS
+CE.       FOR GRAPHICS
+CS.   P R O G R A M
+CS.       ZA POZIVANJE PROGRAMA ZA STAMPANJE NAPONA ELEMENATA LJUSKE
+CS.       ZA GRAFIKU
+C .
+C ......................................................................
+C
+      include 'paka.inc'
+      
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /SUMELE/ ISUMEL,ISUMGR
+      COMMON /PODTIP/ IPODT
+      COMMON /DUPLAP/ IDVA
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /NIDEAS/ IDEAS
+      DIMENSION AU(*)
+      REAL AU
+      COMMON /CDEBUG/ IDEBUG
+      IF(IDEBUG.GT.0) PRINT *, ' STAGR8'
+C
+      N45=6
+      LDEFOR=LSIGMA
+      IF(NMODM.LE.4) LDEFOR=LSIGMA+NE*NGS12*N45*MXS*IDVA
+C
+      GO TO (     1,  1,  1,  1,  5,  5,999,999,999,  5,
+     1          999,999,999,  5,  5,  5,  5,  5,  5,  5,
+     2            5,999,999,999,999,999,999,999,999,999,
+     3          999,  5,  5,  5,999,999,999,999,999,999,
+     4          999,999,999,999,999,999,999,999,999,999,
+     5          999,999,999,999,999,999,999,999,999,999,
+     6            5,999,999,999,999,999,999,999,999,999,
+     7          999,999,999,999,999,999,999,999,999,999,
+     8          999,999,999,999,999,999,999,999,999,999,
+     9          999,999,999,999,999,999,999,999,999,999),NMODM
+C
+    1 IF(IPODT.EQ.1.OR.IPODT.EQ.3) THEN
+         ISUME=ISUMEL
+         IF(IDEAS.GE.0) CALL ST5G80(A(LSIGMA),A(LAU),AU(LISNA),
+     +               AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,2)
+         IF(ISTDE.NE.-1) THEN
+            ISUMEL=ISUME 
+            IF(IDEAS.GE.0) CALL ST5G80(A(LDEFOR),A(LAU),AU(LISNA),
+     +                 AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,3)
+         ENDIF
+      ENDIF
+      IF(IPODT.NE.1.AND.IPODT.NE.3) THEN
+         ISUME=ISUMEL
+         IF(IDEAS.GE.0) CALL STAG80(A(LSIGMA),A(LAU),AU(LISNA),
+     1               AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,2)
+         CALL STAU81(A(LSIGMA),AU(LISNA),AU(LCEL),ICVEL,0,A(LAU),
+     +               AU(LNSLOJ),AU(LNMAT))
+         CALL STDU81(A(LDEFOR),AU(LISNA),AU(LCEL),ICVEL,0,A(LAU),
+     +               AU(LNSLOJ),AU(LNMAT))
+         IF(ISTDE.NE.-1) THEN
+            ISUMEL=ISUME 
+            IF(IDEAS.GE.0) CALL STAG80(A(LDEFOR),A(LAU),AU(LISNA),
+     1                 AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,3)
+         ENDIF
+      ENDIF
+      RETURN
+C
+    5 ISUME=ISUMEL
+      IF(IDEAS.GE.0) CALL STAG85(A(LPLAS1),A(LAU),AU(LISNA),
+     +            AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,2)
+      CALL STAU85(A(LSIGMA),AU(LISNA),AU(LCEL),ICVEL,A(LPLAS1),A(LAU),1,
+     +            AU(LNMAT),AU(LNSLOJ))
+      IF(ISTDE.NE.-1) THEN
+         ISUMEL=ISUME 
+         IF(IDEAS.GE.0) CALL STAG85(A(LPLAS1),A(LAU),AU(LISNA),
+     +               AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,3)
+      ENDIF
+      IF(NMODM.NE.15.AND.NMODM.NE.18.AND.NMODM.NE.61) THEN
+         ISUMEL=ISUME 
+         IF(IDEAS.GE.0) CALL STAG85(A(LPLAS1),A(LAU),AU(LISNA),
+     +               AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,0)
+      ENDIF
+      IF(NMODM.EQ.15.OR.NMODM.EQ.16.OR.NMODM.EQ.18.OR.NMODM.EQ.19) THEN
+         ISUMEL=ISUME 
+         IF(IDEAS.GE.0) CALL STAG85(A(LPLAS1),A(LAU),AU(LISNA),
+     +               AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,1)
+      ENDIF
+      ISUMEL=ISUME 
+      IF(IDEAS.GE.0) CALL STAG85(A(LPLAS1),A(LAU),AU(LISNA),
+     +            AU(LNMAT),AU(LNSLOJ),AU(LDSLOJ),AU(LCEL),ICVEL,99)
+  999 RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE STA018(TAU,TEMGT,CORGT,AU,ISNA,MATV,NSLOJ,DSLOJ,
+     &                  IPRC,MCVEL,NEL,NCVEL,ICVEL,INDCAL,DEF)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO PRINTOUT STRESS IN SHELL ELEMENTS FOR MATERIAL MODEL 1 AND 2
+CS.   P R O G R A M
+CS.      ZA STAMPANJE NAPONA ELEMENATA LJUSKI ZA MATERIJALNI MODEL 1 I 2
+C .
+C ......................................................................
+C
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /INTGRA/ INCOTX,INCOTY,INCOTZ
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /SRPSKI/ ISRPS
+      COMMON /PRINCI/ PRINC(3)
+      COMMON /PODTIP/ IPODT
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /MAXREZ/ PMALL,BMALL,AMALL,SMKOR,SMALL,
+     +                NPMALL,NBMALL,NAMALL,KPMALL,KBMALL,KAMALL,
+     +                NSMKOR,NSMALL,NGRKOR,NGRALL,KSMALL
+      COMMON /CDEBUG/ IDEBUG
+C
+      DIMENSION AU(*)
+      REAL AU
+      DIMENSION TAU(6,NGS12,NE,*),TEMGT(NGS12,*),CORGT(3,NGS12,*),
+     1          NEL(NE,*),MATV(*),NSLOJ(*),DSLOJ(MSLOJ,*),
+     1          DEF(6,NGS12,NE,*)
+      DIMENSION ISNA(*),IPRC(*),MCVEL(*),NCVEL(*),STRESL(6),STRESS(10),
+     1          STRAIN(7),SRED(6),SRED2(6),V(3,3)
+      DIMENSION XC(3),LR(9),LS(9),TG(6)
+      DATA LR/1,2,2,1, 3,2,3,1, 3/
+      DATA LS/1,1,2,2, 1,3,2,3, 3/
+      DATA XC/1.D0,-1.D0,0.D0/
+      DATA TG/0.D0,0.577350269189626D0,0.774596669241483D0,
+     1             0.861136311594053D0,0.906179845938664D0,1.D0/
+C
+      IF(IDEBUG.GT.0) PRINT *, ' STA018'
+C
+      ISTGL=1
+C
+      NGR1=1
+      NGS1=1
+      NGT1=1
+      NNLM=0
+      INDSN=0
+      INNOLD=0
+      SEFE=0.D0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2040) NLM
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6040) NLM
+         GO TO 20
+         ENDIF
+C
+         ISN=ISNA(NLM)
+         INN=0
+         IF(ISN.GE.10)THEN
+            ISN=ISN-10
+            INN=1
+         ENDIF
+         IF(INN.NE.INNOLD) INDSN=0
+         IF(ISN.EQ.1) GO TO 20
+         IF(INDSN.EQ.0.AND.INN.EQ.0) THEN
+            IF(ISN.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2011) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6011) NGE
+            ENDIF
+            IF(ISN.EQ.2) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2010) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6010) NGE
+            ENDIF
+         ENDIF
+         IF(INDSN.EQ.0.AND.INN.EQ.1) THEN
+            IF(ISN.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2013) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6013) NGE
+            ENDIF
+            IF(ISN.EQ.2) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2012) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6012) NGE
+            ENDIF
+         ENDIF
+C
+         INDSN=1
+         INNOLD=INN
+         IPC=IPRC(NLM)
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         WRITE(IZLAZ,5000) NMM
+         MSS=1
+         NBT=2
+         IF(MSET.GT.0) THEN
+            NBT=1
+            MST=MATV(NLM)
+            MSS=NSLOJ(MST)
+            TTT=-1.D0
+         ENDIF
+C
+C        G A U S O V E    T A C K E
+C
+         IF(INN.EQ.0)THEN
+            JG=0
+            C=1./NGS12/MSS
+            SEFE1=0.D0
+            SEFE2=0.D0
+            CALL CLEAR(SRED,6)
+            CALL CLEAR(SRED2,6)
+            DO 10 NGR=1,NGAUSX
+            DO 10 NGS=1,NGAUSY
+            DO 10 NGT=1,NGAUSZ
+               JG=JG+1
+               KR=0
+            DO 10 MSL=1,MSS
+               CALL JEDNA1(STRESS,TAU(1,JG,NLM,MSL),6)
+               IF(ISTNA.EQ.1) CALL ZBIRM1(SRED,STRESS,6)
+               CALL GLAVN3(STRESS)
+               IF(ISTNA.EQ.2) THEN
+                  IF(STRESS(7).GT.SEFE1) THEN
+                     NGR1=NGR
+                     NGS1=NGS
+                     NGT1=NGT
+                     SEFE1=STRESS(7)
+                     CALL JEDNA1(SRED,STRESS,6)
+                  ENDIF
+               ENDIF
+               IF(STRESS(7).GE.SEFE) THEN
+                  MSLL=MSL
+                  NNLM=NMM
+                  NNGR=NGR
+                  NNGS=NGS
+                  NNGT=NGT
+                  NNCV=0
+                  SEFE=STRESS(7)
+               ENDIF
+               IF(ISTNA.EQ.0) THEN
+                  IF(KR.EQ.0) THEN
+                     WRITE(IZLAZ,5001) NGR,NGS,NGT,(STRESS(K),K=1,6)
+                  ELSE
+                     WRITE(IZLAZ,5002)             (STRESS(K),K=1,6)
+                  ENDIF
+               ENDIF
+               IF(ISTDE.NE.-1) THEN
+                  CALL JEDNA1(STRAIN,DEF(1,JG,NLM,MSL),6)
+                  IF(ISTNA.EQ.1) CALL ZBIRM1(SRED2,STRAIN,6)
+                  IF(ISTNA.EQ.2) THEN
+                     CALL GLAVN3(STRAIN)
+                     IF(STRAIN(7).GT.SEFE2) THEN
+                        SEFE2=STRAIN(7)
+                        CALL JEDNA1(SRED2,STRAIN,6)
+                     ENDIF
+                  ENDIF
+                  IF(ISTNA.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2002) (STRAIN(K),K=1,6)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6002) (STRAIN(K),K=1,6)
+                  ENDIF
+               ENDIF
+               KR=1
+               IF(ISTNA.EQ.0) THEN
+                  IF(INDCAL.EQ.0)THEN
+                     WRITE(IZLAZ,5002) STRESS(7),PRINC
+                  ELSEIF(INDCAL.EQ.1)THEN
+                     WRITE(IZLAZ,5002) STRESS(7),PRINC,TEMGT(JG,NLM)
+                  ENDIF
+                  IF(ISTGL.EQ.1) THEN 
+                     CALL GLAPR3(STRESS,V)
+                     DO J=1,3
+                        WRITE(IZLAZ,2050) J,(V(K,J),K=1,3)
+                     ENDDO
+                     call glavn8(stress)
+                     WRITE(IZLAZ,2060) (STRESS(k),k=8,10)
+                  ENDIF
+                  IF(IPC.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2020) (CORGT(K,JG,NLM),K=1,3)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6020) (CORGT(K,JG,NLM),K=1,3)
+                  ENDIF
+               ENDIF
+   10       CONTINUE
+            IF(ISTNA.EQ.1) THEN
+               CALL JEDNAK(STRESS,SRED,C,6)
+               WRITE(IZLAZ,1010) (STRESS(I),I=1,6)
+               IF(ISTGL.EQ.1) THEN 
+                  CALL GLAVN3(STRESS)
+                  WRITE(IZLAZ,5002) STRESS(7),PRINC
+                  CALL GLAPR3(STRESS,V)
+                  WRITE(IZLAZ,2050) (J,(V(K,J),K=1,3),J=1,3)
+                  call glavn8(stress)
+                  WRITE(IZLAZ,2060) (STRESS(k),k=8,10)
+               ENDIF
+            ENDIF
+            IF(ISTNA.EQ.2) THEN
+               WRITE(IZLAZ,5001) NGR1,NGS1,NGT1,(SRED(I),I=1,6) 
+            ENDIF
+            IF(ISTDE.NE.-1) THEN
+               IF(ISTNA.EQ.1) THEN 
+                  CALL JEDNAK(STRAIN,SRED2,C,6)
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2002) (STRAIN(K),K=1,6)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6002) (STRAIN(K),K=1,6)
+               ENDIF
+               IF(ISTNA.EQ.2) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2002) (SRED2(K),K=1,6)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6002) (SRED2(K),K=1,6)
+               ENDIF
+            ENDIF
+         ENDIF
+C
+C        C V O R O V I
+C
+         IF(INN.EQ.1)THEN
+            DO 12 N=1,NCVE
+               NN=NEL(NLM,N)
+               IF(NN.EQ.0) GO TO 12
+               IF(ICVEL.EQ.1) NN=NCVEL(NN)
+               KR=0
+            DO 13 MBT=1,NBT
+            DO 13 MSL=1,MSS
+               IF(MSET.GT.0) THEN
+                  DDD =DSLOJ(MSL,MST)
+                  TTT =TTT+2.D0*DDD
+                    T =TTT-DDD
+               ELSE
+                  IF(INCOTZ.EQ.1) TT=TG(6)
+                  IF(INCOTZ.EQ.0) THEN
+                     IF(NGAUSZ.EQ.1) TT=TG(1)
+                     IF(NGAUSZ.EQ.2) TT=TG(2)
+                     IF(NGAUSZ.EQ.3) TT=TG(3)
+                     IF(NGAUSZ.EQ.4) TT=TG(4)
+                     IF(NGAUSZ.EQ.5) TT=TG(5)
+                  ENDIF
+                  IF(MBT.EQ.1) T=-TT
+                  IF(MBT.EQ.2) T= TT
+               ENDIF
+               CALL SMOOTH(TAU(1,1,NLM,MSL),STRESL,6,
+     1                     NGAUSX,NGAUSY,NGAUSZ,XC(LR(N)),XC(LS(N)),T)
+               CALL JEDNA1(STRESS,STRESL,6)
+               CALL GLAVN3(STRESS)
+               IF(STRESS(7).GE.SEFE) THEN
+                  MSLL=MSL
+                  NNLM=NMM
+                  NNGR=0
+                  NNGS=0
+                  NNGT=0
+                  NNCV=NN
+                  SEFE=STRESS(7)
+               ENDIF
+               IF(KR.EQ.0) WRITE(IZLAZ,5003) NN,(STRESS(K),K=1,6)
+               IF(KR.EQ.1) WRITE(IZLAZ,5002)    (STRESS(K),K=1,6)
+               IF(ISTDE.NE.-1) THEN
+                  CALL SMOOTH(DEF(1,1,NLM,MSL),STRAIN,6,
+     1                       NGAUSX,NGAUSY,NGAUSZ,XC(LR(N)),XC(LS(N)),T)
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2002) (STRAIN(K),K=1,6)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6002) (STRAIN(K),K=1,6)
+               ENDIF
+               KR=1
+               WRITE(IZLAZ,5002) STRESS(7),PRINC
+   13       CONTINUE
+   12       CONTINUE
+         ENDIF
+C
+   20 CONTINUE
+      IF(NNLM.GT.0)THEN
+         IF(NNCV.EQ.0)THEN
+      IF(ISRPS.EQ.0.AND.INDSN.EQ.1)
+     1WRITE(IZLAZ,2030) NNLM,NNGR,NNGS,NNGT,MSLL,SEFE
+      IF(ISRPS.EQ.1.AND.INDSN.EQ.1)
+     1WRITE(IZLAZ,6030) NNLM,NNGR,NNGS,NNGT,MSLL,SEFE
+         ELSE
+      IF(ISRPS.EQ.0.AND.INDSN.EQ.1)
+     1WRITE(IZLAZ,2035) NNLM,NNCV,MSLL,SEFE
+      IF(ISRPS.EQ.1.AND.INDSN.EQ.1)
+     1WRITE(IZLAZ,6035) NNLM,NNCV,MSLL,SEFE
+         ENDIF
+         IF(SMKOR.LT.SEFE) THEN
+            SMKOR=SEFE
+            NGRKOR=NGE
+            NSMKOR=NNLM
+         ENDIF
+         IF(SMALL.LT.SEFE) THEN
+            SMALL=SEFE
+            NGRALL=NGE
+            NSMALL=NNLM
+            KSMALL=KOR
+         ENDIF
+      ENDIF
+      RETURN
+C
+ 5000 FORMAT(/I8)
+ 5001 FORMAT(3I3,6(1PE11.3))
+ 5002 FORMAT(9X,6(1PE11.3))
+ 5003 FORMAT(I6,3X,6(1PE11.3))
+ 1010 FORMAT(9X,6(1PE11.3))
+ 2050 FORMAT('     V(',I1,')=',3(1PE12.5))
+ 2060 FORMAT('     Sigma1=',1PE12.5,' Sigma2=',1PE12.5,' alfa=',1PE12.5)
+C-----------------------------------------------------------------------
+ 2002 FORMAT(' UK.DEFO.',6(1PE11.3))
+ 2010 FORMAT(/'1'///' GLOBALNI NAPONI ELEMENATA LJUSKI GRUPE ELEMENATA',
+     1I6/1X,54('-')//
+     1' ELEMENT /'/' IR IS IT   NAPON-XX',2X,' NAPON-YY',2X,
+     1' NAPON-ZZ',2X,' NAPON-XY',2X,' NAPON-YZ',2X,' NAPON-ZX'/
+     112X,'EF.NAPON',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)',
+     14X,'TEMPER.')
+ 2011 FORMAT(/'1'///' LOKALNI NAPONI ELEMENATA LJUSKI GRUPE ELEMENATA',
+     1I6/1X,53('-')//
+     1' ELEMENT /'/' IR IS IT   NAPON-RR',2X,' NAPON-SS',2X,
+     1' NAPON-TT',2X,' NAPON-RS',2X,' NAPON-ST',2X,' NAPON-TR'/
+     112X,'EF.NAPON',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)',
+     14X,'TEMPER.')
+ 2012 FORMAT(/'1'///' GLOBALNI NAPONI ELEMENATA LJUSKI GRUPE ELEMENATA',
+     1I6/1X,54('-')//
+     1' ELEMENT /'/' C V O R    NAPON-XX',2X,' NAPON-YY',2X,
+     1' NAPON-ZZ',2X,' NAPON-XY',2X,' NAPON-YZ',2X,' NAPON-ZX'/
+     112X,'EF.NAPON',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)')
+ 2013 FORMAT(/'1'///' LOKALNI NAPONI ELEMENATA LJUSKI GRUPE ELEMENATA',
+     1I6/1X,53('-')//
+     1' ELEMENT /'/' C V O R    NAPON-RR',2X,' NAPON-SS',2X,
+     1' NAPON-TT',2X,' NAPON-RS',2X,' NAPON-ST',2X,' NAPON-TR'/
+     112X,'EF.NAPON',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)')
+ 2020 FORMAT(
+     1' KOORD.-X=',1PE10.3,2X,' KOORD.-Y=',1PE10.3,2X,' KOORD.-Z=',
+     11PE10.3)
+ 2030 FORMAT(//' MAKSIMALNI EFEKTIVNI NAPON:'/' ELEMENT =',I6,'  IR =',
+     1I2,'  IS =',I2,'  IT =',I2,'  SLOJ =',I2,'  MAX.EFE.NAP.=',
+     11PE11.3//)
+ 2035 FORMAT(//' MAKSIMALNI EFEKTIVNI NAPON:'/' ELEMENT =',I6,
+     1'   CVOR =',I6,'  SLOJ =',I2,'  MAX.EFE.NAP.=',1PE11.3//)
+ 2040 FORMAT(/' NESTAO JE ELEMENT -',I5)
+C-----------------------------------------------------------------------
+ 6002 FORMAT(' TO.STRA.',6(1PE11.3))
+ 6010 FORMAT(/'1'///' GLOBAL STRESS COMPONENTS OF SHELL ELEMENTS FOR GRO
+     1UP',I6/1X,58('-')//
+     1' ELEMENT /'/' IR IS IT  STRESS-XX',2X,'STRESS-YY',2X,
+     1'STRESS-ZZ',2X,'STRESS-XY',2X,'STRESS-YZ',2X,'STRESS-ZX'/
+     111X,'EF.STRESS',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)',
+     14X,'TEMPER.')
+ 6011 FORMAT(/'1'///' LOCAL STRESS COMPONENTS OF SHELL ELEMENTS FOR GROU
+     1P',I6/1X,57('-')//
+     1' ELEMENT /'/' IR IS IT  STRESS-RR',2X,'STRESS-SS',2X,
+     1'STRESS-TT',2X,'STRESS-RS',2X,'STRESS-ST',2X,'STRESS-TR'/
+     111X,'EF.STRESS',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)',
+     14X,'TEMPER.')
+ 6012 FORMAT(/'1'///' GLOBAL STRESS COMPONENTS OF SHELL ELEMENTS FOR GRO
+     1UP',I6/1X,58('-')//
+     1' ELEMENT /'/' N O D E   STRESS-XX',2X,'STRESS-YY',2X,
+     1'STRESS-ZZ',2X,'STRESS-XY',2X,'STRESS-YZ',2X,'STRESS-ZX'/
+     111X,'EF.STRESS',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)')
+ 6013 FORMAT(/'1'///' LOCAL STRESS COMPONENTS OF SHELL ELEMENTS FOR GROU
+     1P',I6/1X,57('-')//
+     1' ELEMENT /'/' N O D E   STRESS-RR',2X,'STRESS-SS',2X,
+     1'STRESS-TT',2X,'STRESS-RS',2X,'STRESS-ST',2X,'STRESS-TR'/
+     111X,'EF.STRESS',3X,'PRINC(1)',3X,'PRINC(2)',3X,'PRINC(3)')
+ 6020 FORMAT(
+     1' COORD.-X=',1PE10.3,2X,' COORD.-Y=',1PE10.3,2X,' COORD.-Z=',
+     11PE10.3)
+ 6030 FORMAT(//' MAXIMUM EFFECTIVE STRESS:'/' ELEMENT =',I6,'  IR =',I2,
+     1'  IS =',I2,'  IT =',I2,'  LAYER =',I2,'  MAX.EFF.STR.=',
+     11PE11.3//)
+ 6035 FORMAT(//' MAXIMUM EFFECTIVE STRESS:'/' ELEMENT =',I6,
+     1'   NODE =',I6,'  LAYER =',I2,'  MAX.EFF.STR.=',1PE11.3//)
+ 6040 FORMAT(/' DEATH ELEMENT -',I5)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE W81(TAU,NLM,I,NOD,IND,SRED,SEFE1,SEFE2)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+C
+      DIMENSION TAU(6,NGS12,NE,*),S(6),STRESS(7),SRED(*)
+C
+      KR=0
+      ITB=NGAUSZ-1
+      IF(ITB.EQ.0) ITB=1
+      ITS=MXS-1
+      IF(ITS.EQ.0) ITS=1
+      IPRO=-5
+      DO 20 MSL=1,MXS,ITS
+      DO 20 NZ=1,NGAUSZ,ITB
+       IF((NZ.EQ.1.AND.MSL.EQ.1).OR.(NZ.EQ.NGAUSZ.AND.MSL.EQ.MXS)) THEN
+         IPRO=IPRO+6
+         IJ=I*NGAUSZ+NZ
+         S(1)=TAU(1,IJ,NLM,MSL)
+         S(2)=TAU(4,IJ,NLM,MSL)
+         S(3)=TAU(2,IJ,NLM,MSL)
+         S(4)=TAU(6,IJ,NLM,MSL)
+         S(5)=TAU(5,IJ,NLM,MSL)
+         S(6)=TAU(3,IJ,NLM,MSL)
+         IF(ISTNA.EQ.0) THEN
+          IF(IND.EQ.1) WRITE(IGRAF,1500) S
+          IF(IND.EQ.0) THEN
+          IF(KR.EQ.0)WRITE(IZLAZ,1000) NOD,S(1),S(3),S(6),S(2),S(5),S(4)
+            IF(KR.EQ.1) WRITE(IZLAZ,1010) S(1),S(3),S(6),S(2),S(5),S(4)
+            KR=1
+          ENDIF
+          GO TO 20
+         ENDIF
+C
+         STRESS(1)=S(1)
+         STRESS(2)=S(3)
+         STRESS(3)=S(6)
+         STRESS(4)=S(2)
+         STRESS(5)=S(5)
+         STRESS(6)=S(4)
+         IF(ISTNA.EQ.1.AND.IND.EQ.0) CALL ZBIRM1(SRED(IPRO),STRESS,6)
+         IF(ISTNA.EQ.1.AND.IND.EQ.1) CALL ZBIRM1(SRED(IPRO),S,6)
+         CALL GLAVN3(STRESS)
+         IF(ISTNA.EQ.2) THEN
+            IF(IPRO.EQ.1.AND.STRESS(7).GT.SEFE1) THEN
+               SEFE1=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+            IF(IPRO.EQ.7.AND.STRESS(7).GT.SEFE2) THEN
+               SEFE2=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+         ENDIF
+       ENDIF
+   20 CONTINUE
+      RETURN
+ 1000 FORMAT(' ',I5,6(1X,1PE11.4))
+ 1010 FORMAT(6X,6(1X,1PE11.4))
+ 1500 FORMAT(6(1PE13.5))
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE W82(TAU,NLM,I,J,NOD,IND,SRED,SEFE1,SEFE2)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+C
+      DIMENSION TAU(6,NGS12,NE,*),S(6),STRESS(7),SRED(*)
+C
+      KR=0
+      ITB=NGAUSZ-1
+      IF(ITB.EQ.0)ITB=1
+      ITS=MXS-1
+      IF(ITS.EQ.0) ITS=1
+      IPRO=-5
+      DO 20 MSL=1,MXS,ITS
+      DO 20 NZ=1,NGAUSZ,ITB
+       IF((NZ.EQ.1.AND.MSL.EQ.1).OR.(NZ.EQ.NGAUSZ.AND.MSL.EQ.MXS)) THEN
+         IPRO=IPRO+6
+         IJ=I*NGAUSZ+NZ
+         KL=J*NGAUSZ+NZ
+         S(1)=(TAU(1,IJ,NLM,MSL)+TAU(1,KL,NLM,MSL))/2.D0
+         S(2)=(TAU(4,IJ,NLM,MSL)+TAU(4,KL,NLM,MSL))/2.D0
+         S(3)=(TAU(2,IJ,NLM,MSL)+TAU(2,KL,NLM,MSL))/2.D0
+         S(4)=(TAU(6,IJ,NLM,MSL)+TAU(6,KL,NLM,MSL))/2.D0
+         S(5)=(TAU(5,IJ,NLM,MSL)+TAU(5,KL,NLM,MSL))/2.D0
+         S(6)=(TAU(3,IJ,NLM,MSL)+TAU(3,KL,NLM,MSL))/2.D0
+         IF(ISTNA.EQ.0) THEN
+          IF(IND.EQ.1) WRITE(IGRAF,1500) S
+          IF(IND.EQ.0) THEN
+          IF(KR.EQ.0)WRITE(IZLAZ,1000) NOD,S(1),S(3),S(6),S(2),S(5),S(4)
+            IF(KR.EQ.1) WRITE(IZLAZ,1010) S(1),S(3),S(6),S(2),S(5),S(4)
+            KR=1
+          ENDIF
+          GO TO 20
+         ENDIF
+C
+         STRESS(1)=S(1)
+         STRESS(2)=S(3)
+         STRESS(3)=S(6)
+         STRESS(4)=S(2)
+         STRESS(5)=S(5)
+         STRESS(6)=S(4)
+         IF(ISTNA.EQ.1.AND.IND.EQ.0) CALL ZBIRM1(SRED(IPRO),STRESS,6)
+         IF(ISTNA.EQ.1.AND.IND.EQ.1) CALL ZBIRM1(SRED(IPRO),S,6)
+         CALL GLAVN3(STRESS)
+         IF(ISTNA.EQ.2) THEN
+            IF(IPRO.EQ.1.AND.STRESS(7).GT.SEFE1) THEN
+               SEFE1=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+            IF(IPRO.EQ.7.AND.STRESS(7).GT.SEFE2) THEN
+               SEFE2=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+         ENDIF
+       ENDIF
+   20 CONTINUE
+      RETURN
+ 1000 FORMAT(' ',I5,6(1X,1PE11.4))
+ 1010 FORMAT(6X,6(1X,1PE11.4))
+ 1500 FORMAT(6(1PE13.5))
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE WR81(TAU,S,NLM,I,J,NOD,IND,SRED,SEFE1,SEFE2)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+C
+      DIMENSION TAU(6,NGS12,NE,*),S(6),STRESS(7),SRED(*)
+C
+      KR=0
+      ITB=NGAUSZ-1
+      IF(ITB.EQ.0)ITB=1
+      ITS=MXS-1
+      IF(ITS.EQ.0) ITS=1
+      IPRO=-5
+      DO 20 MSL=1,MXS,ITS
+      DO 20 NZ=1,NGAUSZ,ITB
+       IF((NZ.EQ.1.AND.MSL.EQ.1).OR.(NZ.EQ.NGAUSZ.AND.MSL.EQ.MXS)) THEN
+         IPRO=IPRO+6
+         IJ=(I-1)*NGAUSZ*NGAUSY+(J-1)*NGAUSZ+NZ
+         S(1)=TAU(1,IJ,NLM,MSL)
+         S(2)=TAU(4,IJ,NLM,MSL)
+         S(3)=TAU(2,IJ,NLM,MSL)
+         S(4)=TAU(6,IJ,NLM,MSL)
+         S(5)=TAU(5,IJ,NLM,MSL)
+         S(6)=TAU(3,IJ,NLM,MSL)
+         IF(ISTNA.EQ.0) THEN
+          IF(IND.EQ.1) WRITE(IGRAF,1500) S
+          IF(IND.EQ.0) THEN
+          IF(KR.EQ.0)WRITE(IZLAZ,1000) NOD,S(1),S(3),S(6),S(2),S(5),S(4)
+            IF(KR.EQ.1) WRITE(IZLAZ,1010) S(1),S(3),S(6),S(2),S(5),S(4)
+            KR=1
+          ENDIF
+          GO TO 20
+         ENDIF
+C
+         STRESS(1)=S(1)
+         STRESS(2)=S(3)
+         STRESS(3)=S(6)
+         STRESS(4)=S(2)
+         STRESS(5)=S(5)
+         STRESS(6)=S(4)
+         IF(ISTNA.EQ.1.AND.IND.EQ.0) CALL ZBIRM1(SRED(IPRO),STRESS,6)
+         IF(ISTNA.EQ.1.AND.IND.EQ.1) CALL ZBIRM1(SRED(IPRO),S,6)
+         CALL GLAVN3(STRESS)
+         IF(ISTNA.EQ.2) THEN
+            IF(IPRO.EQ.1.AND.STRESS(7).GT.SEFE1) THEN
+               SEFE1=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+            IF(IPRO.EQ.7.AND.STRESS(7).GT.SEFE2) THEN
+               SEFE2=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+         ENDIF
+       ENDIF
+   20 CONTINUE
+      RETURN
+ 1000 FORMAT(' ',I5,6(1X,1PE11.4))
+ 1010 FORMAT(6X,6(1X,1PE11.4))
+ 1500 FORMAT(6(1PE13.5))
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE WR82(TAU,S,NLM,I,J,K,L,NOD,IND,SRED,SEFE1,SEFE2)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+C
+      DIMENSION TAU(6,NGS12,NE,*),S(6),STRESS(7),SRED(*)
+C
+      KR=0
+      ITB=NGAUSZ-1
+      IF(ITB.EQ.0)ITB=1
+      ITS=MXS-1
+      IF(ITS.EQ.0) ITS=1
+      IPRO=-5
+      DO 20 MSL=1,MXS,ITS
+      DO 20 NZ=1,NGAUSZ,ITB
+       IF((NZ.EQ.1.AND.MSL.EQ.1).OR.(NZ.EQ.NGAUSZ.AND.MSL.EQ.MXS)) THEN
+         IPRO=IPRO+6
+         IJ=(I-1)*NGAUSZ*NGAUSY+(J-1)*NGAUSZ+NZ
+         KL=(K-1)*NGAUSZ*NGAUSY+(L-1)*NGAUSZ+NZ
+         S(1)=(TAU(1,IJ,NLM,MSL)+TAU(1,KL,NLM,MSL))/2.D0
+         S(2)=(TAU(4,IJ,NLM,MSL)+TAU(4,KL,NLM,MSL))/2.D0
+         S(3)=(TAU(2,IJ,NLM,MSL)+TAU(2,KL,NLM,MSL))/2.D0
+         S(4)=(TAU(6,IJ,NLM,MSL)+TAU(6,KL,NLM,MSL))/2.D0
+         S(5)=(TAU(5,IJ,NLM,MSL)+TAU(5,KL,NLM,MSL))/2.D0
+         S(6)=(TAU(3,IJ,NLM,MSL)+TAU(3,KL,NLM,MSL))/2.D0
+         IF(ISTNA.EQ.0) THEN
+          IF(IND.EQ.1) WRITE(IGRAF,1500) S
+          IF(IND.EQ.0) THEN
+          IF(KR.EQ.0)WRITE(IZLAZ,1000) NOD,S(1),S(3),S(6),S(2),S(5),S(4)
+            IF(KR.EQ.1) WRITE(IZLAZ,1010) S(1),S(3),S(6),S(2),S(5),S(4)
+            KR=1
+          ENDIF
+          GO TO 20
+         ENDIF
+C
+         STRESS(1)=S(1)
+         STRESS(2)=S(3)
+         STRESS(3)=S(6)
+         STRESS(4)=S(2)
+         STRESS(5)=S(5)
+         STRESS(6)=S(4)
+         IF(ISTNA.EQ.1.AND.IND.EQ.0) CALL ZBIRM1(SRED(IPRO),STRESS,6)
+         IF(ISTNA.EQ.1.AND.IND.EQ.1) CALL ZBIRM1(SRED(IPRO),S,6)
+         CALL GLAVN3(STRESS)
+         IF(ISTNA.EQ.2) THEN
+            IF(IPRO.EQ.1.AND.STRESS(7).GT.SEFE1) THEN
+               SEFE1=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+            IF(IPRO.EQ.7.AND.STRESS(7).GT.SEFE2) THEN
+               SEFE2=STRESS(7)
+               IF(IND.EQ.0) CALL JEDNA1(SRED(IPRO),STRESS,6)
+               IF(IND.EQ.1) CALL JEDNA1(SRED(IPRO),S,6)
+            ENDIF
+         ENDIF
+       ENDIF
+   20 CONTINUE
+      RETURN
+ 1000 FORMAT(' ',I5,6(1X,1PE11.4))
+ 1010 FORMAT(6X,6(1X,1PE11.4))
+ 1500 FORMAT(6(1PE13.5))
+      END
+C=======================================================================
+C
+C======================================================================
+      SUBROUTINE ST5G80(TAU,AU,ISNA,MATV,NSLOJ,DSLOJ,MCVEL,ICVEL,ISDTY)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     STAMPANJE NAPONA ZA TROUGAONE LJUSKE U UNIVERZALNI FILE
+CE     PRINTOUT STRESS FOR TRIANGULAR SHELLS IN UNIVERSAL FILE
+C 
+      CHARACTER*250 NASLOV    
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /NASLOV/ NASLOV
+      COMMON /SUMELE/ ISUMEL,ISUMGR
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /SRPSKI/ ISRPS
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+C
+      DIMENSION AU(*)
+      REAL AU
+C
+      DIMENSION TAU(6,NGS12,NE,*),MATV(*),NSLOJ(*),DSLOJ(MSLOJ,*)
+      DIMENSION ISNA(*),MCVEL(*),SIGM(6),SR(12)
+C
+      NNCVE=NCVE
+      IF(NCVE.GT.3.AND.NCVE.LT.6) NCVE=3
+C
+C     STRUKTURNA ANALIZA = 1
+      IMOTY=1
+C     STACIONARAN = 1; NESTACIONARAN = 4   
+      IANTY=1
+      IFAT1=1
+      IFAT2=1
+      FATY8=0.0D0
+      IF(NDT.GT.1) THEN 
+        IANTY=4
+        IFAT1=2
+        FATY8=VREME
+      ENDIF
+C     SIMETRICAN TENZOR = 4
+      IDACH=4
+C     NAPONI = 2
+C      ISDTY=2
+C     DEFORMACIJE = 3
+C      ISDTY=3
+C     PRECIZNOST JEDNOSTRUKA = 2; DVOSTRUKA = 4 
+      IDATY=2
+C     BROJ PODATAKA = 6*MAKSIMALAN BROJ SLOJEVA*BR.GAUSOVIH TACAKA PO DEBLJ.
+      NDVPN=6
+      IF(NGAUSZ.GT.1.OR.MXS.GT.1) NDVPN=12
+      IEXP=1
+      NNODS=NCVE
+      IF(ISTNA.GT.0) NNODS=-NNODS
+      NVPN=NDVPN
+      IND1=-1
+      INA1=57
+      INDSN=0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 20
+C
+         ISN=ISNA(NLM)
+         IF(ISN.EQ.1) GO TO 20
+         IF(INDSN.EQ.0) THEN
+      WRITE(IGRAF,5000) IND1
+      WRITE(IGRAF,5000) INA1
+      WRITE(IGRAF,5003) NASLOV
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2004) KOR
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6004) KOR
+      WRITE(IGRAF,1000) IMOTY,IANTY,IDACH,ISDTY,IDATY,NDVPN
+      IF(NDT.EQ.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR
+      IF(NDT.GT.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR,KOR
+      WRITE(IGRAF,2000) FATY8
+         ENDIF
+         INDSN=1
+         NUM=NLM+ISUMEL
+         IF(ICVEL.EQ.1) NUM=MCVEL(NLM)
+         WRITE(IGRAF,1000) NUM,IEXP,NNODS,NVPN
+         C=1./NCVE
+         SE1=0.D0
+         SE2=0.D0
+         CALL CLEAR(SR,12)
+         IF(NCVE.EQ.3) THEN
+           CALL WR81(TAU,SIGM,NLM,1,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,2,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,3,1,NOD,1,SR,SE1,SE2)
+         ENDIF
+         IF(NCVE.EQ.6.AND.NGAUSX.EQ.7) THEN
+           CALL WR81(TAU,SIGM,NLM,1,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,4,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,2,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,5,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,3,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,6,1,NOD,1,SR,SE1,SE2)
+         ENDIF
+         IF(NCVE.EQ.6.AND.NGAUSX.EQ.3) THEN
+           CALL WR81(TAU,SIGM,NLM,1,1,NOD,1,SR,SE1,SE2)
+           CALL WR82(TAU,SIGM,NLM,1,1,2,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,2,1,NOD,1,SR,SE1,SE2)
+           CALL WR82(TAU,SIGM,NLM,2,1,3,1,NOD,1,SR,SE1,SE2)
+           CALL WR81(TAU,SIGM,NLM,3,1,NOD,1,SR,SE1,SE2)
+           CALL WR82(TAU,SIGM,NLM,3,1,1,1,NOD,1,SR,SE1,SE2)
+         ENDIF
+         IF(ISTNA.GT.0) CALL STGRNA(SR,C,ISTNA,IGRAF,NDVPN)
+   20 CONTINUE
+      IF(INDSN.EQ.1) WRITE(IGRAF,5000) IND1
+      ISUMEL=ISUMEL+NE
+      NCVE=NNCVE
+      RETURN
+C
+ 1000 FORMAT(8I10)
+ 2000 FORMAT(6(1PE13.5))
+ 5000 FORMAT(I6)
+ 5003 FORMAT(A80)
+C-----------------------------------------------------------------------
+ 2004 FORMAT('NAPONI IZOPARAMETARSKE TROUGAONE LJUSKE'/
+     1       'DATUM I VREME'/
+     1       'PRAZNA'/
+     1       'SLUCAJ OPTERECENJA:',I10)
+ 6004 FORMAT('STRESS OF ISOPARAMETRIC TRIANGULAR SHELL ELEMENTS'/
+     1       'DATE'/
+     1       'EMPTY'/
+     1       'LOAD CASE         :',I10)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE STAG80(TAU,AU,ISNA,MATV,NSLOJ,DSLOJ,MCVEL,ICVEL,ISDTY)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     STAMPANJE NAPONA ZA VISESLOJNE LJUSKE U UNIVERZALNI FILE
+CE     PRINTOUT STRESS FOR MULTILAYERD SHELLS IN UNIVERSAL FILE
+C 
+      CHARACTER*250 NASLOV    
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /INTGRA/ INCOTX,INCOTY,INCOTZ
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /NASLOV/ NASLOV
+      COMMON /SUMELE/ ISUMEL,ISUMGR
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /SRPSKI/ ISRPS
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+C
+      DIMENSION AU(*)
+      REAL AU
+      DIMENSION TAU(6,NGS12,NE,*),MATV(*),NSLOJ(*),DSLOJ(MSLOJ,*)
+      DIMENSION ISNA(*),MCVEL(*),S(6),SR(12)
+      DIMENSION XC(3),LR(9),LS(9),TG(6)
+      DATA LR/1,2,2,1, 3,2,3,1, 3/
+      DATA LS/1,1,2,2, 1,3,2,3, 3/
+      DATA XC/1.D0,-1.D0,0.D0/
+      DATA TG/0.D0,0.577350269189626D0,0.774596669241483D0,
+     1             0.861136311594053D0,0.906179845938664D0,1.D0/
+C
+      NNCVE=NCVE
+      IF(NCVE.GT.4.AND.NCVE.LT.8) NCVE=4
+      IF(NCVE.EQ.9) NCVE=8
+C
+C     STRUKTURNA ANALIZA = 1
+      IMOTY=1
+C     STACIONARAN = 1; NESTACIONARAN = 4   
+      IANTY=1
+      IFAT1=1
+      IFAT2=1
+      FATY8=0.0D0
+      IF(NDT.GT.1) THEN 
+        IANTY=4
+        IFAT1=2
+        FATY8=VREME
+      ENDIF
+C     SIMETRICAN TENZOR = 4
+      IDACH=4
+C     NAPONI = 2
+C      ISDTY=2
+C     DEFORMACIJE = 3
+C      ISDTY=3
+C     PRECIZNOST JEDNOSTRUKA = 2; DVOSTRUKA = 4 
+      IDATY=2
+C     BROJ PODATAKA = 6*MAKSIMALAN BROJ SLOJEVA*BR.GAUSOVIH TACAKA PO DEBLJ.
+C      NDVPN=6*MXS
+C      IF(NGAUSZ.GT.1) NDVPN=12*MXS
+      NDVPN=6
+      IF(NGAUSZ.GT.1.OR.MXS.GT.1) NDVPN=12
+      IEXP=1
+      NNODS=NCVE
+      IF(ISTNA.GT.0) NNODS=-NNODS
+      IND1=-1
+      INA1=57
+C
+      INDSN=0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 20
+C
+         ISN=ISNA(NLM)
+         INN=0
+C         INN=1
+         IF(ISN.GE.10)THEN
+            ISN=ISN-10
+            INN=1
+         ENDIF
+         IF(ISN.EQ.1) GO TO 20
+         IF(INDSN.EQ.0) THEN
+      WRITE(IGRAF,5000) IND1
+      WRITE(IGRAF,5000) INA1
+      WRITE(IGRAF,5003) NASLOV
+      IF(ISDTY.EQ.2) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2001)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6001)
+      ELSEIF(ISDTY.EQ.3) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2002)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6002)
+      ELSEIF(ISDTY.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2003)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6003)
+      ELSEIF(ISDTY.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2005)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6005)
+      ENDIF
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2004) KOR
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6004) KOR
+      WRITE(IGRAF,1000) IMOTY,IANTY,IDACH,ISDTY,IDATY,NDVPN
+      IF(NDT.EQ.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR
+      IF(NDT.GT.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR,KOR
+      WRITE(IGRAF,2000) FATY8
+         ENDIF
+         INDSN=1
+C
+         MSS=1
+         NBT=2
+         IF(MSET.GT.0) THEN
+C            NBT=1
+            MST=MATV(NLM)
+            MSS=NSLOJ(MST)
+            TTT=-1.D0
+         ENDIF
+         NVPN=NDVPN
+C
+         NUM=NLM+ISUMEL
+         IF(ICVEL.EQ.1) NUM=MCVEL(NLM)
+         WRITE(IGRAF,1000) NUM,IEXP,NNODS,NVPN
+C
+C  G A U S O V E    T A C K E
+C
+         IF(INN.EQ.0)THEN
+            C=1./NCVE
+            SE1=0.D0
+            SE2=0.D0
+            CALL CLEAR(SR,12)
+            IF(NCVE.EQ.4.AND.NGAUSX.EQ.2) THEN
+               CALL W81(TAU,NLM,3,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,1,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,0,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,2,NOD,1,SR,SE1,SE2)
+            ENDIF
+            IF(NCVE.EQ.4.AND.NGAUSX.EQ.3) THEN
+               CALL W81(TAU,NLM,8,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,2,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,0,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,6,NOD,1,SR,SE1,SE2)
+            ENDIF
+            IF(NCVE.EQ.8.AND.NGAUSX.EQ.3) THEN
+               CALL W81(TAU,NLM,8,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,5,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,2,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,1,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,0,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,3,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,6,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,7,NOD,1,SR,SE1,SE2)
+            ENDIF
+            IF(NCVE.EQ.8.AND.NGAUSX.EQ.2) THEN
+               CALL W81(TAU,NLM,3,NOD,1,SR,SE1,SE2)
+               CALL W82(TAU,NLM,3,1,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,1,NOD,1,SR,SE1,SE2)
+               CALL W82(TAU,NLM,1,0,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,0,NOD,1,SR,SE1,SE2)
+               CALL W82(TAU,NLM,0,2,NOD,1,SR,SE1,SE2)
+               CALL W81(TAU,NLM,2,NOD,1,SR,SE1,SE2)
+               CALL W82(TAU,NLM,2,3,NOD,1,SR,SE1,SE2)
+            ENDIF
+            IF(ISTNA.GT.0) CALL STGRNA(SR,C,ISTNA,IGRAF,NDVPN)
+         ENDIF
+C
+C        C V O R O V I
+C
+         IF(INN.EQ.1)THEN
+            DO 12 N=1,NCVE
+            DO 13 MSL=1,MSS
+            DO 13 MBT=1,NBT
+               IF(MSET.GT.0) THEN
+                  DDD =DSLOJ(MSL,MST)
+                  IF(MBT.EQ.2) TTT =TTT+2.D0*DDD
+C                    T =TTT-DDD
+                    T=TTT
+               ELSE
+                  IF(INCOTZ.EQ.1) TT=TG(6)
+                  IF(INCOTZ.EQ.0) THEN
+                     IF(NGAUSZ.EQ.1) TT=TG(1)
+                     IF(NGAUSZ.EQ.2) TT=TG(2)
+                     IF(NGAUSZ.EQ.3) TT=TG(3)
+                     IF(NGAUSZ.EQ.4) TT=TG(4)
+                     IF(NGAUSZ.EQ.5) TT=TG(5)
+                  ENDIF
+                  IF(MBT.EQ.1) T=-TT
+                  IF(MBT.EQ.2) T= TT
+               ENDIF
+               CALL SMOOTH(TAU(1,1,NLM,MSL),S,6,
+     1                     NGAUSX,NGAUSY,NGAUSZ,XC(LR(N)),XC(LS(N)),T)
+               WRITE(IGRAF,2000) S(1),S(4),S(2),S(6),S(5),S(3)
+   13       CONTINUE
+   12       CONTINUE
+         ENDIF
+C
+   20 CONTINUE
+      IF(INDSN.EQ.1) WRITE(IGRAF,5000) IND1
+      ISUMEL=ISUMEL+NE
+      NCVE=NNCVE
+      RETURN
+C
+ 1000 FORMAT(8I10)
+ 2000 FORMAT(6(1PE13.5))
+ 5000 FORMAT(I6)
+ 5003 FORMAT(A80)
+C-----------------------------------------------------------------------
+ 2001 FORMAT('NAPONI ELEMENTA LJUSKE')
+ 2002 FORMAT('UKUPNE DEFORMACIJE ELEMENTA LJUSKE')
+ 2003 FORMAT('PLASTICNE DEFORMACIJE ELEMENTA LJUSKE')
+ 2005 FORMAT('DEFORMACIJE PUZANJA ELEMENTA LJUSKE')
+ 2004 FORMAT(
+     1       'DATUM I VREME'/
+     1       'PRAZNA'/
+     1       'SLUCAJ OPTERECENJA:',I10)
+C-----------------------------------------------------------------------
+ 6001 FORMAT('STRESS OF SHELL ELEMENT')
+ 6002 FORMAT('TOTAL STRAIN OF SHELL ELEMENT')
+ 6003 FORMAT('PLASTIC STRAIN OF SHELL ELEMENT')
+ 6005 FORMAT('CREEP STRAIN OF SHELL ELEMENT')
+ 6004 FORMAT(
+     1       'DATE'/
+     1       'EMPTY'/
+     1       'LOAD CASE         :',I10)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE STAN85(PLAST,AU,ISNA,MATV,NSLOJ,IPRC,MCVEL,ICVEL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.       TO PRINTOUT STRESS IN SHELL ELEMENTS FOR MATERIAL MODEL 5
+CS.   P R O G R A M
+CS.       ZA STAMPANJE NAPONA ELEMENATA LJUSKI ZA MATERIJALNI MODEL 5
+C .
+C ......................................................................
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /PODTIP/ IPODT
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /MAXREZ/ PMALL,BMALL,AMALL,SMKOR,SMALL,
+     +                NPMALL,NBMALL,NAMALL,KPMALL,KBMALL,KAMALL,
+     +                NSMKOR,NSMALL,NGRKOR,NGRALL,KSMALL
+      COMMON /SRPSKI/ ISRPS
+      COMMON /CDEBUG/ IDEBUG
+C
+      DIMENSION AU(*)
+      REAL AU
+C
+      DIMENSION PLAST(*),ISNA(*),MATV(*),NSLOJ(*),IPRC(*),MCVEL(*)
+      DIMENSION STRESS(7),STRES(7),SRED(6),SRED2(6),SRED3(6),SRED4(6)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' STAN85'
+      NGR1=1
+      NGS1=1
+      NGT1=1
+      NNLM=0
+      NGXYZ=NGS12*MXS
+      NPR56=MODPRO( NMODM )
+      KK=6
+      INDSN=0
+      IT=0
+      SEFE=0.D0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2040) NLM
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6040) NLM
+         GO TO 20
+         ENDIF
+C
+         NPROS=(NLM-1)*NGXYZ-1
+         IBTC=0
+         ISN=ISNA(NLM)
+         IF(ISN.EQ.1) GO TO 20
+C
+         IF(INDSN.EQ.0) THEN
+            IF(ISN.EQ.0) THEN
+               IF(IPODT.NE.1.AND.IPODT.NE.3) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2011) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6011) NGE
+               ENDIF
+               IF(IPODT.EQ.1.OR.IPODT.EQ.3) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2013) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6013) NGE
+               ENDIF
+            ENDIF
+            IF(ISN.EQ.2) THEN
+               IF(IPODT.NE.1.AND.IPODT.NE.3) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2010) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6010) NGE
+               ENDIF
+               IF(IPODT.EQ.1.OR.IPODT.EQ.3) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2012) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6012) NGE
+               ENDIF
+            ENDIF
+         ENDIF
+         INDSN=1
+         IPC=IPRC(NLM)
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         WRITE(IZLAZ,5000) NMM
+         MSS=1
+         IF(MSET.GT.0) MSS=NSLOJ(MATV(NLM))
+         C=1./NGS12/MSS
+         SEFE1=0.D0
+         SEFE2=0.D0
+         SEFE3=0.D0
+         SEFE4=0.D0
+         CALL CLEAR(SRED,6)
+         CALL CLEAR(SRED2,6)
+         CALL CLEAR(SRED3,6)
+         CALL CLEAR(SRED4,6)
+         DO 15 MSL=1,MSS
+            IF(MSET.GT.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2500) MSL
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6500) MSL
+            ENDIF
+            DO 10 NGR=1,NGAUSX
+            DO 10 NGS=1,NGAUSY
+            DO 10 NGT=1,NGAUSZ
+               IBTC=IBTC+1
+               LL=1+(NPROS+IBTC)*NPR56
+               DO 32 II=1,KK
+                  STRES(II)=PLAST(LL+II-1)
+   32          CONTINUE
+C           IF(ISN.EQ.0.AND.DABS(BETA).GT.1.0D-10) THEN
+C              DO 33 II=1,KK
+C                 STRESS(II)=0.D0
+C              DO 33 K=1,KK
+C                STRESS(II)=STRESS(II)+TE(II,K)*STRES(K)
+C  33          CONTINUE
+C           ENDIF
+               IF(ISN.EQ.0) THEN
+                  DO 33 II=1,KK
+                     STRESS(II)=STRES(II)
+   33             CONTINUE
+               ENDIF
+               IF(ISN.EQ.2) THEN
+                  DO 34 II=1,KK
+                     STRESS(II)=STRES(II)
+   34             CONTINUE
+               ENDIF
+               IF(ISTNA.EQ.1) CALL ZBIRM1(SRED,STRESS,6)
+               CALL GLAVN3(STRESS)
+               IF(ISTNA.EQ.2) THEN
+                  IF(STRESS(7).GT.SEFE1) THEN
+                     NGR1=NGR
+                     NGS1=NGS
+                     NGT1=NGT
+                     SEFE1=STRESS(7)
+                     CALL JEDNA1(SRED,STRESS,6)
+                  ENDIF
+               ENDIF
+               IF(STRESS(7).GT.SEFE) THEN
+                  NNLM=NLM
+                  NNGR=NGR
+                  NNGS=NGS
+                  NNGT=NGT
+                  MSLL=MSL
+                  SEFE=STRESS(7)
+               ENDIF
+               IF(ISTNA.EQ.0) 
+     +                  WRITE(IZLAZ,5001) NGR,NGS,NGT,(STRESS(K),K=1,KK)
+               IF(ISTDE.NE.-1) THEN
+                  LL6=LL+6
+                  CALL JEDNA1(STRES,PLAST(LL6),KK)
+                  IF(ISTNA.EQ.1) CALL ZBIRM1(SRED2,STRES,6)
+                  CALL GLAVN3(STRES)
+                  IF(ISTNA.EQ.2) THEN
+                     IF(STRES(7).GT.SEFE2) THEN
+                        SEFE2=STRES(7)
+                        CALL JEDNA1(SRED2,STRES,6)
+                     ENDIF
+                  ENDIF
+                  IF(ISTNA.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2002) (PLAST(II),II=LL+6,LL+11)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6002) (PLAST(II),II=LL+6,LL+11)
+                  ENDIF
+               ENDIF
+               IPRPL=0
+C              Isotropic Damage Model (Oliver 1996); PRINT DAMAGE
+               IF(NMODM.EQ.61) THEN
+      IF(ISRPS.EQ.0)
+     1          WRITE(IZLAZ,2008) PLAST(LL+12),PLAST(LL+13),PLAST(LL+14)
+      IF(ISRPS.EQ.1)
+     1          WRITE(IZLAZ,6008) PLAST(LL+12),PLAST(LL+13),PLAST(LL+14)
+C
+      GO TO 136
+               ENDIF
+C
+               DO 30 II=LL+12,LL+17
+                      IF(PLAST(II).GT.1.0D-10) IPRPL=1
+   30          CONTINUE
+C
+               IF(NMODM.EQ.34) IPRPL=1
+C
+               IF(IPRPL.EQ.1) THEN
+                  LL6=LL+12
+                  CALL JEDNA1(STRES,PLAST(LL6),KK)
+                  IF(ISTNA.EQ.1) CALL ZBIRM1(SRED3,STRES,6)
+                  CALL GLAVN3(STRES)
+                  IF(ISTNA.EQ.2) THEN
+                     IF(STRES(7).GT.SEFE3) THEN
+                        SEFE3=STRES(7)
+                        CALL JEDNA1(SRED3,STRES,6)
+                     ENDIF
+                  ENDIF
+C
+                  IF(ISTNA.EQ.0) THEN
+C 
+                     IF(NMODM.EQ.32.OR.NMODM.EQ.33) THEN
+      IF(ISRPS.EQ.0)
+     1          WRITE(IZLAZ,2005) PLAST(LL+12),PLAST(LL+15),PLAST(LL+14)
+      IF(ISRPS.EQ.1)
+     1          WRITE(IZLAZ,6005) PLAST(LL+12),PLAST(LL+15),PLAST(LL+14)
+C
+                        IF(NMODM.EQ.33) THEN
+      IF(ISRPS.EQ.0)
+     1          WRITE(IZLAZ,2006) PLAST(LL+16),PLAST(LL+17)
+      IF(ISRPS.EQ.1)
+     1          WRITE(IZLAZ,6006) PLAST(LL+16),PLAST(LL+17)
+C
+      GO TO 135
+                        ENDIF
+C
+      GO TO 135
+                     ENDIF
+C
+                     IF(NMODM.EQ.34) THEN
+      IF(ISRPS.EQ.0)
+     1          WRITE(IZLAZ,2005) PLAST(LL+18),PLAST(LL+21),PLAST(LL+20)
+      IF(ISRPS.EQ.1)
+     1          WRITE(IZLAZ,6005) PLAST(LL+18),PLAST(LL+21),PLAST(LL+20)
+      IF(ISRPS.EQ.0)
+     1          WRITE(IZLAZ,1020) (PLAST(II),II=LL+12,LL+17)
+      IF(ISRPS.EQ.1)
+     1          WRITE(IZLAZ,1030) (PLAST(II),II=LL+12,LL+17)
+      IF(ISRPS.EQ.0)
+     1          WRITE(IZLAZ,2007) PLAST(LL+22),PLAST(LL+23)
+      IF(ISRPS.EQ.1)
+     1          WRITE(IZLAZ,6007) PLAST(LL+22),PLAST(LL+23)
+C
+      GO TO 135
+                     ENDIF
+C
+                     IF(NMODM.NE.15.AND.NMODM.NE.18) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2003) (PLAST(II),II=LL+12,LL+17)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6003) (PLAST(II),II=LL+12,LL+17)
+                     ELSE
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2004) (PLAST(II),II=LL+12,LL+17)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6004) (PLAST(II),II=LL+12,LL+17)
+                     ENDIF
+  135  CONTINUE
+                  ENDIF
+               ENDIF
+  136          IPRCR=0
+               IF(NMODM.EQ.16.OR.NMODM.EQ.19) THEN
+                  DO 40 II=LL+24,LL+29
+                     IF(PLAST(II).GT.1.0D-10) IPRCR=1
+   40             CONTINUE
+                  IF(IPRCR.EQ.1) THEN
+                     LL6=LL+24
+                     CALL JEDNA1(STRES,PLAST(LL6),KK)
+                     IF(ISTNA.EQ.1) CALL ZBIRM1(SRED4,STRES,6)
+                     CALL GLAVN3(STRES)
+                     IF(ISTNA.EQ.2) THEN
+                        IF(STRES(7).GT.SEFE4) THEN
+                           SEFE4=STRES(7)
+                           CALL JEDNA1(SRED4,STRES,6)
+                        ENDIF
+                     ENDIF
+                     IF(ISTNA.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2004) (PLAST(II),II=LL+24,LL+29)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6004) (PLAST(II),II=LL+24,LL+29)
+                     ENDIF
+                  ENDIF
+               ENDIF
+               IF(ISTNA.EQ.0) THEN
+                  IF(IPC.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2015) STRESS(7)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6015) STRESS(7)
+                  ENDIF
+                  IF(IPC.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2015) STRESS(7)
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6015) STRESS(7)
+                  ENDIF
+               ENDIF
+   10       CONTINUE
+   15    CONTINUE
+            IF(ISTNA.EQ.1) THEN
+               CALL JEDNAK(STRESS,SRED,C,6)
+               WRITE(IZLAZ,1010) (STRESS(I),I=1,6) 
+               IF(ISTDE.NE.-1) THEN
+                  CALL JEDNAK(STRESS,SRED2,C,6)
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2002) (STRESS(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6002) (STRESS(I),I=1,6) 
+               ENDIF
+               IF(IPRPL.EQ.1) THEN
+                  CALL JEDNAK(STRESS,SRED3,C,6)
+                     IF(NMODM.NE.15.AND.NMODM.NE.18) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2003) (STRESS(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6003) (STRESS(I),I=1,6) 
+                     ELSE
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2004) (STRESS(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6004) (STRESS(I),I=1,6) 
+                     ENDIF
+               ENDIF
+               IF(IPRCR.EQ.1) THEN
+                  CALL JEDNAK(STRESS,SRED4,C,6)
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2004) (STRESS(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6004) (STRESS(I),I=1,6) 
+               ENDIF
+            ENDIF
+            IF(ISTNA.EQ.2) THEN
+               WRITE(IZLAZ,5001) NGR1,NGS1,NGT1,(SRED(I),I=1,6) 
+               IF(ISTDE.NE.-1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2002) (SRED2(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6002) (SRED2(I),I=1,6) 
+               ENDIF
+               IF(IPRPL.EQ.1) THEN
+                  IF(NMODM.NE.15.AND.NMODM.NE.18) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2003) (SRED3(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6003) (SRED3(I),I=1,6)
+                  ELSE
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2004) (SRED3(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6004) (SRED3(I),I=1,6) 
+                  ENDIF
+               ENDIF
+               IF(IPRCR.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2004) (SRED4(I),I=1,6) 
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6004) (SRED4(I),I=1,6) 
+               ENDIF
+            ENDIF
+   20 CONTINUE
+      IF(NNLM.GT.0)THEN
+      IF(ISRPS.EQ.0.AND.INDSN.EQ.1)
+     1WRITE(IZLAZ,2030) NNLM,NNGR,NNGS,NNGT,MSLL,SEFE
+      IF(ISRPS.EQ.1.AND.INDSN.EQ.1)
+     1WRITE(IZLAZ,6030) NNLM,NNGR,NNGS,NNGT,MSLL,SEFE
+         IF(SMKOR.LT.SEFE) THEN
+            SMKOR=SEFE
+            NGRKOR=NGE
+            NSMKOR=NNLM
+         ENDIF
+         IF(SMALL.LT.SEFE) THEN
+            SMALL=SEFE
+            NGRALL=NGE
+            NSMALL=NNLM
+            KSMALL=KOR
+         ENDIF
+      ENDIF
+      RETURN
+ 5000 FORMAT(/I8)
+ 5001 FORMAT(3I3,6(1PE11.3))
+ 1010 FORMAT(9X,6(1PE11.3))
+C
+ 1020 FORMAT(' AKTIV NAP',6(1PE11.3))
+ 1030 FORMAT(' ACTIV TAU',6(1PE11.3))
+C-----------------------------------------------------------------------
+ 2010 FORMAT(/'1'///' GLOBALNI NAPONI ELEMENATA CETVOROUGAONIH LJUSKI GR
+     1UPE ELEMENATA',I6/1X,69('-')//
+     1' ELEMENT /'/' IR IS IT   NAPON-XX',2X,' NAPON-YY',2X,
+     1' NAPON-ZZ',2X,' NAPON-XY',2X,' NAPON-YZ',2X,' NAPON-ZX')
+ 2011 FORMAT(/'1'///' LOKALNI NAPONI ELEMENATA CETVOROUGAONIH LJUSKI GRU
+     1PE ELEMENATA',I6/1X,68('-')//
+     1' ELEMENT /'/' IR IS IT   NAPON-XX',2X,' NAPON-YY',2X,
+     1' NAPON-ZZ',2X,' NAPON-XY',2X,' NAPON-YZ',2X,' NAPON-ZX')
+ 2012 FORMAT(/'1'///' GLOBALNI NAPONI ELEMENATA TROUGAONIH LJUSKI GRUPE 
+     1ELEMENATA',I6/1X,65('-')//
+     1' ELEMENT /'/' IR IS IT   NAPON-XX',2X,' NAPON-YY',2X,
+     1' NAPON-ZZ',2X,' NAPON-XY',2X,' NAPON-YZ',2X,' NAPON-ZX')
+ 2013 FORMAT(/'1'///' LOKALNI NAPONI ELEMENATA TROUGAONIH LJUSKI GRUPE E
+     1LEMENATA',I6/1X,64('-')//
+     1' ELEMENT /'/' IR IS IT   NAPON-XX',2X,' NAPON-YY',2X,
+     1' NAPON-ZZ',2X,' NAPON-XY',2X,' NAPON-YZ',2X,' NAPON-ZX')
+ 2015 FORMAT(' EF.NAPON=',1PE10.3)
+ 2030 FORMAT(//' MAKSIMALNI EFEKTIVNI NAPON:'/' ELEMENT =',I6,'  IR =',
+     1I2,'  IS =',I2,'  IT =',I2,'  SLOJ =',I3,
+     1'  MAX.EFE.NAP.=',1PE11.3//)
+ 2002 FORMAT(' UK.DEFO.',6(1PE11.3))
+ 2003 FORMAT(' PL.DEFO.',6(1PE11.3))
+ 2004 FORMAT(' PU.DEFO.',6(1PE11.3))
+ 2005 FORMAT(' STREC X  ',1PE11.4,'    STREC   Y',1PE11.4,'  STREC Z  ',
+     11PE11.4)
+ 2006 FORMAT(' UZDUZNI NAPON PUZANJA ',1PE11.4,' POPRECNI NAPON PUZANJA'
+     1,1PE11.4)
+ 2007 FORMAT(' FUNKCIJA AKTIVACIJE  ',1PE11.4,5X,'BRZINA DEFORMACIJE  ',
+     11PE11.4)
+ 2008 FORMAT(' OSTECENJE DN=',1PE11.4,'  RN=',1PE11.4,'  QN=',1PE11.4)
+ 2500 FORMAT(/' SLOJ =',I3)
+ 2040 FORMAT(/' NESTAO JE ELEMENT -',I5)
+C-----------------------------------------------------------------------
+ 6010 FORMAT(/'1'///' GLOBAL STRESS COMPONENTS OF RECTANGULAR SHELL ELEM
+     1ENTS FOR GROUP',I6/1X,70('-')//
+     1' ELEMENT /'/' IR IS IT  STRESS-XX',2X,'STRESS-YY',2X,
+     1'STRESS-ZZ',2X,'STRESS-XY',2X,'STRESS-YZ',2X,'STRESS-ZX')
+ 6011 FORMAT(/'1'///' LOCAL STRESS COMPONENTS OF RECTANGULAR SHELL ELEME
+     1NTS FOR GROUP',I6/1X,69('-')//
+     1' ELEMENT /'/' IR IS IT  STRESS-RR',2X,'STRESS-SS',2X,
+     1'STRESS-TT',2X,'STRESS-RS',2X,'STRESS-ST',2X,'STRESS-TR')
+ 6012 FORMAT(/'1'///' GLOBAL STRESS COMPONENTS OF TRIANGULAR SHELL ELEME
+     1NTS FOR GROUP',I6/1X,69('-')//
+     1' ELEMENT /'/' IR IS IT  STRESS-XX',2X,'STRESS-YY',2X,
+     1'STRESS-ZZ',2X,'STRESS-XY',2X,'STRESS-YZ',2X,'STRESS-ZX')
+ 6013 FORMAT(/'1'///' LOCAL STRESS COMPONENTS OF TRIANGULAR SHELL ELEMEN
+     1TS FOR GROUP',I6/1X,68('-')//
+     1' ELEMENT /'/' IR IS IT  STRESS-RR',2X,'STRESS-SS',2X,
+     1'STRESS-TT',2X,'STRESS-RS',2X,'STRESS-ST',2X,'STRESS-TR')
+ 6015 FORMAT(' EF.STRE.=',1PE10.3)
+ 6030 FORMAT(//' MAXIMUM EFFECTIVE STRESS:'/' ELEMENT =',I6,'  IR =',I2,
+     1'  IS =',I2,'  IT =',I2,'  LAYER =',I3,
+     1'  MAX.EFF.STR.=',1PE11.3//)
+ 6002 FORMAT(' TO.STRA.',6(1PE11.3))
+ 6003 FORMAT(' PL.STRA.',6(1PE11.3))
+ 6004 FORMAT(' CR.STRA.',6(1PE11.3))
+ 6005 FORMAT(' STRETCH X  ',1PE11.4,'    STRETCH Y  ',1PE11.4,'  STRETCH
+     1 Z  ',1PE11.4)
+ 6006 FORMAT(' LONGITUD. CREEP STRESS ',1PE11.4,5X,' CIRCUMF. CREEP STRE
+     1SS',1PE11.4)
+ 6007 FORMAT(' ACTIVATION FUNCTION  ',1PE11.4,5X,'STRAIN RATE ',1PE11.4)
+ 6008 FORMAT(' DAMAGE DN= ',1PE11.4,'  RN= ',1PE11.4,'  QN= ',1PE11.4)
+ 6500 FORMAT(/' LAYER =',I3)
+ 6040 FORMAT(/' DEATH ELEMENT -',I5)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE STAG85(PLAST,AU,ISNA,
+     +                  MATV,NSLOJ,DSLOJ,MCVEL,ICVEL,ISDTU)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     STAMPANJE NAPONA ZA VISESLOJNE LJUSKE U UNIVERZALNI FILE
+CE     PRINTOUT STRESS FOR MULTILAYERD SHELLS IN UNIVERSAL FILE
+C 
+      CHARACTER*250 NASLOV    
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /NASLOV/ NASLOV
+      COMMON /SUMELE/ ISUMEL,ISUMGR
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /SRPSKI/ ISRPS
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /KISDTY/ ISDTY
+C
+      DIMENSION AU(*)
+      REAL AU
+C
+      DIMENSION PLAST(*),MATV(*),NSLOJ(*),DSLOJ(MSLOJ,*)
+      DIMENSION ISNA(*),MCVEL(*),SR(12)
+C
+      NNCVE=NCVE
+      IF(NCVE.GT.4.AND.NCVE.LT.8) NCVE=4
+      IF(NCVE.EQ.9) NCVE=8
+C
+C     STRUKTURNA ANALIZA = 1
+      IMOTY=1
+C     STACIONARAN = 1; NESTACIONARAN = 4   
+      IANTY=1
+      IFAT1=1
+      IFAT2=1
+      FATY8=0.0D0
+      IF(NDT.GT.1) THEN 
+        IANTY=4
+        IFAT1=2
+        FATY8=VREME
+      ENDIF
+C     SIMETRICAN TENZOR = 4
+      IDACH=4
+C     NAPONI = 2
+C     ISDTY=2
+C     UKUPNE DEFORMACIJE = 3
+C     ISDTY=3
+C     PLASTICNE DEFORMACIJE = 0
+C     ISDTY=0
+C     DEFORMACIJE PUZANJA = 1
+C     ISDTY=1
+C     EFEKTIVNE PLASTICNE DEFORMACIJE I EFEKTIVNE DEFORMACIJE PUZANJA=99
+C     ISDTY=99
+      ISDTY=ISDTU
+C     PRECIZNOST JEDNOSTRUKA = 2; DVOSTRUKA = 4 
+      IDATY=2
+C     BROJ PODATAKA = 6*MAKSIMALAN BROJ SLOJEVA*BR.GAUSOVIH TACAKA PO DEBLJ.
+      NDVPN=6
+      IF(NGAUSZ.GT.1.OR.MXS.GT.1) NDVPN=12
+      IEXP=1
+      NNODS=NCVE
+      IF(ISTNA.GT.0) NNODS=-NNODS
+      NVPN=NDVPN
+      IND1=-1
+      INA1=57
+C
+      NPROS=MODPRO( NMODM )
+      NGXYZ=NGS12*NPROS*MXS
+      IF(ISDTY.EQ.2) THEN
+         KK=1
+      ELSEIF(ISDTY.EQ.3) THEN
+         KK=7
+      ELSEIF(ISDTY.EQ.0) THEN
+         KK=13
+      ELSEIF(ISDTY.EQ.1) THEN
+         KK=13
+         IF(NMODM.EQ.16.OR.NMODM.EQ.19) KK=25
+      ELSEIF(ISDTY.EQ.99) THEN
+         KK=26
+         IF(NMODM.EQ.15.OR.NMODM.EQ.18) KK=32
+         IF(NMODM.EQ.16.OR.NMODM.EQ.19) KK=45
+         IF(NMODM.EQ.61) KK=13
+      ENDIF
+      INDSN=0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 20
+C
+         ISN=ISNA(NLM)
+         IF(ISN.EQ.1) GO TO 20
+         IF(INDSN.EQ.0) THEN
+      WRITE(IGRAF,5000) IND1
+      WRITE(IGRAF,5000) INA1
+      WRITE(IGRAF,5003) NASLOV
+      IF(ISDTY.EQ.2) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2001)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6001)
+      ELSEIF(ISDTY.EQ.3) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2002)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6002)
+      ELSEIF(ISDTY.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2003)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6003)
+      ELSEIF(ISDTY.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2005)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6005)
+      ELSEIF(ISDTY.EQ.99) THEN
+         if(nmodm.eq.61) then
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2007)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6007)
+         else
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2006)
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6006)
+         endif
+      ENDIF
+      IF(ISRPS.EQ.0)
+     1WRITE(IGRAF,2004) KOR
+      IF(ISRPS.EQ.1)
+     1WRITE(IGRAF,6004) KOR
+      WRITE(IGRAF,1000) IMOTY,IANTY,IDACH,ISDTY,IDATY,NDVPN
+      IF(NDT.EQ.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR
+      IF(NDT.GT.1) WRITE(IGRAF,1000) IFAT1,IFAT2,KOR,KOR
+      WRITE(IGRAF,2000) FATY8
+         ENDIF
+         INDSN=1
+         LL=KK+(NLM-1)*NGXYZ
+         NUM=NLM+ISUMEL
+         IF(ICVEL.EQ.1) NUM=MCVEL(NLM)
+         WRITE(IGRAF,1000) NUM,IEXP,NNODS,NVPN
+         C=1./NCVE
+         SE1=0.D0
+         SE2=0.D0
+         CALL CLEAR(SR,12)
+         IF(NCVE.EQ.4.AND.NGAUSX.EQ.2) THEN
+            CALL WRIT85(PLAST(LL),NPROS,2,2,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,2,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,1,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,2,1,SR,SE1,SE2)
+         ENDIF
+         IF(NCVE.EQ.4.AND.NGAUSX.EQ.3) THEN
+            CALL WRIT85(PLAST(LL),NPROS,3,3,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,3,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,1,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,3,1,SR,SE1,SE2)
+         ENDIF
+         IF(NNODS.EQ.8.AND.NGAUSX.EQ.3) THEN
+            CALL WRIT85(PLAST(LL),NPROS,3,3,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,2,3,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,3,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,2,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,1,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,2,1,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,3,1,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,3,2,SR,SE1,SE2)
+         ENDIF
+         IF(NNODS.EQ.8.AND.NGAUSX.EQ.2) THEN
+            CALL WRIT85(PLAST(LL),NPROS,2,2,SR,SE1,SE2)
+            CALL WRIT86(PLAST(LL),NPROS,2,2,1,2,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,2,SR,SE1,SE2)
+            CALL WRIT86(PLAST(LL),NPROS,1,2,1,1,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,1,1,SR,SE1,SE2)
+            CALL WRIT86(PLAST(LL),NPROS,1,1,2,1,SR,SE1,SE2)
+            CALL WRIT85(PLAST(LL),NPROS,2,1,SR,SE1,SE2)
+            CALL WRIT86(PLAST(LL),NPROS,2,1,2,2,SR,SE1,SE2)
+         ENDIF
+         IF(ISTNA.GT.0) CALL STGRNA(SR,C,ISTNA,IGRAF,NDVPN)
+   20 CONTINUE
+      IF(INDSN.EQ.1) WRITE(IGRAF,5000) IND1
+      ISUMEL=ISUMEL+NE
+      NCVE=NNCVE
+      RETURN
+C
+ 1000 FORMAT(8I10)
+ 2000 FORMAT(6(1PE13.5))
+ 5000 FORMAT(I6)
+ 5003 FORMAT(A80)
+C-----------------------------------------------------------------------
+ 2001 FORMAT('NAPONI ELEMENTA LJUSKE')
+ 2002 FORMAT('UKUPNE DEFORMACIJE ELEMENTA LJUSKE')
+ 2003 FORMAT('PLASTICNE DEFORMACIJE ELEMENTA LJUSKE')
+ 2005 FORMAT('DEFORMACIJE PUZANJA ELEMENTA LJUSKE')
+ 2006 FORMAT('EFEKTIVNE DEFORMACIJE PLASTICNE,PUZANJA')
+ 2007 FORMAT('OSTECENJE')
+ 2004 FORMAT(
+     1       'DATUM I VREME'/
+     1       'PRAZNA'/
+     1       'SLUCAJ OPTERECENJA:',I10)
+C-----------------------------------------------------------------------
+ 6001 FORMAT('STRESS OF SHELL ELEMENT')
+ 6002 FORMAT('TOTAL STRAIN OF SHELL ELEMENT')
+ 6003 FORMAT('PLASTIC STRAIN OF SHELL ELEMENT')
+ 6005 FORMAT('CREEP STRAIN OF SHELL ELEMENT')
+ 6006 FORMAT('EFFECTIVE STRAIN PLASTIC,CREEP OF SHELL ELEMENT')
+ 6007 FORMAT('DAMAGE')
+ 6004 FORMAT(
+     1       'DATE'/
+     1       'EMPTY'/
+     1       'LOAD CASE         :',I10)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE WRIT85(PLAST,NPROS,I,J,SRED,SEFE1,SEFE2)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /KISDTY/ ISDTY
+C
+      DIMENSION PLAST(*),SIGM(6),STRESS(7),SRED(*)
+C
+      ITB=NGAUSZ-1
+      IF(ITB.EQ.0)ITB=1
+      ITS=MXS-1
+      IF(ITS.EQ.0) ITS=1
+      IPRO=-5
+      DO 20 MSL=1,MXS,ITS
+      DO 20 NZ=1,NGAUSZ,ITB
+       IF((NZ.EQ.1.AND.MSL.EQ.1).OR.(NZ.EQ.NGAUSZ.AND.MSL.EQ.MXS)) THEN
+         IPRO=IPRO+6
+      IJ=((MSL-1)*NGS12+(I-1)*NGAUSZ*NGAUSY+(J-1)*NGAUSZ+(NZ-1))*NPROS+1
+         IF(ISDTY.EQ.99) THEN
+            CALL CLEAR(SIGM,6)
+            SIGM(1)=PLAST(IJ)
+            IF(NMODM.EQ.16.OR.NMODM.EQ.19) SIGM(2)=PLAST(IJ+1)
+         ELSE
+            SIGM(1)=PLAST(IJ)
+            SIGM(2)=PLAST(IJ+3)
+            SIGM(3)=PLAST(IJ+1)
+            SIGM(4)=PLAST(IJ+5)
+            SIGM(5)=PLAST(IJ+4)
+            SIGM(6)=PLAST(IJ+2)
+         ENDIF
+         IF(ISTNA.EQ.0.OR.ISDTY.EQ.99) THEN
+            WRITE(IGRAF,2000) SIGM
+            GO TO 20
+         ENDIF
+C
+         STRESS(1)=SIGM(1)
+         STRESS(2)=SIGM(3)
+         STRESS(3)=SIGM(6)
+         STRESS(4)=SIGM(2)
+         STRESS(5)=SIGM(5)
+         STRESS(6)=SIGM(4)
+         IF(ISTNA.EQ.1) CALL ZBIRM1(SRED(IPRO),SIGM,6)
+         CALL GLAVN3(STRESS)
+         IF(ISTNA.EQ.2) THEN
+            IF(IPRO.EQ.1.AND.STRESS(7).GT.SEFE1) THEN
+               SEFE1=STRESS(7)
+               CALL JEDNA1(SRED(IPRO),SIGM,6)
+            ENDIF
+            IF(IPRO.EQ.7.AND.STRESS(7).GT.SEFE2) THEN
+               SEFE2=STRESS(7)
+               CALL JEDNA1(SRED(IPRO),SIGM,6)
+            ENDIF
+         ENDIF
+       ENDIF
+   20 CONTINUE
+      RETURN
+ 2000 FORMAT(6(1PE13.5))
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE WRIT86(PLAST,NPROS,I,J,K,L,SRED,SEFE1,SEFE2)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /KISDTY/ ISDTY
+C
+      DIMENSION PLAST(*),SIGM(6),STRESS(7),SRED(*)
+C
+      ITB=NGAUSZ-1
+      IF(ITB.EQ.0)ITB=1
+      ITS=MXS-1
+      IF(ITS.EQ.0) ITS=1
+      IPRO=-5
+      DO 20 MSL=1,MXS,ITS
+      DO 20 NZ=1,NGAUSZ,ITB
+       IF((NZ.EQ.1.AND.MSL.EQ.1).OR.(NZ.EQ.NGAUSZ.AND.MSL.EQ.MXS)) THEN
+         IPRO=IPRO+6
+      IJ=((MSL-1)*NGS12+(I-1)*NGAUSZ*NGAUSY+(J-1)*NGAUSZ+(NZ-1))*NPROS+1
+      KL=((MSL-1)*NGS12+(K-1)*NGAUSZ*NGAUSY+(L-1)*NGAUSZ+(NZ-1))*NPROS+1
+         IF(ISDTY.EQ.99) THEN
+            CALL CLEAR(SIGM,6)
+            SIGM(1)=(PLAST(IJ)+PLAST(KL))/2.
+            IF(NMODM.EQ.16.OR.NMODM.EQ.19)
+     1      SIGM(2)=(PLAST(IJ+1)+PLAST(KL+1))/2.
+         ELSE
+            SIGM(1)=(PLAST(IJ  )+PLAST(KL  ))/2.
+            SIGM(2)=(PLAST(IJ+3)+PLAST(KL+3))/2.
+            SIGM(3)=(PLAST(IJ+1)+PLAST(KL+1))/2.
+            SIGM(4)=(PLAST(IJ+5)+PLAST(KL+5))/2.
+            SIGM(5)=(PLAST(IJ+4)+PLAST(KL+4))/2.
+            SIGM(6)=(PLAST(IJ+2)+PLAST(KL+2))/2.
+         ENDIF
+         IF(ISTNA.EQ.0.OR.ISDTY.EQ.99) THEN
+            WRITE(IGRAF,2000) SIGM
+            GO TO 20
+         ENDIF
+C
+         STRESS(1)=SIGM(1)
+         STRESS(2)=SIGM(3)
+         STRESS(3)=SIGM(6)
+         STRESS(4)=SIGM(2)
+         STRESS(5)=SIGM(5)
+         STRESS(6)=SIGM(4)
+         IF(ISTNA.EQ.1) CALL ZBIRM1(SRED(IPRO),SIGM,6)
+         CALL GLAVN3(STRESS)
+         IF(ISTNA.EQ.2) THEN
+            IF(IPRO.EQ.1.AND.STRESS(7).GT.SEFE1) THEN
+               SEFE1=STRESS(7)
+               CALL JEDNA1(SRED(IPRO),SIGM,6)
+            ENDIF
+            IF(IPRO.EQ.7.AND.STRESS(7).GT.SEFE2) THEN
+               SEFE2=STRESS(7)
+               CALL JEDNA1(SRED(IPRO),SIGM,6)
+            ENDIF
+         ENDIF
+       ENDIF
+   20 CONTINUE
+      RETURN
+ 2000 FORMAT(6(1PE13.5))
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE STSILA(AU,ESILA,IPGC,MCVEL,NEL,NCVEL,ICVEL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO PRINTOUT FORCES IN SHELL ELEMENTS NODES
+CS.   P R O G R A M
+CS.      ZA STAMPANJE SILA U CVOROVIMA ELEMENATA LJUSKI
+C .
+C ......................................................................
+C
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /SRPSKI/ ISRPS
+      COMMON /CDEBUG/ IDEBUG
+C
+      DIMENSION AU(*)
+      REAL AU
+C
+      DIMENSION ESILA(ND,*),IPGC(*),MCVEL(*),NEL(NE,*),NCVEL(*),SILA(6)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' STSILA'
+C
+      INDSN=0
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2040) NLM
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6040) NLM
+         GO TO 20
+         ENDIF
+C
+         IPG=IPGC(NLM)
+         IF(IPG.EQ.0) GO TO 20
+         IF(INDSN.EQ.0) THEN
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2012) NGE
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6012) NGE
+         ENDIF
+C
+         INDSN=1
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         WRITE(IZLAZ,5000) NMM
+C
+C        C V O R O V I
+C
+         DO 12 N=1,NCVE
+            NN=NEL(NLM,N)
+            IF(NN.EQ.0) GO TO 12
+            IF(ICVEL.EQ.1) NN=NCVEL(NN)
+            N1=(N-1)*3
+            N2=NCVE*3+N1
+            DO 13 I=1,3
+               SILA(I)=ESILA(N1+I,IPG)
+               SILA(3+I)=ESILA(N2+I,IPG)
+   13       CONTINUE
+            WRITE(IZLAZ,5003) NN,(SILA(K),K=1,6)
+   12    CONTINUE
+C
+   20 CONTINUE
+      RETURN
+C
+ 5000 FORMAT(/I8)
+ 5003 FORMAT(I6,3X,6(1PE11.3))
+C-----------------------------------------------------------------------
+ 2012 FORMAT(/'1'///' GLOBALNE CVORNE SILE ELEMENATA LJUSKI GRUPE ELEMEN
+     1ATA',I6/1X,59('-')//
+     1' ELEMENT /'/' C V O R     SILA-X ',2X,'  SILA-Y ',2X,
+     1'  SILA-Z ',2X,' MOMENT-X',2X,' MOMENT-Y',2X,' MOMENT-Z')
+ 2040 FORMAT(/' NESTAO JE ELEMENT -',I5)
+C-----------------------------------------------------------------------
+ 6012 FORMAT(/'1'///' GLOBAL NODAL FORCES COMPONENTS OF SHELL ELEMENTS F
+     1OR GROUP',I6/1X,64('-')//
+     1' ELEMENT /'/' N O D E    FORCE-X ',2X,' FORCE-Y ',2X,
+     1' FORCE-Z ',2X,' MOMENT-X',2X,' MOMENT-Y',2X,' MOMENT-Z')
+ 6040 FORMAT(/' DEATH ELEMENT -',I5)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE GLAVN8(STRESS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CS.   PROGRAM
+CS.      ZA RACUNANJE GLAVNIH NAPONA I EFEKTIVNOG NAPONA ZA 2/D ELEMENT
+CE.   PROGRAM
+CE.      TO CALCULATE PRINCIPAL STRESSES AND EFECTIVE STRESS FOR 2/D ELE
+C . 
+C ......................................................................
+C 
+      DIMENSION STRESS(10)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' GLAVN8'
+      PI=4.D0*DATAN(1.D0)
+      XMY=STRESS(1)-STRESS(2)
+      XPY=0.5D0*(STRESS(1)+STRESS(2))
+      XYT=0.25D0*XMY*XMY+STRESS(4)*STRESS(4)
+      XYT=DSQRT(XYT)
+      STRESS(8)=XPY+XYT
+      STRESS(9)=XPY-XYT
+      ALFA=0.D0
+      STRESS(10)=0.D0
+      IF(DABS(XMY).GT.1.D-9) THEN
+         ALFA=2.0D0*STRESS(4)/XMY
+         STRESS(10)=90.D0*DATAN(ALFA)/PI
+         IF(XMY.LT.0.D0) STRESS(10)=90.D0+STRESS(10)
+      ELSE
+         IF(DABS(STRESS(4)).GT.1.D-9) THEN
+            IF(STRESS(4).LT.0.D0) THEN
+               STRESS(10)=-45.D0
+            ELSE
+               STRESS(10)= 45.D0
+            ENDIF
+         ENDIF
+      ENDIF
+      RETURN
+      END

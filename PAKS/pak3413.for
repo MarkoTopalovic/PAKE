@@ -1,0 +1,499 @@
+C=======================================================================
+C
+C   PLASTICNOST 3/D ELEMENT  -  GENERALNA ANIZOTROPIJA (08.02.1994)
+C                               SA 66 KONSTANTI        
+C=======================================================================
+      SUBROUTINE D3M13(TAU,DEF,IRAC,LPOCG,LPOC1)
+      USE PLAST3D
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+C     PROGRAM ZA ODREDIVANJE LOKACIJA VELICINA KOJE SE CUVAJU
+C     NA NIVOU INTEGRACIONE TACKE
+C
+      include 'paka.inc'
+      
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /REPERM/ MREPER(4)
+      COMMON /DUPLAP/ IDVA
+C
+      LFUN=MREPER(1)
+C      MATE=MREPER(4)
+C
+      LTAU  =LPOCG
+      LDEFT =LTAU   + 6
+      LDEFPT=LDEFT  + 6
+      LALFAT=LDEFPT + 6
+      LTEQT =LALFAT + 6
+      LDQPT =LTEQT  + 1
+      LIPL  =LDQPT  + 1
+C
+      LTAU1 =LPOC1
+      LDEFT1=LTAU1  + 6
+      LDEFP1=LDEFT1 + 6
+      LALFA1=LDEFP1 + 6
+      LTEQT1=LALFA1 + 6
+      LDQPT1=LTEQT1 + 1
+      LIPL1 =LDQPT1 + 1
+C
+      CALL TI313 (PLAST(LIPL),PLAST(LDEFPT),
+     1            PLAST(LALFAT),PLAST(LTEQT),PLAST(LDQPT),
+     1            PLAS1(LIPL1),PLAS1(LTAU1),PLAS1(LDEFT1),PLAS1(LDEFP1),
+     1            PLAS1(LALFA1),PLAS1(LTEQT1),PLAS1(LDQPT1),
+     1            A(LFUN),TAU,DEF,IRAC)
+C
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE TI313 ( PL ,DEFPT,ALFAT,TEQT,DEFQPT,
+     1                   PL1,TAU1,DEF1,DEFP, ALFA1, TEQ, DEFQP,
+     1                   FUN,TAU,DEF,IRAC)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+CE   ELASTOPLASTIC ANISOTROPIC MATERIAL , MIXED HARDENING  3D
+C
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEMEN/ ELAST(6,6),XJ(3,3),ALFA(6),TEMP0,DET,NLM,KK
+      COMMON /TAUD3/ TAUD(6),DEFDPR(6),DEFDS(6),DDEFP(6),
+     1                DETAU(6),DDEF(6)
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /ITERBR/ ITER
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /ORIENT/ CPP(3,3),XJJ(3,3),TSG(6,6),BETA,LBET0,IBB0
+      DIMENSION DEFPT(*),TAU(*),DEF(*),TAU1(*),DEF1(*),DEFP(*),
+     1          ALFAT(*),ALFA1(*),FUN(*)
+      DIMENSION SE(6),DEFL(6),TAUL(6)
+      DIMENSION CE(6,6),CPE(3,3),CM(3),XMX(6),EN(6,6),ENB(6,6)
+      DATA ITMAX/100/,EPSIL/1.0D-6/
+C
+CE  INITIAL DATA
+C
+      KDIM=6
+      IPL =PL
+      IPL1=PL1
+      DVA =2.D0
+      DVT =DVA/3.
+C.. CONSTANTS
+      CALL       PEL313(FUN,MAT,CE,CPE,CM,TEQY0,EM)
+      EM1   =1.-EM
+      IMIX  = 1
+      IF(DABS(EM1).LT.EPSIL) IMIX=0
+      DUM   =0.D0
+      CALL       ENB313(DUM,EN,ENB,FUN,MAT,EM,DUM)
+      WRITE(3,*)'Dum,1./EN(3,3),1./EN(5,5)'
+      WRITE(3,*) DUM,1./EN(3,3),1./EN(5,5)
+C
+C*      TEQY=TEQY0
+C*      IF(IPL.EQ.1) TEQY=TEQT
+      IF(IPL.NE.1) TEQT=TEQY0
+C
+C... TRANSFORM STRAIN INTO MATERIAL AXES DIRECTION
+C
+      IF(IRAC.EQ.2)THEN
+C...................OVO ZAMENITI JER OVAKO JE UVEK U ITERACIJI 0 ELASTICNA
+C...................TREBA RACUNATI C ELASTOPLASTIC.
+        CALL JEDNA1(ELAST,CE,36)
+        RETURN
+      ENDIF
+      CALL CLEAR(DEFL,6)
+      CALL MNOZI1(DEFL,TSG,DEF,6,6)
+C
+C... TRANSFORM ENGENEER. SHEAR STRAIN INTO TENSORIAL
+C
+      DO 10 I=4,6
+   10 DEFPT(I)=0.5*DEFPT(I)
+C
+C     D E V I A T O R I C   STRAIN, EPRIM, ESEKUNDUM, GLITL
+C
+      IF(IATYP.NE.4)THEN
+        DO 20 I=1,3
+   20   DEFDS(I)=DEFL(I)-DEFPT(I)
+        DO 25 I=4,6
+   25   DEFDS(I)=0.5*DEFL(I)-DEFPT(I)
+      ELSE
+        DO 21 I=1,3
+   21   DEFDS(I)=DEFL(I)
+        DO 26 I=4,6
+   26   DEFDS(I)=0.5*DEFL(I)
+      ENDIF
+C
+CE   1)  ELASTIC DEVIATORIC STRESS SOLUTION  (TAUD)
+C
+      DO 40 I=1,3
+       I3=I+3
+       DUM=0.D0
+       DO 30 J=1,3
+   30  DUM=DUM+CPE(I,J)*DEFDS(J)
+       SE(I) =DUM-ALFAT(I)
+       SE(I3)=2.*DEFDS(I3)*CE(I3,I3)-ALFAT(I3)
+   40 CONTINUE
+C
+CE   2)  CHECK FOR YIELDING
+C
+      TEQ=DSQRT(1.5*(AMISES(SE,EN)))
+C      WRITE(3,*)'********TEQ,TEQT',TEQ,TEQT
+C*      IF((TEQ-TEQY)/TEQY.LT.1.D-5)THEN
+      IF((TEQ-TEQT)/TEQT.LT.1.D-5)THEN
+C*        TEQ  =TEQY
+        TEQ  =TEQT
+        DEFQP=DEFQPT
+        DO 600 I=1,6
+        TAUD(I)=SE(I)
+  600   DEFP(I)=DEFPT(I)
+        GO TO 500
+      ENDIF
+C
+CE   3)  SOLUTION IS ELASTO-PLASTIC.  OBTAIN ZERO OF THE ESF.
+C
+      PL1=1.0D0
+C
+CE       ITERATIONS
+C     
+      DEFQP=DEFQPT
+      DUM=DEFQP
+      IF(DEFQP.LE.1.D-4) DUM=1.D-4
+C***************  OVO TRBA DA BUDE EKVIVALENTNI MODUL
+CC      EP2=ANQ*CYQ*DUM**ANQ1      
+      EP2=1.D3
+C
+      IB = 0
+      IT = 0
+      AF = 5.D0
+      DDD= 0.1*(TEQ-TEQT)/EP2
+C****
+          DDD=1.D-03
+C****
+      FP    = TEQ - TEQT
+      TAUY  = TEQT
+      FM    = 0.D0
+      DEPBM = 0.D0
+      DEPBP = 0.D0
+      DDEFQP= DDD
+C      IF(KOR.EQ.3)THEN
+C      WRITE(3,*)'DDD,TEQ,TEQT',DDD,TEQ,TEQT
+C      ENDIF
+C
+      CALL       XMX313(XMX,FUN,MAT,DEFQP,EM1,KDIM)
+      CALL       ENB313(TAUY,EN,ENB,FUN,MAT,EM,DEFQP)
+C
+CC      TOLD= TAUY
+CC      DOLD= DEFQPT
+      EP  = EP2
+  100 IT=IT+1
+      IB1 = IB
+C
+      IF(IT.GT.ITMAX) THEN
+        WRITE(IZLAZ,2000)
+        STOP
+      ENDIF
+C
+      DEFQP=DEFQPT+DDEFQP
+C
+      CALL       ENB313(TAUY,EN,ENB,FUN,MAT,EM,DEFQP)
+      DLAM=1.5*DDEFQP/TAUY
+      IF(IMIX.EQ.1)  CALL     XMX313(XMX,FUN,MAT,DEFQP,EM1,KDIM)
+C
+      CALL       DEV313(TAUD,ENB,SE,CE,CPE,XMX,DLAM)
+C
+      TEQ=DSQRT(1.5*(AMISES(TAUD,EN)))
+      FB = TEQ-TAUY
+C      IF(KOR.EQ.3)THEN
+C      WRITE(3,*)'DEFQP,FB,FM,FP,IB',DEFQP,FB,FM,FP,IB
+C      WRITE(3,*)'DEFQPT,TEQ,TAUY',DEFQPT,TEQ,TAUY
+C      ENDIF
+C
+      CALL BISEC (DDEFQP,DEPBM,DEPBP,DDD,FB,FM,FP,AF,IB)
+C
+CC      DDF   = DEFQP-DOLD
+CC      IF(DABS(DDF).GT.1.D-8 .OR. IT.EQ.1)THEN
+CC        EP  = DABS((TAUY-TOLD)/DDF)
+CC        TOLD= TAUY
+CC        DOLD= DEFQP
+CC      ENDIF
+C
+      IF (IB1.EQ.0) GO TO 100
+      IF (DABS(DDD).GT.EPSIL.AND.
+     1    (DABS(DDD)/(DEPBM+DEPBP)).GT.EPSIL) GO TO 100
+C
+CE      ...   ( DEVIATORIC STRESS )
+C
+ 2000 FORMAT(' ','DOSTIGNUT MAKSIMALAN BROJ BISEKCIJA U TAUI36')
+C
+CE   4)  DETERMINE SOLUTION 
+C
+C
+CE     E L A S T I C  -  P L A S T I C   M A T R I X   CEP
+C
+      IF(ISKNP.NE.2)THEN
+CC      CALL       CEP313()
+      ENDIF
+C
+CE      ...   ( PLASTIC STRAIN ), ( BACK STRESS )
+C
+      DO 110 I=1,6
+        DUM=0.D0
+        DO 105 K=1,6
+  105   DUM=DUM+ENB(I,K)*TAUD(K)
+        DDEFP(I)=DLAM*DUM
+        DEFP(I) =DEFPT(I)+DDEFP(I)
+  110 CONTINUE        
+C
+      IF(IMIX.EQ.1)THEN
+        DO 160 I=1,6
+        ALFA1(I)=XMX(I)*DDEFP(I)+ALFAT(I)
+  160   TAUD(I) =TAUD(I)+ALFA1(I)
+      ENDIF
+      WRITE(3,*)'tauy',TAUY
+      WRITE(3,*)'DEFQP,1./EN(3,3),1./EN(5,5),EN(3,5)+EN(5,3)'
+      WRITE(3,*) DEFQP,1./EN(3,3),1./EN(5,5),EN(3,5)+EN(5,3)
+      WRITE(3,*)'ALFA1(3),ALFA1(5)',ALFA1(3),ALFA1(5)
+C
+CE   5)    CALCULATE STRESS
+C
+  500 CONTINUE
+      TAUM=CM(1)*(DEFL(1)-DEFP(1))+CM(2)*(DEFL(2)-DEFP(2))+
+     &     CM(3)*(DEFL(3)-DEFP(3))
+      DO 200 I=1,3
+  200 TAUL(I)=TAUD(I)+TAUM
+      DO 205 I=4,6
+      TAUL(I)=TAUD(I)
+  205 DEFP(I)=2.*DEFP(I)
+C
+C... TRANSFORM STRESS INTO GLOBAL AXES DIRECTION
+C
+      CALL CLEAR(TAU,6)
+      CALL MNOZI2(TAU,TSG,TAUL,6,6)
+C
+CE  UPDATE FROM PREVIOUS STEP
+C
+      DO 290 I=1,6
+      DEF1(I)=DEFL(I)
+  290 TAU1(I)=TAU(I)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE PEL313(FUN,MAT,CE,CPE,CM,TEQY0,EM)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C     FORM ELASTICITY CONSTANTS
+C
+      COMMON /MATANI/ EX,EY,EZ,VXY,VYZ,VZX,GXY,GYZ,GZX
+      DIMENSION FUN(77,*),CE(6,*),CPE(3,*),CM(*)
+C
+      D13 =1.D0/3.
+      ONE =1.D0
+      DVA =2.D0
+      ZER =0.D0
+      EX=FUN(1,MAT)
+      EY=FUN(2,MAT)
+      EZ=FUN(3,MAT)
+      VXY=FUN(4,MAT)
+      VYZ=FUN(5,MAT)
+      VZX=FUN(6,MAT)
+      GXY=FUN(7,MAT)
+      GYZ=FUN(8,MAT)
+      GZX=FUN(9,MAT)
+      TEQY0 =FUN(10,MAT)
+      EM    =FUN(11,MAT)
+      DO 15 I=1,6
+      DO 15 J=1,6
+   15 CE(I,J)=ZER
+C     MATRICA CE
+      POM=(ONE-DVA*VXY*VYZ*VZX-EX/EZ*VZX*VZX-EY/EX*VXY*VXY
+     1-EZ/EY*VYZ*VYZ)/(EX*EY*EZ)
+      CE(1,1)=(ONE/EZ-VYZ*VYZ/EY)/(EY*POM)
+      CE(2,2)=(ONE/EX-VZX*VZX/EZ)/(EZ*POM)
+      CE(3,3)=(ONE/EY-VXY*VXY/EX)/(EX*POM)
+      CE(1,2)=(VZX*VYZ/EY+VXY/EX)/(EZ*POM)
+      CE(1,3)=(VXY*VYZ/EX+VZX/EZ)/(EY*POM)
+      CE(2,3)=(VXY*VZX/EZ+VYZ/EY)/(EX*POM)
+      CE(4,4)=GXY
+      CE(5,5)=GYZ
+      CE(6,6)=GZX
+      DO 50 I=1,6
+      DO 50 J=I,6
+   50 CE(J,I)=CE(I,J)
+C...   MATRIX  C'E
+      CPE(1,1)=D13*(DVA*CE(1,1)-CE(1,2)-CE(1,3))
+      CPE(1,2)=D13*(DVA*CE(1,2)-CE(2,2)-CE(2,3))
+      CPE(1,3)=D13*(DVA*CE(1,3)-CE(2,3)-CE(3,3))
+      CPE(2,1)=D13*(DVA*CE(1,2)-CE(1,1)-CE(1,3))
+      CPE(2,2)=D13*(DVA*CE(2,2)-CE(1,2)-CE(2,3))
+      CPE(2,3)=D13*(DVA*CE(2,3)-CE(1,3)-CE(3,3))
+      CPE(3,1)=D13*(DVA*CE(1,3)-CE(1,1)-CE(1,2))
+      CPE(3,2)=D13*(DVA*CE(2,3)-CE(1,2)-CE(2,2))
+      CPE(3,3)=D13*(DVA*CE(3,3)-CE(1,3)-CE(2,3))
+C...   VECTOR   CM
+      CM(1)=D13*(CE(1,1)+CE(1,2)+CE(1,3))
+      CM(2)=D13*(CE(1,2)+CE(2,2)+CE(2,3))
+      CM(3)=D13*(CE(1,3)+CE(2,3)+CE(3,3))
+      RETURN
+      END
+C======================================================================
+      FUNCTION AMISES(TAUD,EN)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION TAUD(*),EN(6,*),POM(6)
+      ZERO=0.D0
+      DO 20 J=1,6
+        DUM=ZERO
+        DO 10 K=1,3
+   10   DUM=DUM+TAUD(K)*EN(K,J)
+        DO 15 K=4,6
+   15   DUM=DUM+2.*TAUD(K)*EN(K,J)
+C   15   DUM=DUM+TAUD(K)*EN(K,J)
+        POM(J)=DUM
+   20 CONTINUE
+      AMISES=ZERO
+      DO 30 J=1,6
+   30 AMISES=AMISES+POM(J)*TAUD(J)
+C      WRITE(3,*)'AMISES',AMISES
+      IF(AMISES.LT.ZERO) AMISES=ZERO
+      RETURN
+      END      
+C======================================================================
+      SUBROUTINE DEV313(TAUD,ENB,SE,CE,CPE,XMX,DLAM)
+C
+CE  DEVIATORIC HEAT STRESS  ( TAUD  IS  S_HEAT )
+C
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION TAUD(*),ENB(6,*),SE(*),CE(6,*),CPE(3,*),XMX(*)
+      DIMENSION POM(6,6),LJA(6),MJA(6)
+      DO 10 I=1,3
+      DO  8 J=1,6
+        DUM=0.D0
+        DO 5 K=1,3
+    5   DUM=DUM+CPE(I,K)*ENB(K,J)
+        POM(I,J)=DLAM*(DUM+XMX(I)*ENB(I,J))
+    8 CONTINUE        
+      POM(I,I)=POM(I,I)+1.
+   10 CONTINUE        
+      DO 12 I=4,6
+      DO 11 J=1,6
+   11   POM(I,J)=DLAM*(2.*CE(I,I)+XMX(I))*ENB(I,J)
+      POM(I,I)=POM(I,I)+1.
+   12 CONTINUE        
+C... POGRESNO
+CC      DO 10 I=1,6
+CC      DO 10 J=1,6
+CC        DUM=0.D0
+CC        DO 5 K=1,6
+CC    5   DUM=DUM+CE(I,K)*ENB(K,J)
+CC        POM(I,J)=DLAM*(DUM+XMX(I)*ENB(I,J))+1.
+CC   10 CONTINUE        
+C... ELIMINISANJE ZZ
+CC      DO 20 I=1,2
+CC        DO 15 J=1,2
+CC   15   POM(I,J)=POM(I,J)-POM(I,3)
+CC   20 CONTINUE   
+CC      DO 30 I=1,6
+CC       POM(I,3)=0.D0
+CC   30  POM(3,I)=0.D0
+CC      POM(3,3)=1.D0
+C
+      CALL MINV(POM,6,DUM,LJA,MJA)
+CC      POM(3,3)=0.D0
+      CALL CLEAR (TAUD,6)
+      CALL MNOZI1(TAUD,POM,SE,6,6)
+CC      TAUD(3)=-TAUD(1)-TAUD(2)
+C      WRITE(3,*)'TAUD(3),-TAUD(1)-TAUD(2)',TAUD(3),-TAUD(1)-TAUD(2)
+      RETURN
+      END      
+C======================================================================
+      SUBROUTINE XMX313(XMX,FUN,MAT,DEFQP,EM1,KDIM)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+CS     FORMIRANJE MATRICE XMX
+CE     BACK STRESS CONSTITUTIVE MATRIX
+C
+      DIMENSION XMX(*),FUN(77,*)
+      DUM=DEFQP
+      IF(DUM.LE.1.D-4) DUM=1.D-4
+      DUM=EM1*(FUN(75,MAT)+FUN(76,MAT)*DUM**FUN(77,MAT))
+      DO 10 I=1,KDIM
+   10 XMX(I)=DUM
+      RETURN
+      END
+C======================================================================
+      SUBROUTINE ENB313(TAUY,EN,ENB,FUN,MAT,EM,DEFQP)
+C
+CE   FORM EN  AND  EN_BAR MATRIX  AND  CALCULATE  TAUY
+C
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      DIMENSION EN(6,*),ENB(6,*),FUN(77,*)
+      ONE   =1.D0
+      DVA   =2.D0
+      D3    =1.D0/3.
+      D2    =0.5D0
+      D5    =0.2D0
+      K=9
+CCC... AKO SU SVI EN-OVI ZADATI NA ISTINACIN 
+CC      DO 10 I=1,6
+CC      DO 10 J=I,6
+CC        K =K+3
+CC        K1=K+1
+CC        K2=K+2
+CC        EN(I,J)=FUN(K,MAT)+FUN(K1,MAT)*(EM*DEFQP)**FUN(K2,MAT)
+CC        EN(J,I)=EN(I,J)
+CC   10 CONTINUE
+C... EN-OVI NA DIJAGONALI SU RECIPROCNA VREDNOST KVADRATA * 1.5
+      DO 10 I=1,6
+      DO 10 J=I,6
+        K =K+3
+        K1=K+1
+        K2=K+2
+        EDP=1.D0
+        IF(FUN(K2,MAT).GT.0.D0) EDP=(EM*DEFQP)**FUN(K2,MAT)
+        IF(I.EQ.J)THEN
+          DUM=FUN(K,MAT)+FUN(K1,MAT)*EDP
+          EN(I,J)=1.5/(DUM*DUM)
+        ELSE
+          EN(I,J)=FUN(K,MAT)+FUN(K1,MAT)*EDP
+        ENDIF
+   10 CONTINUE
+C      TAUY=DSQRT(0.5*((EN(1,1)*EN(1,1)+EN(2,2)*EN(2,2)+EN(3,3)*EN(3,3))
+C     &           /3.+  EN(4,4)*EN(4,4)+EN(5,5)*EN(5,5)+EN(6,6)*EN(6,6)))
+      TAUY=DSQRT(0.25*(ONE/EN(1,1)+ONE/EN(2,2)+ONE/EN(3,3)
+     &                +ONE/EN(4,4)+ONE/EN(5,5)+ONE/EN(6,6)))
+C...  NORMIRANJE MATRICE EN()
+C       ( ODGOVARA USLOVU TECENJA S*EN*S-2/3TAUY=0 )
+      DUM=TAUY*TAUY/1.5
+      DO 15 I=1,6
+      DO 15 J=I,6
+        EN(I,J)=EN(I,J)*DUM
+C   EN   NIJE SIMETRICNO. CLANOVI ISPOD DIJAGONALE SLEDE IZ SIMETRICNOSTI ENB
+C   ENB  SIMETRICNO ZBOG SIMETRIJE TENZORA DEFORMACIJE
+C        EN(J,I)=EN(I,J)
+   15 CONTINUE
+C   KOREKCIJA PODTROUGLA 3x3 EN
+      EN(3,2)=D2*(DVA*EN(2,3)-EN(1,3)-EN(3,3)+EN(2,2)+EN(1,2))
+      DUM1=DVA*EN(1,2)+EN(1,1)-EN(2,2)-EN(3,2)
+      DUM2=DVA*EN(1,3)+EN(1,1)-EN(2,3)-EN(3,3)
+      EN(2,1)=D5*(DVA*DUM1+DUM2)
+      EN(3,1)=D5*(DVA*DUM2+DUM1)
+C
+      DO 30 J=1,6
+        ENB(1,J)=D3*(DVA*EN(1,J)-EN(2,J)-EN(3,J))
+        ENB(2,J)=D3*(DVA*EN(2,J)-EN(1,J)-EN(3,J))
+        ENB(3,J)=D3*(DVA*EN(3,J)-EN(2,J)-EN(1,J))
+   30 CONTINUE
+        DO 40 I=4,6
+        DO 40 J=I,6
+          ENB(I,J)=EN(I,J)
+   40   CONTINUE
+        DO 50 I=1,6
+        DO 50 J=I,6
+          ENB(J,I)=ENB(I,J)
+   50   CONTINUE
+        DO 60 I=4,6
+        DO 60 J=1,I-1
+          EN(I,J)=ENB(I,J)
+   60   CONTINUE
+C      WRITE(3,*)'*en'
+C      WRITE(3,1000)((EN(I,J),J=1,6),I=1,6)
+C      WRITE(3,*)'ENB'
+C      WRITE(3,1000)((ENB(I,J),J=1,6),I=1,6)
+C1000  FORMAT(6G10.4)
+      RETURN
+      END

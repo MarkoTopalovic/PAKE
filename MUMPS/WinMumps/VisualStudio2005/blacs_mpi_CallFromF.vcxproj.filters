@@ -1,0 +1,538 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="init">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="comm">
+      <UniqueIdentifier>{e232cb63-93b2-4e23-9052-95661b5e8dc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="long">
+      <UniqueIdentifier>{07d5e88f-8e2e-421e-bf3f-13c441deff32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="supp">
+      <UniqueIdentifier>{8ee31a4a-6d62-46ac-a1a4-9ee50740e0fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="internal">
+      <UniqueIdentifier>{4d5c3e84-b07b-487a-bceb-9acd9f161cda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{c780dfa4-1c8b-4939-abfa-fb742aea0443}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_pinfo_MainInC.c">
+      <Filter>init</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_pinfo_MainInF77.c">
+      <Filter>init</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs2sys_handle_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_barrier_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_freebuff_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridexit_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridinfo_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridinit_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridmap_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\free_blacs_system_handle_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sys2blacs_handle_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_abort_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_exit_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_get_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_pcoord_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_pnum_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_set_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_setup_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dcputime00_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dwalltime00_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\kbrid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\kbsid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\krecvid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ksendid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_Arecv.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ArgCheck.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_Asend.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_BeComb.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_BlacsAbort.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_BlacsErr.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_BlacsWarn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_BuffIsFree.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cMPI_amn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cMPI_amn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cMPI_amx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cMPI_amx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cMPI_sum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ContxtNum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cvvamn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cvvamn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cvvamx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cvvamx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_cvvsum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dMPI_amn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dMPI_amn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dMPI_amx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dMPI_amx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dmvcopy.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dvmcopy.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dvvamn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dvvamn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dvvamx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dvvamx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_dvvsum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_EmergencyBuff.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_GetBuff.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_GetMpiGeType.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_GetMpiTrType.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_GlobalVars.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_HypBR.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_HypBS.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_IdringBR.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_IdringBS.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_iMPI_amn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_iMPI_amn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_iMPI_amx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_iMPI_amx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_imvcopy.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ivmcopy.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ivvamn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ivvamn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ivvamx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ivvamx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_ivvsum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_MpathBR.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_MpathBS.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_MPI_C_to_f77_trans_comm.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_MPI_F77_to_c_trans_comm.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_MringComb.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_Pack.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_Rsend.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_sMPI_amn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_sMPI_amn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_sMPI_amx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_sMPI_amx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_smvcopy.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_Srecv.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_SringBR.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_SringBS.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_Ssend.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_svmcopy.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_svvamn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_svvamn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_svvamx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_svvamx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_svvsum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_TransDist.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_TransUserComm.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_TreeBR.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_TreeBS.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_TreeComb.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_Unpack.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_UpdateBuffs.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zMPI_amn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zMPI_amn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zMPI_amx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zMPI_amx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zMPI_sum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zvvamn.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zvvamn2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zvvamx.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zvvamx2.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\INTERNAL\BI_zvvsum.c">
+      <Filter>internal</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\blacs\SRC\MPI\Bconfig.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\blacs\SRC\MPI\Bdef.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

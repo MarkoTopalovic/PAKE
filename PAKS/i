@@ -1,0 +1,869 @@
+Comparing files pak0.for and ..\pak0.FOR
+FC: no differences encountered
+
+Comparing files pak00.for and ..\pak00.FOR
+FC: no differences encountered
+
+Comparing files pak01.for and ..\pak01.FOR
+FC: no differences encountered
+
+Comparing files pak02.for and ..\pak02.FOR
+FC: no differences encountered
+
+Comparing files pak021.for and ..\pak021.FOR
+FC: no differences encountered
+
+Comparing files pak03.for and ..\pak03.FOR
+FC: no differences encountered
+
+Comparing files pak031.for and ..\pak031.FOR
+FC: no differences encountered
+
+Comparing files pak03g.for and ..\pak03g.FOR
+FC: no differences encountered
+
+Comparing files pak04.for and ..\pak04.FOR
+FC: no differences encountered
+
+Comparing files pak05.for and ..\pak05.FOR
+FC: no differences encountered
+
+Comparing files pak051.for and ..\pak051.FOR
+FC: no differences encountered
+
+Comparing files pak06.for and ..\pak06.FOR
+FC: no differences encountered
+
+Comparing files pak061.for and ..\pak061.FOR
+FC: no differences encountered
+
+Comparing files pak061a.for and ..\pak061a.FOR
+FC: no differences encountered
+
+Comparing files pak062.for and ..\pak062.FOR
+FC: no differences encountered
+
+Comparing files pak062a.for and ..\pak062a.FOR
+FC: no differences encountered
+
+Comparing files pak065.for and ..\pak065.FOR
+FC: no differences encountered
+
+Comparing files pak07.for and ..\pak07.FOR
+FC: no differences encountered
+
+Comparing files pak071.for and ..\pak071.FOR
+FC: no differences encountered
+
+Comparing files pak08.for and ..\pak08.FOR
+FC: no differences encountered
+
+Comparing files pak081.for and ..\pak081.FOR
+FC: no differences encountered
+
+Comparing files pak09.for and ..\pak09.FOR
+FC: no differences encountered
+
+Comparing files pak10.for and ..\pak10.FOR
+FC: no differences encountered
+
+Comparing files pak101.for and ..\pak101.FOR
+FC: no differences encountered
+
+Comparing files pak102.for and ..\pak102.FOR
+FC: no differences encountered
+
+Comparing files pak103.for and ..\pak103.FOR
+FC: no differences encountered
+
+Comparing files pak105.for and ..\pak105.FOR
+FC: no differences encountered
+
+Comparing files pak11.for and ..\pak11.FOR
+FC: no differences encountered
+
+Comparing files pak111.for and ..\pak111.FOR
+FC: no differences encountered
+
+Comparing files pak112.for and ..\pak112.FOR
+FC: no differences encountered
+
+Comparing files pak113.for and ..\pak113.FOR
+FC: no differences encountered
+
+Comparing files pak12.for and ..\pak12.FOR
+***** pak12.for
+  100 CONTINUE
+      IF(indbth.eq.1) THEN
+C
+C       PRIPREMA ZA RESTART
+C
+        LMA8=LSTAZA(2)-1
+        CALL WRITDD(AU,MXAU/IDVA,IELEM,LMA8,LDUZI)
+      ENDIF
+C
+***** ..\pak12.FOR
+  100 CONTINUE
+C
+*****
+
+Comparing files pak121.for and ..\pak121.FOR
+FC: no differences encountered
+
+Comparing files pak122.for and ..\pak122.FOR
+FC: no differences encountered
+
+Comparing files pak123.for and ..\pak123.FOR
+FC: no differences encountered
+
+Comparing files pak13.for and ..\pak13.FOR
+FC: no differences encountered
+
+Comparing files pak1405.for and ..\pak1405.FOR
+FC: no differences encountered
+
+Comparing files pak1411.for and ..\pak1411.FOR
+FC: no differences encountered
+
+Comparing files pak1424.for and ..\pak1424.FOR
+FC: no differences encountered
+
+Comparing files pak1430.for and ..\pak1430.FOR
+FC: no differences encountered
+
+Comparing files pak15.for and ..\pak15.FOR
+FC: no differences encountered
+
+Comparing files pak21.for and ..\pak21.FOR
+FC: no differences encountered
+
+Comparing files pak22.for and ..\pak22.FOR
+FC: no differences encountered
+
+Comparing files pak221.for and ..\pak221.FOR
+FC: no differences encountered
+
+Comparing files pak222.for and ..\pak222.FOR
+FC: no differences encountered
+
+Comparing files pak223.for and ..\pak223.FOR
+FC: no differences encountered
+
+Comparing files pak22b1.for and ..\pak22b1.FOR
+FC: no differences encountered
+
+Comparing files pak23.for and ..\pak23.FOR
+FC: no differences encountered
+
+Comparing files pak231.for and ..\pak231.FOR
+FC: no differences encountered
+
+Comparing files pak2405.for and ..\pak2405.FOR
+FC: no differences encountered
+
+Comparing files pak2406.for and ..\pak2406.FOR
+FC: no differences encountered
+
+Comparing files pak2407.for and ..\pak2407.FOR
+FC: no differences encountered
+
+Comparing files pak2408.for and ..\pak2408.FOR
+FC: no differences encountered
+
+Comparing files pak2409.for and ..\pak2409.FOR
+FC: no differences encountered
+
+Comparing files pak2410.for and ..\pak2410.FOR
+FC: no differences encountered
+
+Comparing files pak2416.for and ..\pak2416.FOR
+FC: no differences encountered
+
+Comparing files pak2419.for and ..\pak2419.FOR
+FC: no differences encountered
+
+Comparing files pak2420.for and ..\pak2420.FOR
+FC: no differences encountered
+
+Comparing files pak2421.for and ..\pak2421.FOR
+FC: no differences encountered
+
+Comparing files pak2422.for and ..\pak2422.FOR
+FC: no differences encountered
+
+Comparing files pak2425.for and ..\pak2425.FOR
+FC: no differences encountered
+
+Comparing files pak2426.for and ..\pak2426.FOR
+FC: no differences encountered
+
+Comparing files pak2428.for and ..\pak2428.FOR
+FC: no differences encountered
+
+Comparing files pak2430.for and ..\pak2430.FOR
+FC: no differences encountered
+
+Comparing files pak2431.for and ..\pak2431.FOR
+FC: no differences encountered
+
+Comparing files pak2440.for and ..\pak2440.FOR
+FC: no differences encountered
+
+Comparing files pak2451.for and ..\pak2451.FOR
+FC: no differences encountered
+
+Comparing files pak2461.for and ..\pak2461.FOR
+FC: no differences encountered
+
+Comparing files pak25.for and ..\pak25.FOR
+FC: no differences encountered
+
+Comparing files pak26.for and ..\pak26.FOR
+FC: no differences encountered
+
+Comparing files pak31.for and ..\pak31.FOR
+FC: no differences encountered
+
+Comparing files pak32.for and ..\pak32.FOR
+***** pak32.for
+     1                ,MAXNOD,LXL,LYL,LZL,LSIF1,LXGG,LYGG,LZGG,LNNOD
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+***** ..\pak32.FOR
+     1                ,MAXNOD,LXL,LYL,LZL,LSIF1,LXGG,LYGG,LZGG,LNNOD
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+*****
+
+***** pak32.for
+     1A(LGUSM),LA,AE(LCEGE),AU(LESILA),A(LID),A(LDEFOR),
+     8AU(LNNOD),AU(LALFT),AU(LINDBEL),AU(LBIRTHC),AU(LTBTH),AU(LCEL))
+      ELSE
+***** ..\pak32.FOR
+     1A(LGUSM),LA,AE(LCEGE),AU(LESILA),A(LID),A(LDEFOR),
+     8AU(LNNOD),AU(LALFT),AU(LINDBEL),AU(LBIRTHC),AU(LTBTH))
+      ELSE
+*****
+
+***** pak32.for
+C
+      IF(((IALFA.GE.0.OR.NSILA.GT.0).AND.IILS.NE.-1).or.indbth.eq.1)THEN
+C
+***** ..\pak32.FOR
+C
+      IF((IALFA.GE.0.OR.NSILA.GT.0).AND.IILS.NE.-1) THEN
+C
+*****
+
+***** pak32.for
+     1                COR0,TEMGT,CORGT,AU,ZAPS,NPRZ,INDZS,GUSM,LA,CEGE,
+     1                ESILA,ID,DEF,NNOD,ALFT,INDBEL,BIRTHC,TBTH,MCVEL)
+      USE PLAST3D
+***** ..\pak32.FOR
+     1                COR0,TEMGT,CORGT,AU,ZAPS,NPRZ,INDZS,GUSM,LA,CEGE,
+     1                ESILA,ID,DEF,NNOD,ALFT,INDBEL,BIRTHC,TBTH)
+      USE PLAST3D
+*****
+
+***** pak32.for
+     1          DEF(NLD,NGS12,*),NNOD(*),ID(NP,*),ALFT(LA,*)
+      DIMENSION INDBEL(*),BIRTHC(NE,*),TBTH(*),MCVEL(*)
+      DIMENSION STRAIN(6),STRESS(6),TA(6)
+***** ..\pak32.FOR
+     1          DEF(NLD,NGS12,*),NNOD(*),ID(NP,*),ALFT(LA,*)
+      DIMENSION INDBEL(*),BIRTHC(NE,*),TBTH(*)
+      DIMENSION STRAIN(6),STRESS(6),TA(6)
+*****
+
+***** pak32.for
+               INDBEL(NLM)=1
+               NMM=NLM
+               IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+               IF(NMM.EQ.449189.OR.NMM.EQ.449223.OR.NMM.EQ.449273) THEN
+               write(3,1241) vreme,TBTH(nlm),NMM,(birthc(nlm,i),i=1,nd)
+ 1241          format(' T0',2F6.1,I9,8(1X,3(1PE8.1)))
+               ENDIF
+            ENDIF
+***** ..\pak32.FOR
+               INDBEL(NLM)=1
+C               write(3,1241) vreme,TBTH(nlm),NLM,(birthc(nlm,i),i=1,nd)
+C 1241          format(' T',2F6.1,I9,8(1X,3(1PE8.1)))
+            ENDIF
+*****
+
+***** pak32.for
+         ENDIF
+               IF(NMM.EQ.449189.OR.NMM.EQ.449223.OR.NMM.EQ.449273) THEN
+               write(3,1240) vreme,TBTH(nlm),NMM,(birthc(nlm,i),i=1,nd),
+     1         (UEL(I),I=1,ND),INDBEL(NLM)
+ 1240          format(' TU',2F6.1,I9,8(1X,3(1PE8.1))/8(1X,3(1PE8.1)),I5)
+               ENDIF
+C
+***** ..\pak32.FOR
+         ENDIF
+C
+*****
+
+Comparing files pak32b1.for and ..\pak32b1.FOR
+FC: no differences encountered
+
+Comparing files pak33.for and ..\pak33.FOR
+FC: no differences encountered
+
+Comparing files pak3405.for and ..\pak3405.FOR
+FC: no differences encountered
+
+Comparing files pak3406.for and ..\pak3406.FOR
+FC: no differences encountered
+
+Comparing files pak3406k.for and ..\pak3406k.FOR
+FC: no differences encountered
+
+Comparing files pak3407.for and ..\pak3407.FOR
+FC: no differences encountered
+
+Comparing files pak3409.for and ..\pak3409.FOR
+FC: no differences encountered
+
+Comparing files pak3410.for and ..\pak3410.FOR
+FC: no differences encountered
+
+Comparing files pak3413.for and ..\pak3413.FOR
+FC: no differences encountered
+
+Comparing files pak3416.for and ..\pak3416.FOR
+FC: no differences encountered
+
+Comparing files pak3419.for and ..\pak3419.FOR
+FC: no differences encountered
+
+Comparing files pak3420.for and ..\pak3420.FOR
+FC: no differences encountered
+
+Comparing files pak3421.for and ..\pak3421.FOR
+FC: no differences encountered
+
+Comparing files pak3422.for and ..\pak3422.FOR
+FC: no differences encountered
+
+Comparing files pak3423.for and ..\pak3423.FOR
+FC: no differences encountered
+
+Comparing files pak3424.for and ..\pak3424.FOR
+FC: no differences encountered
+
+Comparing files pak3425.for and ..\pak3425.FOR
+FC: no differences encountered
+
+Comparing files pak3426.for and ..\pak3426.FOR
+FC: no differences encountered
+
+Comparing files pak3427.for and ..\pak3427.FOR
+FC: no differences encountered
+
+Comparing files pak3428.for and ..\pak3428.FOR
+FC: no differences encountered
+
+Comparing files pak3429.for and ..\pak3429.FOR
+FC: no differences encountered
+
+Comparing files pak3430.for and ..\pak3430.FOR
+FC: no differences encountered
+
+Comparing files pak3431.for and ..\pak3431.FOR
+FC: no differences encountered
+
+Comparing files pak3441.for and ..\pak3441.FOR
+FC: no differences encountered
+
+Comparing files pak3442.for and ..\pak3442.FOR
+FC: no differences encountered
+
+Comparing files pak3443.for and ..\pak3443.FOR
+FC: no differences encountered
+
+Comparing files pak3444.for and ..\pak3444.FOR
+FC: no differences encountered
+
+Comparing files pak3445.for and ..\pak3445.FOR
+FC: no differences encountered
+
+Comparing files pak3452.for and ..\pak3452.FOR
+FC: no differences encountered
+
+Comparing files pak3453.for and ..\pak3453.FOR
+FC: no differences encountered
+
+Comparing files pak3454.for and ..\pak3454.FOR
+FC: no differences encountered
+
+Comparing files pak3461.for and ..\pak3461.FOR
+FC: no differences encountered
+
+Comparing files pak35.for and ..\pak35.FOR
+FC: no differences encountered
+
+Comparing files pak36.for and ..\pak36.FOR
+FC: no differences encountered
+
+Comparing files pak41.for and ..\pak41.FOR
+FC: no differences encountered
+
+Comparing files pak42.for and ..\pak42.FOR
+FC: no differences encountered
+
+Comparing files pak422.for and ..\pak422.FOR
+FC: no differences encountered
+
+Comparing files pak43.for and ..\pak43.FOR
+FC: no differences encountered
+
+Comparing files pak44.for and ..\pak44.FOR
+FC: no differences encountered
+
+Comparing files pak45.for and ..\pak45.FOR
+FC: no differences encountered
+
+Comparing files pak51.for and ..\pak51.FOR
+FC: no differences encountered
+
+Comparing files pak52.for and ..\pak52.FOR
+FC: no differences encountered
+
+Comparing files pak53.for and ..\pak53.FOR
+FC: no differences encountered
+
+Comparing files pak61.for and ..\pak61.FOR
+FC: no differences encountered
+
+Comparing files pak62.for and ..\pak62.FOR
+FC: no differences encountered
+
+Comparing files pak621.for and ..\pak621.FOR
+FC: no differences encountered
+
+Comparing files pak622.for and ..\pak622.FOR
+FC: no differences encountered
+
+Comparing files pak63.for and ..\pak63.FOR
+FC: no differences encountered
+
+Comparing files pak65.for and ..\pak65.FOR
+FC: no differences encountered
+
+Comparing files pak66.for and ..\pak66.FOR
+FC: no differences encountered
+
+Comparing files pak71.for and ..\pak71.FOR
+FC: no differences encountered
+
+Comparing files pak72.for and ..\pak72.FOR
+FC: no differences encountered
+
+Comparing files pak73.for and ..\pak73.FOR
+FC: no differences encountered
+
+Comparing files pak81.for and ..\pak81.FOR
+FC: no differences encountered
+
+Comparing files pak82.for and ..\pak82.FOR
+FC: no differences encountered
+
+Comparing files pak82b.for and ..\pak82b.FOR
+FC: no differences encountered
+
+Comparing files pak82f.for and ..\pak82f.FOR
+FC: no differences encountered
+
+Comparing files pak82i.for and ..\pak82i.FOR
+FC: no differences encountered
+
+Comparing files pak82p.for and ..\pak82p.FOR
+FC: no differences encountered
+
+Comparing files pak82t.for and ..\pak82t.FOR
+FC: no differences encountered
+
+Comparing files pak83.for and ..\pak83.FOR
+FC: no differences encountered
+
+Comparing files pak8405.for and ..\pak8405.FOR
+FC: no differences encountered
+
+Comparing files pak8406.for and ..\pak8406.FOR
+FC: no differences encountered
+
+Comparing files pak8410.for and ..\pak8410.FOR
+FC: no differences encountered
+
+Comparing files pak8416.for and ..\pak8416.FOR
+FC: no differences encountered
+
+Comparing files pak8419.for and ..\pak8419.FOR
+FC: no differences encountered
+
+Comparing files pak8420.for and ..\pak8420.FOR
+FC: no differences encountered
+
+Comparing files pak8421.for and ..\pak8421.FOR
+FC: no differences encountered
+
+Comparing files pak8432.for and ..\pak8432.FOR
+FC: no differences encountered
+
+Comparing files pak8433.for and ..\pak8433.FOR
+FC: no differences encountered
+
+Comparing files pak8434.for and ..\pak8434.FOR
+FC: no differences encountered
+
+Comparing files pak8461.for and ..\pak8461.FOR
+FC: no differences encountered
+
+Comparing files pak85.for and ..\pak85.FOR
+FC: no differences encountered
+
+Comparing files pak86.for and ..\pak86.FOR
+FC: no differences encountered
+
+Comparing files pak91.for and ..\pak91.FOR
+FC: no differences encountered
+
+Comparing files pak92.for and ..\pak92.FOR
+FC: no differences encountered
+
+Comparing files pak920.for and ..\pak920.FOR
+FC: no differences encountered
+
+Comparing files pak921.for and ..\pak921.FOR
+FC: no differences encountered
+
+Comparing files pak922.for and ..\pak922.FOR
+FC: no differences encountered
+
+Comparing files pak923a.for and ..\pak923a.FOR
+FC: no differences encountered
+
+Comparing files pak93.for and ..\pak93.FOR
+FC: no differences encountered
+
+Comparing files pak931.for and ..\pak931.FOR
+FC: no differences encountered
+
+Comparing files pak932.for and ..\pak932.FOR
+FC: no differences encountered
+
+Comparing files pak932p.for and ..\pak932p.FOR
+FC: no differences encountered
+
+Comparing files pak933.for and ..\pak933.FOR
+FC: no differences encountered
+
+Comparing files pak935.for and ..\pak935.FOR
+FC: no differences encountered
+
+Comparing files pak935p.for and ..\pak935p.FOR
+FC: no differences encountered
+
+Comparing files pak9406.for and ..\pak9406.FOR
+FC: no differences encountered
+
+Comparing files pak9414.for and ..\pak9414.FOR
+FC: no differences encountered
+
+Comparing files pakbocac.for and ..\pakbocac.FOR
+***** pakbocac.for
+C     RACUNANJE POCETNIH DUZINA ZA KONVERGENCIJU
+      II=99
+      IF(KPROF.EQ.0) THEN
+         OPEN (II,FILE='BOCAC.REZ',STATUS='UNKNOWN',
+***** ..\pakbocac.FOR
+C     RACUNANJE POCETNIH DUZINA ZA KONVERGENCIJU
+      IF(KPROF.EQ.0) THEN
+         II=94
+         OPEN (II,FILE='BOCAC.REZ',STATUS='UNKNOWN',
+*****
+
+***** pakbocac.for
+     1         FORM='FORMATTED',ACCESS='SEQUENTIAL')
+         WRITE(II,*) '     CELO, A1B1L0, A1C1L0, A1D1L0, A1E1L0,',
+     1       ' B1C1L0, B1D1L0, D1C1L0,E1B1L0, E1C1L0, E1D1L0,   ',
+     1       ' A111L0, A112L0, A113L0, C121L0, C122L0, C123L0,',
+     1       ' E131L0, E132L0, E133L0'
+         CALL MERKONV(NA1,NB1,DP(1),ICVEL,NELCV,ID,RTH,CORD,NP)
+***** ..\pakbocac.FOR
+     1         FORM='FORMATTED',ACCESS='SEQUENTIAL')
+         WRITE(94,*) 'CELO,A1B1L0,A1C1L0,A1D1L0,B1C1L0,B1D1L0,D1C1L0,',
+     1               'E1B1L0,E1C1L0,E1D1L0,A1E1L0,',
+     1               'A111L0,A112L0,A113L0,C121L0,C122L0,C123L0,',
+     1               'E131L0,E132L0,E133L0'
+         CALL MERKONV(NA1,NB1,DP(1),ICVEL,NELCV,ID,RTH,CORD,NP)
+*****
+
+***** pakbocac.for
+         CALL MERKONV(NE1,NBE133,DP(19),ICVEL,NELCV,ID,RTH,CORD,NP)
+c      WRITE(II,5000) (DP(I),I=1,19)
+ 5000 FORMAT(' DP0',10(1PE15.8))
+***** ..\pakbocac.FOR
+         CALL MERKONV(NE1,NBE133,DP(19),ICVEL,NELCV,ID,RTH,CORD,NP)
+c      WRITE(94,5000) (DP(I),I=1,19)
+ 5000 FORMAT(' DP0',10(1PE15.8))
+*****
+
+***** pakbocac.for
+
+c      WRITE(II,5001) (DP(I),I=1,19)
+ 5001 FORMAT(' DP',10(1PE15.8))
+c      WRITE(II,5002) (DL(I),I=1,19)
+ 5002 FORMAT(' DL',10(1PE15.8))
+***** ..\pakbocac.FOR
+
+c      WRITE(94,5001) (DP(I),I=1,19)
+ 5001 FORMAT(' DP',10(1PE15.8))
+c      WRITE(94,5002) (DL(I),I=1,19)
+ 5002 FORMAT(' DL',10(1PE15.8))
+*****
+
+***** pakbocac.for
+      STAC=146.5001-VREME
+      WRITE(II,5100) STAC,(DL(I),I=1,19)
+C
+***** ..\pakbocac.FOR
+      STAC=146.5001-VREME
+      WRITE(94,5100) STAC,(DL(I),I=1,19)
+C
+*****
+
+***** pakbocac.for
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /BOCACS/ TAUS(6,8,6),TAUM(6,8,6),TAU0(6,8,6)
+      DIMENSION NEL1(6),TED(6,*),TA(*),MCVEL(*)
+       
+      TPROF1=55.
+      IF(VREME.LT.TPROF1) RETURN
+      STAC=147.5001-VREME
+C
+       NEL1(1)=449189
+       NEL1(2)=449229
+       NEL1(3)=449273
+c       NEL1(4)=291742
+c       NEL1(5)=291682
+c       NEL1(6)=291616
+         NMM=NLM
+***** ..\pakbocac.FOR
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /BOCACS/ TAUS(6,8,6),TAU0(6,8,6)
+      DIMENSION MCVEL(*),NEL1(12),TA(*),TED(6,*)
+       
+      TPROF1=54.
+      IF(VREME.LT.TPROF1) RETURN
+C
+       NEL1(1)=291742
+       NEL1(2)=291682
+       NEL1(3)=291616
+       NEL1(4)=355060
+       NEL1(5)=355100
+       NEL1(6)=355144
+         NMM=NLM
+*****
+
+***** pakbocac.for
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         DO 11 NC=1,3
+         IF(NMM.EQ.NEL1(NC)) GO TO 12
+***** ..\pakbocac.FOR
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         DO 11 NC=1,6
+         IF(NMM.EQ.NEL1(NC)) GO TO 12
+*****
+
+***** pakbocac.for
+C     OTVARANJE FAJLA ZA ZAPISIVANJE NAPONA KOJI SE MERE
+      IF(NMM.EQ.NEL1(1)) II=91
+      IF(NMM.EQ.NEL1(2)) II=92
+      IF(NMM.EQ.NEL1(3)) II=93
+      IF(KPROF.EQ.0) THEN
+      IF(JG.EQ.1) THEN
+      IF(NMM.EQ.NEL1(1))
+     1   OPEN (II,FILE='BOCAC.189',STATUS='UNKNOWN',
+     1         FORM='FORMATTED',ACCESS='SEQUENTIAL')
+      IF(NMM.EQ.NEL1(2))
+     1   OPEN (II,FILE='BOCAC.229',STATUS='UNKNOWN',
+     1         FORM='FORMATTED',ACCESS='SEQUENTIAL')
+      IF(NMM.EQ.NEL1(3))
+     1   OPEN (II,FILE='BOCAC.273',STATUS='UNKNOWN',
+     1         FORM='FORMATTED',ACCESS='SEQUENTIAL')
+      ENDIF
+***** ..\pakbocac.FOR
+C     OTVARANJE FAJLA ZA ZAPISIVANJE NAPONA KOJI SE MERE
+      IF(KPROF.EQ.0) THEN
+         II=95
+         OPEN (II,FILE='BOCAC.NAP',STATUS='UNKNOWN',
+     1         FORM='FORMATTED',ACCESS='SEQUENTIAL')
+      IF(JG.EQ.1)
+     1WRITE(95,*) 'CELO,CSC1-1T,CSC1-1R,CSC1-2T,CSC1-2R,CSC1-3T,CSC1-3R'
+C
+            DO 20 I=1,6
+CS             KOSIJEVI NAPONI U GLOBAL. ILI LOKAL. DEKART. SISTEMU
+CE             CAUCHY STRESS IN GLOBAL OR LOCAL CARTESIAN SYSTEM 
+CE             ISN: INDICATOR FOR STRESS STORAGE (=0-LOCAL,=2-GLOBAL)
+               CALL GLLOKN(TA,TED,TAU0(I,JG,NC),0,I)
+   20       CONTINUE
+      STAC=146.5001-VREME
+C STAMPANJE NAPONA NA MERNIM MESTIMA
+      WRITE(95,5101) STAC,NEL1(NC),JG,(TAU0(I,JG,NC),I=1,6)
+ 5101 FORMAT(' 0',F9.3,I7,I3,6(1PE12.4))
+      ENDIF
+*****
+
+***** pakbocac.for
+C
+C STAMPANJE NAPONA NA MERNIM MESTIMA
+c      WRITE(II,5103) STAC,NEL1(NC),JG,(TA(I),I=1,6)
+ 5103 FORMAT('0GL',F9.3,I7,I3,6(1PE12.4))
+            DO 20 I=1,6
+CS             KOSIJEVI NAPONI U GLOBAL. ILI LOKAL. DEKART. SISTEMU
+***** ..\pakbocac.FOR
+C
+            DO 21 I=1,6
+CS             KOSIJEVI NAPONI U GLOBAL. ILI LOKAL. DEKART. SISTEMU
+*****
+
+***** pakbocac.for
+CE             ISN: INDICATOR FOR STRESS STORAGE (=0-LOCAL,=2-GLOBAL)
+               CALL GLLOKN(TA,TED,TAU0(I,JG,NC),0,I)
+   20       CONTINUE
+C STAMPANJE NAPONA NA MERNIM MESTIMA
+c      WRITE(II,5101) STAC,NEL1(NC),JG,(TAU0(I,JG,NC),I=1,6)
+ 5101 FORMAT('0LO',F9.3,I7,I3,6(1PE12.4))
+      ENDIF
+C
+C      WRITE(II,5104) STAC,NEL1(NC),JG,(TA(I),I=1,6)
+ 5104 FORMAT(' GL',F9.3,I7,I3,6(1PE12.4))
+            DO 21 I=1,6
+CS             KOSIJEVI NAPONI U GLOBAL. ILI LOKAL. DEKART. SISTEMU
+CE             CAUCHY STRESS IN GLOBAL OR LOCAL CARTESIAN SYSTEM 
+CE             ISN: INDICATOR FOR STRESS STORAGE (=0-LOCAL,=2-GLOBAL)
+               CALL GLLOKN(TA,TED,TAUS(I,JG,NC),0,I)
+               TAUM(I,JG,NC)=(TAUS(I,JG,NC)-TAU0(I,JG,NC))/1000.
+   21       CONTINUE
+C STAMPANJE NAPONA NA MERNIM MESTIMA
+c      WRITE(II,5100) STAC,NEL1(NC),JG,(TAUS(I,JG,NC),I=1,6)
+ 5100 FORMAT(' LO',F9.3,I7,I3,6(1PE12.4))
+      IF((NMM.EQ.NEL1(1).AND.JG.EQ.8).OR.
+     1   (NMM.EQ.NEL1(2).AND.JG.EQ.7).OR.
+     1   (NMM.EQ.NEL1(3).AND.JG.EQ.8))
+     1WRITE(II,5105) STAC,NEL1(NC),JG,(TAUM(I,JG,NC),I=1,6)
+ 5105 FORMAT(' LM',F9.3,I7,I3,6(1PE12.4))
+C
+***** ..\pakbocac.FOR
+CE             ISN: INDICATOR FOR STRESS STORAGE (=0-LOCAL,=2-GLOBAL)
+               CALL GLLOKN(TA,TED,TAUS(I,JG,NC),0,I)
+               IF(NC.LE.3) TAUS(I,JG,NC)=TAUS(I,JG,NC)-TAU0(I,JG,NC)
+   21       CONTINUE
+      STAC=146.5001-VREME
+C STAMPANJE NAPONA NA MERNIM MESTIMA
+      WRITE(95,5100) STAC,NEL1(NC),JG,(TAUS(I,JG,NC),I=1,6)
+C
+*****
+
+***** pakbocac.for
+      RETURN
+C-----------------------------------------------------------------------
+***** ..\pakbocac.FOR
+      RETURN
+C
+ 5100 FORMAT(' ',F9.3,I7,I3,6(1PE12.4))
+C-----------------------------------------------------------------------
+*****
+
+Comparing files pakExplicit.for and ..\pakExplicit.FOR
+FC: no differences encountered
+
+Comparing files pakf10.for and ..\pakf10.FOR
+FC: no differences encountered
+
+Comparing files pakf11.for and ..\pakf11.FOR
+FC: no differences encountered
+
+Comparing files pakf12.for and ..\pakf12.FOR
+FC: no differences encountered
+
+Comparing files pakf2.for and ..\pakf2.FOR
+FC: no differences encountered
+
+Comparing files pakf3.for and ..\pakf3.FOR
+FC: no differences encountered
+
+Comparing files pakf4.for and ..\pakf4.FOR
+FC: no differences encountered
+
+Comparing files pakf5.for and ..\pakf5.FOR
+FC: no differences encountered
+
+Comparing files pakf6.for and ..\pakf6.FOR
+FC: no differences encountered
+
+Comparing files pakf7.for and ..\pakf7.FOR
+FC: no differences encountered
+
+Comparing files pakf8.for and ..\pakf8.FOR
+FC: no differences encountered
+
+Comparing files pakf9.for and ..\pakf9.FOR
+FC: no differences encountered
+
+Comparing files pakfn.for and ..\pakfn.FOR
+FC: no differences encountered
+
+Comparing files pakfvtk.for and ..\pakfvtk.FOR
+FC: no differences encountered
+
+Comparing files pakj.for and ..\pakj.FOR
+FC: no differences encountered
+
+Comparing files pakj2d.for and ..\pakj2d.FOR
+FC: no differences encountered
+
+Comparing files pakj2dx.for and ..\pakj2dx.FOR
+FC: no differences encountered
+
+Comparing files pakj3d.for and ..\pakj3d.FOR
+FC: no differences encountered
+
+Comparing files pakjcir2d.for and ..\pakjcir2d.FOR
+FC: no differences encountered
+
+Comparing files pakjcir2dx.for and ..\pakjcir2dx.FOR
+FC: no differences encountered
+
+Comparing files pakjcir3d.for and ..\pakjcir3d.FOR
+FC: no differences encountered
+
+Comparing files pakjcor.for and ..\pakjcor.FOR
+FC: no differences encountered
+
+Comparing files pakjfc.for and ..\pakjfc.FOR
+FC: no differences encountered
+
+Comparing files pakjfront.for and ..\pakjfront.FOR
+FC: no differences encountered
+
+Comparing files pakjsec.for and ..\pakjsec.FOR
+FC: no differences encountered
+
+Comparing files pakkt.for and ..\pakkt.FOR
+FC: no differences encountered
+
+Comparing files pakn.for and ..\pakn.FOR
+FC: no differences encountered
+
+Comparing files pakn8.for and ..\pakn8.FOR
+FC: no differences encountered
+
+Comparing files paku.for and ..\paku.FOR
+FC: no differences encountered
+
+Comparing files pakx.for and ..\pakx.FOR
+FC: no differences encountered
+
+Comparing files pakzmod.for and ..\pakzmod.FOR

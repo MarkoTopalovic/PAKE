@@ -1,0 +1,359 @@
+C==========================================================
+C
+C     FORMIRANJE MATRICA ELEMENTA U GAUS.TA$KI
+C   SUBROUTINE MATEKG
+C==========================================================
+      SUBROUTINE MATEKG(ID,NOP,BL,BLT,BNL,BNLT,H,SKE,TSG,LM,
+     * UKUM,FNEUR,KORK)
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+      include 'paka.inc'
+      
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /PLASTI/ LPLAST,LPLAS1,LSIGMA
+      COMMON /ITERBR/ ITER
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /IGRGLA/ NGRU,NGSU,NGTU,NGS,NTE,NUD,IANAL,JTAU,NWE,NT6,INEL
+     *,MATG
+      COMMON /IGREP/  LIGNOP,LIGNDS,LIGDST,LIGCTR,MXAUG,LMXAUG,LAG,MAXAE
+     *               ,LICTRP,LIGX  ,LIGY  ,LIGZ,LAE,LLM,LIGMAT
+      COMMON /GRUPEE/ NGEL,NGENL,LGEOM,NGEOM,ITERM
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /DUPLAP/ IDVA
+      COMMON /IGMAT / EM(3,3),IBTC,LNAP1,LPLAS,LPLA1
+      COMMON/ELKG/DET,WTU,R,S,T,NLM,JNGS,NCV,ND,PI2,SS,GR(3),GS(3)
+     1,XJ(3,3),AK(40),BK(40),DLS(40),DLT(40),VS(40,3),VT(40,3),V1(40,3)
+      COMMON/CONSKG/C43,C23,C13,C15,C19
+      COMMON/ANALES/DETW,ND3,IET
+      DIMENSION BL(3,*),BLT(NT6,*),BNL(9,*),BNLT(NT6,*),TAU(8)
+     1         ,H(NTE,*),SKE(*),LM(NT6,*),
+     2          TSG(6,3)
+      DIMENSION HP(3,6,3),G3(3),ET(9,9),ETP(9,9),
+     2TSGP(9,9)
+      DIMENSION TA3(3),TA6(6),XL(3,3),UKUM(*),STRESS(3),FNEUR(*)
+      DIMENSION ID(NP,*),NOP(NE,*),U(24)
+C
+C     MATRICA TSIGMA(TSG)
+C
+      DO 66 I=1,3
+      IF(DABS(GR(I)).LT.1.D-08) GR(I)=0.
+   66 IF(DABS(GS(I)).LT.1.D-08) GS(I)=0.
+      GRI=DSQRT(GR(1)*GR(1)+GR(2)*GR(2)+GR(3)*GR(3))
+      G3(1)=GR(2)*GS(3)-GR(3)*GS(2)
+      G3(2)=GR(3)*GS(1)-GR(1)*GS(3)
+      G3(3)=GR(1)*GS(2)-GR(2)*GS(1)
+      G3I=DSQRT(G3(1)*G3(1)+G3(2)*G3(2)+G3(3)*G3(3))
+      DO 15 I=1,3
+      GR(I)=GR(I)/GRI
+      IF(DABS(G3(I)).LT.1.D-08) G3(I)=0.
+   15 G3(I)=G3(I)/G3I
+      GS(1)=G3(2)*GR(3)-G3(3)*GR(2)
+      GS(2)=G3(3)*GR(1)-G3(1)*GR(3)
+      GS(3)=G3(1)*GR(2)-G3(2)*GR(1)
+      TSG(1,1)=GR(1)*GR(1)
+      TSG(1,2)=2.*GR(1)*GS(1)
+      TSG(1,3)=2.*GR(1)*G3(1)
+      TSG(2,1)=GR(2)*GR(2)
+      TSG(2,2)=2.*GR(2)*GS(2)
+      TSG(2,3)=2.*GR(2)*G3(2)
+      TSG(3,1)=GR(3)*GR(3)
+      TSG(3,2)=2.*GR(3)*GS(3)
+      TSG(3,3)=2.*GR(3)*G3(3)
+      TSG(4,1)=GR(1)*GR(2)
+      TSG(4,2)=GR(1)*GS(2)+GS(1)*GR(2)
+      TSG(4,3)=GR(1)*G3(2)+GR(2)*G3(1)
+      TSG(5,1)=GR(2)*GR(3)
+      TSG(5,2)=GR(2)*GS(3)+GR(3)*GS(2)
+      TSG(5,3)=GR(2)*G3(3)+GR(3)*G3(2)
+      TSG(6,1)=GR(3)*GR(1)
+      TSG(6,2)=GR(3)*GS(1)+GR(1)*GS(3)
+      TSG(6,3)=GR(3)*G3(1)+GR(1)*G3(3)
+      ND=NCV*6
+      ND3=NCV*3
+C***
+C     OSNOVNA PETLJA PO BROJU $VOROVA
+C
+      DO 10 NC=1,NCV
+      IF(IANAL.EQ.0) GO TO 240
+      IF(NLM.GT.1.OR.KOR.GT.1.OR.JNGS.GT.1) GO TO 240
+      DO 241 I=1,9
+      DO 241 J=1,9
+  241 TSGP(I,J)=0.
+  240 JB=(NC-1)*6
+      JBA=(NC-1)*3
+      DO 5 I=1,3
+      DO 5 J=1,3
+      DO 5 K=1,6
+    5 HP(I,K,J)=0.
+C***
+      SP=S
+      TP=T
+C     IF(NPRES.NE.0) GO TO 32
+      IF(IANAL.EQ.0) GO TO 81
+      SP=0.
+      TP=0.
+      GO TO 32
+   81 SP=S*BK(NC)
+      TP=T*AK(NC)
+   32 DO 65 I=1,3
+   65 IF(DABS(V1(NC,I)).LT.1.D-08) V1(NC,I)=0.
+      HP(1,1,1)= H(NC,2)
+      HP(1,5,1)= H(NC,2)*((TP+DLT(NC))*VT(NC,3)+(SP+DLS(NC))*VS(NC,3))
+      HP(1,6,1)=-H(NC,2)*((TP+DLT(NC))*VT(NC,2)+(SP+DLS(NC))*VS(NC,2))
+      HP(2,5,1)= H(NC,1)*BK(NC)*VS(NC,3)
+      HP(2,6,1)=-H(NC,1)*BK(NC)*VS(NC,2)
+      HP(3,5,1)= H(NC,1)*AK(NC)*VT(NC,3)
+      HP(3,6,1)=-H(NC,1)*AK(NC)*VT(NC,2)
+      HP(1,2,2)= H(NC,2)
+      HP(1,4,2)=-H(NC,2)*((TP+DLT(NC))*VT(NC,3)+(SP+DLS(NC))*VS(NC,3))
+      HP(1,6,2)= H(NC,2)*((TP+DLT(NC))*VT(NC,1)+(SP+DLS(NC))*VS(NC,1))
+      HP(2,4,2)=-H(NC,1)*BK(NC)*VS(NC,3)
+      HP(2,6,2)= H(NC,1)*BK(NC)*VS(NC,1)
+      HP(3,4,2)=-H(NC,1)*AK(NC)*VT(NC,3)
+      HP(3,6,2)= H(NC,1)*AK(NC)*VT(NC,1)
+      HP(1,3,3)= H(NC,2)
+      HP(1,4,3)= H(NC,2)*((TP+DLT(NC))*VT(NC,2)+(SP+DLS(NC))*VS(NC,2))
+      HP(1,5,3)= H(NC,2)*((TP+DLT(NC))*VT(NC,1)+(SP+DLS(NC))*VS(NC,1))
+      HP(2,4,3)= H(NC,1)*BK(NC)*VS(NC,2)
+      HP(2,5,3)=-H(NC,1)*BK(NC)*VS(NC,1)
+      HP(3,4,3)= H(NC,1)*AK(NC)*VT(NC,2)
+      HP(3,5,3)=-H(NC,1)*AK(NC)*VT(NC,1)
+C***
+C     MATRICA BNL
+C***
+      DO 11 I=1,3
+      KK=I-1
+      DO 11 J=1,3
+      KKJ=KK+J
+      DO 12 K=1,6
+      JBK=JB+K
+      XX=0.
+      DO 13 L=1,3
+      IF(K.LE.3.AND.L.GT.1) GO TO 13
+      XX=XX+XJ(J,L)*HP(L,K,I)
+   13 CONTINUE
+      BNL(KK+J,JB+K)=XX
+   12 CONTINUE
+      KK=KK+2
+   11 CONTINUE
+C
+      IF(IANAL.EQ.0) GO TO 80
+   80 CONTINUE
+      DO 290 I=1,3
+      DO 290 J=JB+1,JB+6
+  290 BL(I,J)=0.
+      DO 14 I=1,3
+       DO 894 J=1,6
+        DO 1895 K=1,3
+ 1895 BL(I,JB+J)=BL(I,JB+J)+BNL(4*K-3,JB+J)*TSG(K,I)
+        DO 1986 K=1,2
+ 1986 BL(I,JB+J)=BL(I,JB+J)+BNL(2*K,JB+J)*TSG(4,I)
+        DO 1897 K=3,4
+ 1897 BL(I,JB+J)=BL(I,JB+J)+BNL(2*K,JB+J)*TSG(5,I)
+        DO 1988 K=1,2
+ 1988 BL(I,JB+J)=BL(I,JB+J)+BNL(4*K-1,JB+J)*TSG(6,I)
+  894 CONTINUE
+   14 CONTINUE
+C
+   10 CONTINUE
+C
+      IF(IATYP.NE.2) GO TO 270
+C
+C IZRACUNAVANJE KOEFICIJENATA XL(I,J) TJ. L(I,J)
+C
+C ODREDJIVANJE VEKTORA CVORNIH POMERANJA ELEMENTA U(I) IZ
+C VEKTORA UKUPNIH POMERANJA KONSTRUKCIJE UKUM
+C
+       II=0
+      DO 180  N=1,NTE
+       NN=NOP(NLM,N)
+      DO 181 I=1,6
+       II=II+1
+      IF(ID(NN,I).EQ.0) GO TO 182
+      J=ID(NN,I)
+      U(II)=UKUM(J)
+      GO TO 181
+  182 U(II)=0.
+  181 CONTINUE
+  180 CONTINUE
+C
+      DO 892 I=1,3
+      II=I
+      DO 890 J=1,3
+      XX=0.
+      DO 891 K=1,NT6
+      XX = XX + BNL(II,K)*U(K)
+  891 CONTINUE
+      XL(I,J)=XX
+      II=II+3
+  890 CONTINUE
+  892 CONTINUE
+C
+C  KOREKCIJA BL0 SA BL1
+C
+      DO 900 I=1,3
+      DO 893 J=1,NT6
+C
+      DO 901 K=1,3
+      DO 901 L=1,3
+  901 BL(I,J)=BL(I,J) + (XL(L,K)*BNL((K-1)*3+L,J))*TSG(K,I)
+      DO 902 L=1,3
+  902 BL(I,J)=BL(I,J) + (XL(L,1)*BNL(3+L,J))*TSG(4,I)
+      DO 903 L=1,3
+  903 BL(I,J)=BL(I,J) + (XL(L,2)*BNL(L,J))*TSG(4,I)
+      DO 904 L=1,3
+  904 BL(I,J)=BL(I,J) + (XL(L,2)*BNL(6+L,J))*TSG(5,I)
+      DO 905 L=1,3
+  905 BL(I,J)=BL(I,J) + (XL(L,3)*BNL(3+L,J))*TSG(5,I)
+      DO 906 L=1,3
+  906 BL(I,J)=BL(I,J) + (XL(L,3)*BNL(L,J))*TSG(6,I)
+      DO 907 L=1,3
+  907 BL(I,J)=BL(I,J) + (XL(L,1)*BNL(6+L,J))*TSG(6,I)
+  893 CONTINUE
+  900 CONTINUE
+C
+C***
+C     MATRICA ELASTI$NOSTI ZA GLOBALNI SISTEM
+C***
+  270 CONTINUE
+      DO 16 I=1,6
+      DO 16 J=1,3
+      ETP(I,J)=0.
+      DO 16 K=1,3
+   16 ETP(I,J)=ETP(I,J)+TSG(I,K)*EM(K,J)
+      DO 17 I=1,6
+      DO 17 J=1,6
+      ET(I,J)=0.
+      DO 17 K=1,3
+   17 ET(I,J)=ET(I,J)+ETP(I,K)*TSG(J,K)
+C     ISPITATI MOGUCNOST ODREDJIVANJA PRI.R.NAPONA PREKO BL A NE BLS
+      IF(ISKNP.NE.2) GO TO 96
+C
+C   NAPONI U GAUSS-OVOJ TACKI
+C
+      IF(ISKNP.NE.1)
+     *CALL DETAU(BL,FUG,UKUM,TAU,STRESS,LM)
+C
+C     GO TO 120
+C***
+C     MATRICA KL-LINEARNI DEO SKE
+C***
+   96 CONTINUE
+      IF(ISKNP.EQ.2) GO TO 120
+      DO 19 I=1,ND
+      DO 19 J=1,3
+      BLT(I,J)=0.
+      DO 19 K=1,3
+   19 BLT(I,J)=BLT(I,J)+BL(K,I)*EM(K,J)
+      KK=0
+      IF(IANAL.EQ.1) GO TO 90
+      DETW=DET*WTU
+      GO TO 95
+   90 DETW=4.*DET*WTU
+      SSA=DABS(SS)
+C
+C     MATRICA KRUTOSTI
+C
+   95 DO 20 I=1,ND
+      DO 20 J=I,ND
+      KK=KK+1
+      XX=0.
+      DO 21 K=1,3
+   21 XX=XX+BLT(I,K)*BL(K,J)
+      SKE(KK)=SKE(KK)+XX*DETW
+   20 CONTINUE
+C
+      IF(IANAL.EQ.0) GO TO 120
+C...
+C   ANALITICKA INTEGRACIJA PO PRESEKU
+C...
+C     DETW=C43*DET*WTU
+C     IET=3
+C     CALL ANALKG(SKE,BLSA,BLTA,EM,EM,BLT,BNLT,NWE)
+C
+  120 IF((KOR.EQ.1.AND.ITER.EQ.0.AND.KORK.NE.2).OR.IATYP.EQ.0) RETURN
+C***
+CCCCCCIF(IATYP.NE.2) RETURN
+C     NELINEARNI DEO MATRICE KRUTOSTI ELEMENTA
+C***
+      DETW=DET*WTU
+      DO 351 I=1,6
+      TA6(I)=0.
+      DO 351 J=1,3
+C     IF(NMODM.LT.5) STRESS(J)=TAU(J)
+  351 TA6(I)=TA6(I)+TSG(I,J)*STRESS(J)
+      IF(IANAL.EQ.0.AND.KORK.EQ.2) GO TO 251
+      IF(IANAL.GT.0)DETW=4.*DETW
+      IF(KORK.EQ.2) GO TO 243
+      DO 22 I=1,9
+      DO 22 J=1,9
+      ETP(I,J)=0.
+      TSGP(I,J)=0.
+   22 ET(I,J)=0.
+      IF(IANAL.EQ.1) GO TO 243
+      DO 23 I=1,3
+      I3=I+3
+      I6=I+6
+      ET(I,I)  =TA6(1)
+      ET(I3,I3)=TA6(2)
+      ET(I6,I6)=TA6(3)
+      ET(I3,I) =TA6(4)
+      ET(I6,I3)=TA6(5)
+      ET(I6,I) =TA6(6)
+   23 CONTINUE
+      DO 245 I=1,9
+      DO 245 J=I,9
+  245 ET(I,J)=ET(J,I)
+  251 CONTINUE
+C     IF(KORK.EQ.2) GO TO 400
+      IF(KORK.EQ.2) GO TO 246
+      GO TO 250
+C
+  243 CONTINUE
+C 243 IF(NMODM.GE.5) GO TO 2467
+CC    DO 350 I=1,3
+CC350 TA3(I)=TAU(NLM,JNGS,I)
+CC    GO TO 2468
+      TA3(1)=STRESS(1)
+      TA3(2)=STRESS(2)
+      TA3(3)=STRESS(3)
+      IF(KORK.NE.1) GO TO 246
+      IF(IANAL.EQ.0) GO TO 250
+C
+C   MNOZENJE SA MATRICOM BL0(MATRICA BL ZA S=0 I T=0)
+C    A NE  BL0 PRI PRIMENI T.L. ,I KOREKCIJA SKE
+C
+  250 DO 360 I=1,ND
+      DO 360 J=1,9
+      BNLT(I,J)=0.
+      DO 360 K=1,9
+  360 BNLT(I,J)=BNLT(I,J)+BNL(K,I)*ET(K,J)
+      KK=0
+      DO 361 I=1,ND
+      DO 361 J=I,ND
+      KK=KK+1
+      XX=0.
+      DO 362 K=1,9
+  362 XX=XX+BNLT(I,K)*BNL(K,J)
+      SKE(KK)=SKE(KK)+XX*DETW
+  361 CONTINUE
+  246 CONTINUE
+C
+C UNUTRASNJE SILE
+C
+      DO 30 I=1,ND
+      XX=0.
+      II=LM(I,NLM)
+      IF(LM(I,NLM).EQ.0) GO TO 28
+      DO 29 J=1,3
+   29 XX=XX+BL(J,I)*STRESS(J)
+C
+   28 FNEUR(II)=FNEUR(II)+XX*DETW
+   30 CONTINUE
+C
+      RETURN
+      END

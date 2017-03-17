@@ -1,0 +1,2272 @@
+C=====================================================================
+      SUBROUTINE TGRAU8(NEL,MCVEL,ICVEL,NMAT,THID,IGRAF)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C .......................................................................
+C .
+CE.   P R O G R A M
+CE.       TO PRINTOUT SHELL ELEMENTS DATA IN NEUTRAL GRAPHICS FILE
+CS.   P R O G R A M
+CS.       ZA STAMPANJE ELEMENATA LJUSKE U NEUTRALNI FILE
+C .
+C .......................................................................
+C 
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /SUMELE/ ISUMEL,ISUMGR
+      COMMON /SRPSKI/ ISRPS
+      COMMON /NIDEAS/ IDEAS
+      COMMON /STAPRO/ THIDP(100),NPROPR(100)
+      DIMENSION NEL(NE,*),MCVEL(*),NMAT(*),THID(*)
+      DIMENSION FIZ(14)         
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' TGRAU8'
+      ISUMGR=ISUMGR+1
+C
+C     FIZICKE OSOBINE
+C
+      NULA=0
+      ZERO=0.
+      ONE=1.
+      JEDAN=1
+      INDPR=25
+      INDPD=2
+      I11=11
+      I2=2
+      I4=4
+      I8=8
+      I14=14
+      I48=48
+C
+      NPROP=1
+      DO IM=1,NE
+         IF(NPROP.LT.NMAT(IM)) NPROP=NMAT(IM)
+      ENDDO
+      NPRP=1
+      DO IM=1,100
+         IF(NPRP.LT.NPROPR(IM)) NPRP=NPROPR(IM)
+      ENDDO
+      IF(NPRP.NE.NPROP) STOP 'NPRP.NE.NPROP'
+      II=IGRAF
+      IND=-1
+      ITYP=402
+      DO 20 I=1,NPROP
+         IF(NPROPR(I).EQ.0) GO TO 20
+         WRITE(II,5100) IND
+         WRITE(II,5100) ITYP
+         IFGD=17
+         IF(NCVE.EQ.8) IFGD=18
+         IF(MSET.GT.0) THEN
+            IFGD=21
+            IF(NCVE.EQ.8) IFGD=22
+         ENDIF
+         IPRO=IFGD
+         APR=THIDP(I)
+         ICOL=124-(I-1)*2
+         WRITE(II,5600) I,ICOL,I,IPRO,I,NULA
+         WRITE(II,2001) I
+         WRITE(II,5600) NULA,NULA,NULA,NULA
+C 45
+         WRITE(II,5600) NULA
+C 93
+         WRITE(II,5600) JEDAN
+         WRITE(II,5500) APR
+C
+         WRITE(II,5100) IND
+   20 CONTINUE
+C
+ 5100 FORMAT(i5)
+ 5500 FORMAT(5(1PE13.5,','))
+ 5600 FORMAT(6(I4,','))
+ 2001 FORMAT(' PRO',I4)
+ 2002 FORMAT(A80)
+ 5200 FORMAT(F3.1,',')
+C
+C     E L E M E N T I
+C
+      NNCVE=NCVE
+      IF(NCVE.LT.8) NCVE=4
+      IF(NCVE.EQ.9) NCVE=8
+C     GRAFICKI OPIS ELEMENTA:
+C     MEMBRANE - SA 4 CVOROVA = 13, SA 8 CVOROVA = 14
+C     PLANE STRAIN - SA 4 CVOROVA = 19, SA 8 CVOROVA = 20
+C     AXISYMMETRIC - SA 4 CVOROVA = 23, SA 8 CVOROVA = 24
+C     PLATE - SA 4 CVOROVA = 17, SA 8 CVOROVA = 18
+C     LAMINATE - SA 4 CVOROVA = 21, SA 8 CVOROVA = 22
+      IFGD=17
+      IF(NCVE.EQ.8) IFGD=18
+      IF(MSET.GT.0) THEN
+         IFGD=21
+         IF(NCVE.EQ.8) IFGD=22
+      ENDIF
+C     VRSTA PLATE ELEMENTA: SA 4 CVOROVA = 4, SA 8 CVOROVA = 5
+      IFDI=4
+      IF(NCVE.EQ.8) IFDI=5
+C     TABELA FIZICKIH OSOBINA
+C      IPTN=ISUMGR
+C     BROJ CVOROVA NA ELEMENTU
+      NNODS=NCVE
+      IND=-1
+      ITYP=404
+      WRITE(IGRAF,1100) IND
+      WRITE(IGRAF,1100) ITYP
+      DO 10 I=1,NE
+C        REDNI BROJ ELEMENTA
+         IEL=I+ISUMEL
+         IF(ICVEL.EQ.1) IEL=MCVEL(I)
+C        TABELA MATERIJALA
+         MPTN=NMAT(I)
+         IPTN=MPTN
+C        BOJA  
+         ICOL=124-(MPTN-1)*2
+         WRITE(IGRAF,1000) IEL,ICOL,MPTN,IFGD,IFDI,MPTN,NULA,NULA
+         IF(NCVE.EQ.4) THEN
+            WRITE(IGRAF,1001) (NEL(I,J),J=1,4),NULA,NULA,NULA,NULA,
+     +                        NULA,NULA
+            WRITE(IGRAF,1011) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,
+     +                        NULA,NULA
+         ELSE
+            WRITE(IGRAF,1001) (NEL(I,J),J=1,8),
+     +                        NULA,NULA
+            WRITE(IGRAF,1011) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,
+     +                        NULA,NULA
+         ENDIF
+         WRITE(IGRAF,1002) ZERO,ZERO,ZERO
+         WRITE(IGRAF,1002) ZERO,ZERO,ZERO
+         WRITE(IGRAF,1002) ZERO,ZERO,ZERO
+         WRITE(IGRAF,1003) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,
+     +                     NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+   10 CONTINUE
+      WRITE(IGRAF,1100) IND
+      ISUMEL=ISUMEL+NE
+      NCVE=NNCVE
+      RETURN
+C
+ 1000 FORMAT(I10,',',7(I4,','))
+ 1001 FORMAT(10(I10,','))
+ 1011 FORMAT(10(I2,','))
+ 1002 FORMAT(3(F3.0,','))
+ 1003 FORMAT(16(I2,','))
+ 1100 FORMAT(i5)
+ 1200 FORMAT(6(1PE13.5,','))
+      END
+C======================================================================
+      SUBROUTINE STAU81(SIGMA,ISNA,MCVEL,ICVEL,IPLA,AU,NSLOJ,IMAT)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /NIDEAS/ IDEAS
+      COMMON /SRPSKI/ ISRPS
+C
+      DIMENSION AU(*)
+      REAL AU
+      DIMENSION ISNA(*),MCVEL(*),NSLOJ(*),IMAT(*)
+      DIMENSION SIGMA(6,NGS12,NE,*),S(14),N(20)
+C
+      JEDAN=1
+      NULA=0
+      ZERO=0.
+      ONE=1.
+      MJ=-1
+      M451=451
+      M2=2
+      M3=3
+      M4=4
+      M5=5
+      M8=8
+      M9=9
+C
+      II=49
+C
+      IND=7020
+      NND=100220
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   83 IND=7021
+      NND=100221
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   84 IND=7022
+      NND=100222
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   85 IND=7023
+      NND=100223
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   86 IND=7024
+      NND=100224
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   87 IND=7025
+      NND=100225
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   88 IND=7033
+      NND=100233
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   92 IND=7420
+      NND=100620
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   93 IND=7421
+      NND=100621
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   94 IND=7422
+      NND=100622
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   95 IND=7423
+      NND=100623
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   96 IND=7424
+      NND=100624
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   97 IND=7425
+      NND=100625
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+   98 IND=7433
+      NND=100633
+      CALL NAPUNI(N,NCVE,NND)
+      GO TO 10
+C
+   10 WRITE(II,1000) KOR,IND,JEDAN
+      IF(IND.EQ.7020) WRITE(II,7020) 
+      IF(IND.EQ.7021) WRITE(II,7021) 
+      IF(IND.EQ.7022) WRITE(II,7022) 
+      IF(IND.EQ.7023) WRITE(II,7023) 
+      IF(IND.EQ.7024) WRITE(II,7024) 
+      IF(IND.EQ.7025) WRITE(II,7025) 
+      IF(IND.EQ.7033) WRITE(II,7033) 
+      IF(IND.EQ.7420) WRITE(II,7420) 
+      IF(IND.EQ.7421) WRITE(II,7421) 
+      IF(IND.EQ.7422) WRITE(II,7422) 
+      IF(IND.EQ.7423) WRITE(II,7423) 
+      IF(IND.EQ.7424) WRITE(II,7424) 
+      IF(IND.EQ.7425) WRITE(II,7425) 
+      IF(IND.EQ.7433) WRITE(II,7433) 
+      WRITE(II,1010) ZERO,ZERO,ZERO
+      IF(ISTNA.EQ.0) THEN
+       WRITE(II,1000) N(1),N(2),N(3),N(4),N(5),N(6),N(7),N(8),N(9),N(10)
+       WRITE(II,1000) 
+     +       N(11),N(12),N(13),N(14),N(15),N(16),N(17),N(18),N(19),N(20)
+      ELSE
+        WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+        WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      ENDIF
+      INDM=MOD(IND,100)
+      INMM=MOD(IND,1000)
+      IF(INDM.GE.10.AND.INDM.LT.50) WRITE(II,1000) NULA,NULA,M4,M8
+      IF(INDM.GE.50.AND.INDM.LT.99) WRITE(II,1000) NULA,NULA,M5,M8
+      IF(ISTNA.EQ.0) THEN
+         WRITE(II,1000) NULA,NULA,JEDAN
+      ELSE
+         WRITE(II,1000) JEDAN,NULA,JEDAN
+      ENDIF
+      DO 40 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 40
+C
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         CALL SREDK8(SIGMA,S,NLM,NGS12,NE,AU(LNSLOJ),AU(LNMAT),MSET)
+         IF(IPLA.EQ.0) THEN
+            IF(IND.EQ.7020) WRITE(II,5000) NMM,S(1)
+            IF(IND.EQ.7021) WRITE(II,5000) NMM,S(2)
+            IF(IND.EQ.7022) WRITE(II,5000) NMM,S(3)
+            IF(IND.EQ.7023) WRITE(II,5000) NMM,S(4)
+            IF(IND.EQ.7024) WRITE(II,5000) NMM,S(5)
+            IF(IND.EQ.7025) WRITE(II,5000) NMM,S(6)
+            IF(IND.EQ.7033) WRITE(II,5000) NMM,S(7)
+            IF(IND.EQ.7420) WRITE(II,5000) NMM,S(8)
+            IF(IND.EQ.7421) WRITE(II,5000) NMM,S(9)
+            IF(IND.EQ.7422) WRITE(II,5000) NMM,S(10)
+            IF(IND.EQ.7423) WRITE(II,5000) NMM,S(11)
+            IF(IND.EQ.7424) WRITE(II,5000) NMM,S(12)
+            IF(IND.EQ.7425) WRITE(II,5000) NMM,S(13)
+            IF(IND.EQ.7433) WRITE(II,5000) NMM,S(14)
+         ELSE
+         ENDIF
+   40 CONTINUE
+      WRITE(II,5500) MJ,ZERO
+      IF(ISTNA.GT.0) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+C
+      DO 30 NC=1,NCVE
+      WRITE(II,1000) KOR,N(NC),JEDAN
+      IF(IND.EQ.7020) WRITE(II,17020) NC 
+      IF(IND.EQ.7021) WRITE(II,17021) NC 
+      IF(IND.EQ.7022) WRITE(II,17022) NC 
+      IF(IND.EQ.7023) WRITE(II,17023) NC 
+      IF(IND.EQ.7024) WRITE(II,17024) NC 
+      IF(IND.EQ.7025) WRITE(II,17025) NC 
+      IF(IND.EQ.7033) WRITE(II,17033) NC 
+      IF(IND.EQ.7420) WRITE(II,17420) NC 
+      IF(IND.EQ.7421) WRITE(II,17421) NC 
+      IF(IND.EQ.7422) WRITE(II,17422) NC 
+      IF(IND.EQ.7423) WRITE(II,17423) NC 
+      IF(IND.EQ.7424) WRITE(II,17424) NC 
+      IF(IND.EQ.7425) WRITE(II,17425) NC 
+      IF(IND.EQ.7433) WRITE(II,17433) NC 
+      WRITE(II,1010) ZERO,ZERO,ZERO
+      WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      IF(INDM.GE.10.AND.INDM.LT.50) WRITE(II,1000) NULA,NULA,M4,M8
+      IF(INDM.GE.50.AND.INDM.LT.99) WRITE(II,1000) NULA,NULA,M5,M8
+      WRITE(II,1000) NULA,NULA,NULA
+      IF(NCVE.EQ.4.AND.NGAUSX.EQ.2) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=3*NGAUSZ+1
+            IF(NC.EQ.2) IJ=NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=2*NGAUSZ+1
+         ELSE
+            IF(NC.EQ.1) IJ=4*NGAUSZ
+            IF(NC.EQ.2) IJ=2*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=3*NGAUSZ
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.4.AND.NGAUSX.EQ.3) THEN
+         IF(INMM.GT.400) THEN
+C           IJ=I*NGAUSZ+1
+            IF(NC.EQ.1) IJ=8*NGAUSZ+1
+            IF(NC.EQ.2) IJ=2*NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=6*NGAUSZ+1
+         ELSE
+C           IJ=(I+1)*NGAUSZ
+            IF(NC.EQ.1) IJ=9*NGAUSZ
+            IF(NC.EQ.2) IJ=3*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=7*NGAUSZ
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.8.AND.NGAUSX.EQ.2) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=3*NGAUSZ+1
+            IF(NC.EQ.2) IJ=NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=2*NGAUSZ+1
+            IF(NC.EQ.5) THEN
+               IJ=-(3*NGAUSZ+1)
+               JI=NGAUSZ+1
+            ENDIF
+            IF(NC.EQ.6) THEN
+               IJ=-(NGAUSZ+1)
+               JI=1
+            ENDIF
+            IF(NC.EQ.7) THEN
+               IJ=-1
+               JI=2*NGAUSZ+1
+            ENDIF
+            IF(NC.EQ.8) THEN
+               IJ=-(2*NGAUSZ+1)
+               JI=3*NGAUSZ+1
+            ENDIF
+         ELSE
+            IF(NC.EQ.1) IJ=4*NGAUSZ
+            IF(NC.EQ.2) IJ=2*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=3*NGAUSZ
+            IF(NC.EQ.5) THEN
+               IJ=-(4*NGAUSZ)
+               JI=2*NGAUSZ
+            ENDIF
+            IF(NC.EQ.6) THEN
+               IJ=-(2*NGAUSZ)
+               JI=NGAUSZ
+            ENDIF
+            IF(NC.EQ.7) THEN
+               IJ=-NGAUSZ
+               JI=3*NGAUSZ
+            ENDIF
+            IF(NC.EQ.8) THEN
+               IJ=-(3*NGAUSZ)
+               JI=4*NGAUSZ
+            ENDIF
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.8.AND.NGAUSX.EQ.3) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=8*NGAUSZ+1
+            IF(NC.EQ.2) IJ=2*NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=6*NGAUSZ+1
+            IF(NC.EQ.5) IJ=5*NGAUSZ+1
+            IF(NC.EQ.6) IJ=NGAUSZ+1
+            IF(NC.EQ.7) IJ=3*NGAUSZ+1
+            IF(NC.EQ.8) IJ=7*NGAUSZ+1
+         ELSE
+            IF(NC.EQ.1) IJ=9*NGAUSZ
+            IF(NC.EQ.2) IJ=3*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=7*NGAUSZ
+            IF(NC.EQ.5) IJ=6*NGAUSZ
+            IF(NC.EQ.6) IJ=2*NGAUSZ
+            IF(NC.EQ.7) IJ=4*NGAUSZ
+            IF(NC.EQ.8) IJ=8*NGAUSZ
+         ENDIF
+      ENDIF
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 20
+C
+         MAT=IMAT(NLM)
+         MST=MAT
+         NNSL=1
+         IF(MSET.GT.0) NNSL=NSLOJ(MST)
+C
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         IF(IPLA.EQ.0) THEN
+            IF(IND.EQ.7420.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(1,IJ,NLM,1)
+            ELSEIF(IND.EQ.7420.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(1,-IJ,NLM,1)+SIGMA(1,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7421.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(2,IJ,NLM,1)
+            ELSEIF(IND.EQ.7421.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(2,-IJ,NLM,1)+SIGMA(2,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7422.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(3,IJ,NLM,1)
+            ELSEIF(IND.EQ.7422.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(3,-IJ,NLM,1)+SIGMA(3,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7423.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(4,IJ,NLM,1)
+            ELSEIF(IND.EQ.7423.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(4,-IJ,NLM,1)+SIGMA(4,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7424.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(5,IJ,NLM,1)
+            ELSEIF(IND.EQ.7424.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(5,-IJ,NLM,1)+SIGMA(5,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7425.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(6,IJ,NLM,1)
+            ELSEIF(IND.EQ.7425.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(6,-IJ,NLM,1)+SIGMA(6,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7433.AND.IJ.GT.0) THEN
+               XMY=SIGMA(1,IJ,NLM,1)-SIGMA(2,IJ,NLM,1)
+               YMZ=SIGMA(2,IJ,NLM,1)-SIGMA(3,IJ,NLM,1)
+               ZMX=SIGMA(3,IJ,NLM,1)-SIGMA(1,IJ,NLM,1)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,IJ,NLM,1)*SIGMA(4,IJ,NLM,1)+
+     1                    SIGMA(5,IJ,NLM,1)*SIGMA(5,IJ,NLM,1)+
+     1                    SIGMA(6,IJ,NLM,1)*SIGMA(6,IJ,NLM,1))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               WRITE(II,5000) NMM,EFEK
+            ELSEIF(IND.EQ.7433.AND.IJ.LT.0) THEN
+               XMY=SIGMA(1,-IJ,NLM,1)-SIGMA(2,-IJ,NLM,1)
+               YMZ=SIGMA(2,-IJ,NLM,1)-SIGMA(3,-IJ,NLM,1)
+               ZMX=SIGMA(3,-IJ,NLM,1)-SIGMA(1,-IJ,NLM,1)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,-IJ,NLM,1)*SIGMA(4,-IJ,NLM,1)+
+     1                    SIGMA(5,-IJ,NLM,1)*SIGMA(5,-IJ,NLM,1)+
+     1                    SIGMA(6,-IJ,NLM,1)*SIGMA(6,-IJ,NLM,1))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               XMY=SIGMA(1,JI,NLM,1)-SIGMA(2,JI,NLM,1)
+               YMZ=SIGMA(2,JI,NLM,1)-SIGMA(3,JI,NLM,1)
+               ZMX=SIGMA(3,JI,NLM,1)-SIGMA(1,JI,NLM,1)
+               EFE1=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,JI,NLM,1)*SIGMA(4,JI,NLM,1)+
+     1                    SIGMA(5,JI,NLM,1)*SIGMA(5,JI,NLM,1)+
+     1                    SIGMA(6,JI,NLM,1)*SIGMA(6,JI,NLM,1))
+               IF(EFE1.GT.1.D-19) EFE1=DSQRT(EFE1)
+               EFEK=(EFEK+EFE1)/2
+               WRITE(II,5000) NMM,EFEK
+            ENDIF
+C
+            IF(IND.EQ.7020.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(1,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7020.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(1,-IJ,NLM,NNSL)+SIGMA(1,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7021.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(2,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7021.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(2,-IJ,NLM,NNSL)+SIGMA(2,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7022.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(3,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7022.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(3,-IJ,NLM,NNSL)+SIGMA(3,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7023.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(4,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7023.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(4,-IJ,NLM,NNSL)+SIGMA(4,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7024.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(5,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7024.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(5,-IJ,NLM,NNSL)+SIGMA(5,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7025.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(6,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7025.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(6,-IJ,NLM,NNSL)+SIGMA(6,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7033.AND.IJ.GT.0) THEN
+               XMY=SIGMA(1,IJ,NLM,NNSL)-SIGMA(2,IJ,NLM,NNSL)
+               YMZ=SIGMA(2,IJ,NLM,NNSL)-SIGMA(3,IJ,NLM,NNSL)
+               ZMX=SIGMA(3,IJ,NLM,NNSL)-SIGMA(1,IJ,NLM,NNSL)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,IJ,NLM,NNSL)*SIGMA(4,IJ,NLM,NNSL)+
+     1                    SIGMA(5,IJ,NLM,NNSL)*SIGMA(5,IJ,NLM,NNSL)+
+     1                    SIGMA(6,IJ,NLM,NNSL)*SIGMA(6,IJ,NLM,NNSL))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               WRITE(II,5000) NMM,EFEK
+            ELSEIF(IND.EQ.7033.AND.IJ.LT.0) THEN
+               XMY=SIGMA(1,-IJ,NLM,NNSL)-SIGMA(2,-IJ,NLM,NNSL)
+               YMZ=SIGMA(2,-IJ,NLM,NNSL)-SIGMA(3,-IJ,NLM,NNSL)
+               ZMX=SIGMA(3,-IJ,NLM,NNSL)-SIGMA(1,-IJ,NLM,NNSL)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,-IJ,NLM,NNSL)*SIGMA(4,-IJ,NLM,NNSL)+
+     1                    SIGMA(5,-IJ,NLM,NNSL)*SIGMA(5,-IJ,NLM,NNSL)+
+     1                    SIGMA(6,-IJ,NLM,NNSL)*SIGMA(6,-IJ,NLM,NNSL))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               XMY=SIGMA(1,JI,NLM,NNSL)-SIGMA(2,JI,NLM,NNSL)
+               YMZ=SIGMA(2,JI,NLM,NNSL)-SIGMA(3,JI,NLM,NNSL)
+               ZMX=SIGMA(3,JI,NLM,NNSL)-SIGMA(1,JI,NLM,NNSL)
+               EFE1=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,JI,NLM,NNSL)*SIGMA(4,JI,NLM,NNSL)+
+     1                    SIGMA(5,JI,NLM,NNSL)*SIGMA(5,JI,NLM,NNSL)+
+     1                    SIGMA(6,JI,NLM,NNSL)*SIGMA(6,JI,NLM,NNSL))
+               IF(EFE1.GT.1.D-19) EFE1=DSQRT(EFE1)
+               EFEK=(EFEK+EFE1)/2
+               WRITE(II,5000) NMM,EFEK
+            ENDIF
+         ELSE
+C            FORC=SIGMA(NLM,1)*APRS(NLM)
+C            IF(IND.EQ.3036) WRITE(II,5000) NMM,FORC
+C            IF(IND.EQ.3183) WRITE(II,5000) NMM,SIGMA(NLM,1)
+C            IF(IND.EQ.3184) WRITE(II,5000) NMM,DEFUK(NLM)
+C            IF(IND.EQ.3285) WRITE(II,5000) NMM,DABS(SIGMA(NLM,1))
+C            IF(IND.EQ.3286) WRITE(II,5000) NMM,DEFPL(NLM)
+C            IF(IND.EQ.3287) WRITE(II,5000) NMM,DEFCR(NLM)
+         ENDIF
+   20 CONTINUE
+      WRITE(II,5500) MJ,ZERO
+   30 CONTINUE
+c
+   31 CONTINUE
+      IF(IND.EQ.7020) GO TO 83
+      IF(IND.EQ.7021) GO TO 84
+      IF(IND.EQ.7022) GO TO 85
+      IF(IND.EQ.7023) GO TO 86
+      IF(IND.EQ.7024) GO TO 87
+      IF(IND.EQ.7025) GO TO 88
+      IF(IND.EQ.7033) GO TO 92
+      IF(IND.EQ.7420) GO TO 93
+      IF(IND.EQ.7421) GO TO 94
+      IF(IND.EQ.7422) GO TO 95
+      IF(IND.EQ.7423) GO TO 96
+      IF(IND.EQ.7424) GO TO 97
+      IF(IND.EQ.7425) GO TO 98
+      RETURN
+ 1000 FORMAT(10(I7,','))
+ 1001 FORMAT(I6,',',F12.4,',')
+ 7020 FORMAT('PLATE TOP X NORMAL STRESS')
+17020 FORMAT('NODE',I10,' X NORMAL STRESS')
+ 7021 FORMAT('PLATE TOP Y NORMAL STRESS')
+17021 FORMAT('NODE',I10,' Y NORMAL STRESS')
+ 7022 FORMAT('PLATE TOP Z NORMAL STRESS')
+17022 FORMAT('NODE',I10,' Z NORMAL STRESS')
+ 7023 FORMAT('PLATE TOP XY SHEAR STRESS')
+17023 FORMAT('NODE',I10,' XY SHEAR STRESS')
+ 7024 FORMAT('PLATE TOP YZ SHEAR STRESS')
+17024 FORMAT('NODE',I10,' YZ SHEAR STRESS')
+ 7025 FORMAT('PLATE TOP ZX SHEAR STRESS')
+17025 FORMAT('NODE',I10,' ZX SHEAR STRESS')
+ 7033 FORMAT('PLATE TOP VONMISES STRESS')
+17033 FORMAT('NODE',I10,' VONMISES STRESS')
+ 7420 FORMAT('PLATE BOT X NORMAL STRESS')
+17420 FORMAT('NODE',I10,' X NORMAL STRESS')
+ 7421 FORMAT('PLATE BOT Y NORMAL STRESS')
+17421 FORMAT('NODE',I10,' Y NORMAL STRESS')
+ 7422 FORMAT('PLATE BOT Z NORMAL STRESS')
+17422 FORMAT('NODE',I10,' Z NORMAL STRESS')
+ 7423 FORMAT('PLATE BOT XY SHEAR STRESS')
+17423 FORMAT('NODE',I10,' XY SHEAR STRESS')
+ 7424 FORMAT('PLATE BOT YZ SHEAR STRESS')
+17424 FORMAT('NODE',I10,' YZ SHEAR STRESS')
+ 7425 FORMAT('PLATE BOT ZX SHEAR STRESS')
+17425 FORMAT('NODE',I10,' ZX SHEAR STRESS')
+ 7433 FORMAT('PLATE BOT VONMISES STRESS')
+17433 FORMAT('NODE',I10,' VONMISES STRESS')
+ 1010 FORMAT(3(1PE12.4,','))
+ 5000 FORMAT(I10,',',3(1PE12.4,','))
+ 5500 FORMAT(I2,',',3(1PE12.4,','))
+      END
+C======================================================================
+      SUBROUTINE STDU81(SIGMA,ISNA,MCVEL,ICVEL,IPLA,AU,NSLOJ,IMAT)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /NIDEAS/ IDEAS
+      COMMON /SRPSKI/ ISRPS
+C
+      DIMENSION AU(*)
+      REAL AU
+      DIMENSION ISNA(*),MCVEL(*),NSLOJ(*),IMAT(*)
+      DIMENSION SIGMA(6,NGS12,NE,*),S(14),N(20)
+C
+      JEDAN=1
+      NULA=0
+      ZERO=0.
+      ONE=1.
+      MJ=-1
+      M451=451
+      M2=2
+      M3=3
+      M4=4
+      M5=5
+      M8=8
+      M9=9
+C
+      II=49
+C
+      IND=7050
+      NND=100250
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   83 IND=7051
+      NND=100251
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   84 IND=7052
+      NND=100252
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   85 IND=7053
+      NND=100253
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   86 IND=7054
+      NND=100254
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   87 IND=7055
+      NND=100255
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   88 IND=7061
+      NND=100261
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   92 IND=7450
+      NND=100650
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   93 IND=7451
+      NND=100651
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   94 IND=7452
+      NND=100652
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   95 IND=7453
+      NND=100653
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   96 IND=7454
+      NND=100654
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   97 IND=7455
+      NND=100655
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   98 IND=7461
+      NND=100661
+      CALL NAPUNI(N,NCVE,NND)
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+C
+   10 WRITE(II,1000) KOR,IND,JEDAN
+      IF(IND.EQ.7050) WRITE(II,7050) 
+      IF(IND.EQ.7051) WRITE(II,7051) 
+      IF(IND.EQ.7052) WRITE(II,7052) 
+      IF(IND.EQ.7053) WRITE(II,7053) 
+      IF(IND.EQ.7054) WRITE(II,7054) 
+      IF(IND.EQ.7055) WRITE(II,7055) 
+      IF(IND.EQ.7061) WRITE(II,7061) 
+      IF(IND.EQ.7450) WRITE(II,7450) 
+      IF(IND.EQ.7451) WRITE(II,7451) 
+      IF(IND.EQ.7452) WRITE(II,7452) 
+      IF(IND.EQ.7453) WRITE(II,7453) 
+      IF(IND.EQ.7454) WRITE(II,7454) 
+      IF(IND.EQ.7455) WRITE(II,7455) 
+      IF(IND.EQ.7461) WRITE(II,7461) 
+      WRITE(II,1010) ZERO,ZERO,ZERO
+      IF(ISTDE.EQ.0) THEN
+       WRITE(II,1000) N(1),N(2),N(3),N(4),N(5),N(6),N(7),N(8),N(9),N(10)
+       WRITE(II,1000) 
+     +       N(11),N(12),N(13),N(14),N(15),N(16),N(17),N(18),N(19),N(20)
+      ELSE
+        WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+        WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      ENDIF
+      INDM=MOD(IND,100)
+      INMM=MOD(IND,1000)
+      IF(INDM.GE.10.AND.INDM.LT.50) WRITE(II,1000) NULA,NULA,M4,M8
+      IF(INDM.GE.50.AND.INDM.LT.99) WRITE(II,1000) NULA,NULA,M5,M8
+      IF(ISTDE.EQ.0) THEN
+         WRITE(II,1000) NULA,NULA,JEDAN
+      ELSE
+         WRITE(II,1000) JEDAN,NULA,JEDAN
+      ENDIF
+      DO 40 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 40
+C
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         CALL SREDK8(SIGMA,S,NLM,NGS12,NE,AU(LNSLOJ),AU(LNMAT),MSET)
+         IF(IPLA.EQ.0) THEN
+            IF(IND.EQ.7050) WRITE(II,5000) NMM,S(1)
+            IF(IND.EQ.7051) WRITE(II,5000) NMM,S(2)
+            IF(IND.EQ.7052) WRITE(II,5000) NMM,S(3)
+            IF(IND.EQ.7053) WRITE(II,5000) NMM,S(4)
+            IF(IND.EQ.7054) WRITE(II,5000) NMM,S(5)
+            IF(IND.EQ.7055) WRITE(II,5000) NMM,S(6)
+            IF(IND.EQ.7061) WRITE(II,5000) NMM,S(7)
+            IF(IND.EQ.7450) WRITE(II,5000) NMM,S(8)
+            IF(IND.EQ.7451) WRITE(II,5000) NMM,S(9)
+            IF(IND.EQ.7452) WRITE(II,5000) NMM,S(10)
+            IF(IND.EQ.7453) WRITE(II,5000) NMM,S(11)
+            IF(IND.EQ.7454) WRITE(II,5000) NMM,S(12)
+            IF(IND.EQ.7455) WRITE(II,5000) NMM,S(13)
+            IF(IND.EQ.7461) WRITE(II,5000) NMM,S(14)
+         ELSE
+         ENDIF
+   40 CONTINUE
+      WRITE(II,5500) MJ,ZERO
+      IF(ISTDE.eq.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+C
+      DO 30 NC=1,NCVE
+      WRITE(II,1000) KOR,N(NC),JEDAN
+      IF(IND.EQ.7050) WRITE(II,17050) NC 
+      IF(IND.EQ.7051) WRITE(II,17051) NC 
+      IF(IND.EQ.7052) WRITE(II,17052) NC 
+      IF(IND.EQ.7053) WRITE(II,17053) NC 
+      IF(IND.EQ.7054) WRITE(II,17054) NC 
+      IF(IND.EQ.7055) WRITE(II,17055) NC 
+      IF(IND.EQ.7061) WRITE(II,17061) NC 
+      IF(IND.EQ.7450) WRITE(II,17450) NC 
+      IF(IND.EQ.7451) WRITE(II,17451) NC 
+      IF(IND.EQ.7452) WRITE(II,17452) NC 
+      IF(IND.EQ.7453) WRITE(II,17453) NC 
+      IF(IND.EQ.7454) WRITE(II,17454) NC 
+      IF(IND.EQ.7455) WRITE(II,17455) NC 
+      IF(IND.EQ.7461) WRITE(II,17461) NC 
+      WRITE(II,1010) ZERO,ZERO,ZERO
+      WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      IF(INDM.GE.10.AND.INDM.LT.50) WRITE(II,1000) NULA,NULA,M4,M8
+      IF(INDM.GE.50.AND.INDM.LT.99) WRITE(II,1000) NULA,NULA,M5,M8
+      WRITE(II,1000) NULA,NULA,NULA
+      IF(NCVE.EQ.4.AND.NGAUSX.EQ.2) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=3*NGAUSZ+1
+            IF(NC.EQ.2) IJ=NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=2*NGAUSZ+1
+         ELSE
+            IF(NC.EQ.1) IJ=4*NGAUSZ
+            IF(NC.EQ.2) IJ=2*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=3*NGAUSZ
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.4.AND.NGAUSX.EQ.3) THEN
+         IF(INMM.GT.400) THEN
+C           IJ=I*NGAUSZ+1
+            IF(NC.EQ.1) IJ=8*NGAUSZ+1
+            IF(NC.EQ.2) IJ=2*NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=6*NGAUSZ+1
+         ELSE
+C           IJ=(I+1)*NGAUSZ
+            IF(NC.EQ.1) IJ=9*NGAUSZ
+            IF(NC.EQ.2) IJ=3*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=7*NGAUSZ
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.8.AND.NGAUSX.EQ.2) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=3*NGAUSZ+1
+            IF(NC.EQ.2) IJ=NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=2*NGAUSZ+1
+            IF(NC.EQ.5) THEN
+               IJ=-(3*NGAUSZ+1)
+               JI=NGAUSZ+1
+            ENDIF
+            IF(NC.EQ.6) THEN
+               IJ=-(NGAUSZ+1)
+               JI=1
+            ENDIF
+            IF(NC.EQ.7) THEN
+               IJ=-1
+               JI=2*NGAUSZ+1
+            ENDIF
+            IF(NC.EQ.8) THEN
+               IJ=-(2*NGAUSZ+1)
+               JI=3*NGAUSZ+1
+            ENDIF
+         ELSE
+            IF(NC.EQ.1) IJ=4*NGAUSZ
+            IF(NC.EQ.2) IJ=2*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=3*NGAUSZ
+            IF(NC.EQ.5) THEN
+               IJ=-(4*NGAUSZ)
+               JI=2*NGAUSZ
+            ENDIF
+            IF(NC.EQ.6) THEN
+               IJ=-(2*NGAUSZ)
+               JI=NGAUSZ
+            ENDIF
+            IF(NC.EQ.7) THEN
+               IJ=-NGAUSZ
+               JI=3*NGAUSZ
+            ENDIF
+            IF(NC.EQ.8) THEN
+               IJ=-(3*NGAUSZ)
+               JI=4*NGAUSZ
+            ENDIF
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.8.AND.NGAUSX.EQ.3) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=8*NGAUSZ+1
+            IF(NC.EQ.2) IJ=2*NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=6*NGAUSZ+1
+            IF(NC.EQ.5) IJ=5*NGAUSZ+1
+            IF(NC.EQ.6) IJ=NGAUSZ+1
+            IF(NC.EQ.7) IJ=3*NGAUSZ+1
+            IF(NC.EQ.8) IJ=7*NGAUSZ+1
+         ELSE
+            IF(NC.EQ.1) IJ=9*NGAUSZ
+            IF(NC.EQ.2) IJ=3*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=7*NGAUSZ
+            IF(NC.EQ.5) IJ=6*NGAUSZ
+            IF(NC.EQ.6) IJ=2*NGAUSZ
+            IF(NC.EQ.7) IJ=4*NGAUSZ
+            IF(NC.EQ.8) IJ=8*NGAUSZ
+         ENDIF
+      ENDIF
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 20
+C
+         MAT=IMAT(NLM)
+         MST=MAT
+         NNSL=1
+         IF(MSET.GT.0) NNSL=NSLOJ(MST)
+C
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         IF(IPLA.EQ.0) THEN
+            IF(IND.EQ.7450.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(1,IJ,NLM,1)
+            ELSEIF(IND.EQ.7450.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(1,-IJ,NLM,1)+SIGMA(1,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7451.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(2,IJ,NLM,1)
+            ELSEIF(IND.EQ.7451.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(2,-IJ,NLM,1)+SIGMA(2,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7452.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(3,IJ,NLM,1)
+            ELSEIF(IND.EQ.7452.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(3,-IJ,NLM,1)+SIGMA(3,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7453.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(4,IJ,NLM,1)
+            ELSEIF(IND.EQ.7453.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(4,-IJ,NLM,1)+SIGMA(4,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7454.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(5,IJ,NLM,1)
+            ELSEIF(IND.EQ.7454.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(5,-IJ,NLM,1)+SIGMA(5,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7455.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(6,IJ,NLM,1)
+            ELSEIF(IND.EQ.7455.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(6,-IJ,NLM,1)+SIGMA(6,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7461.AND.IJ.GT.0) THEN
+               XMY=SIGMA(1,IJ,NLM,1)-SIGMA(2,IJ,NLM,1)
+               YMZ=SIGMA(2,IJ,NLM,1)-SIGMA(3,IJ,NLM,1)
+               ZMX=SIGMA(3,IJ,NLM,1)-SIGMA(1,IJ,NLM,1)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,IJ,NLM,1)*SIGMA(4,IJ,NLM,1)+
+     1                    SIGMA(5,IJ,NLM,1)*SIGMA(5,IJ,NLM,1)+
+     1                    SIGMA(6,IJ,NLM,1)*SIGMA(6,IJ,NLM,1))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               WRITE(II,5000) NMM,EFEK
+            ELSEIF(IND.EQ.7461.AND.IJ.LT.0) THEN
+               XMY=SIGMA(1,-IJ,NLM,1)-SIGMA(2,-IJ,NLM,1)
+               YMZ=SIGMA(2,-IJ,NLM,1)-SIGMA(3,-IJ,NLM,1)
+               ZMX=SIGMA(3,-IJ,NLM,1)-SIGMA(1,-IJ,NLM,1)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,-IJ,NLM,1)*SIGMA(4,-IJ,NLM,1)+
+     1                    SIGMA(5,-IJ,NLM,1)*SIGMA(5,-IJ,NLM,1)+
+     1                    SIGMA(6,-IJ,NLM,1)*SIGMA(6,-IJ,NLM,1))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               XMY=SIGMA(1,JI,NLM,1)-SIGMA(2,JI,NLM,1)
+               YMZ=SIGMA(2,JI,NLM,1)-SIGMA(3,JI,NLM,1)
+               ZMX=SIGMA(3,JI,NLM,1)-SIGMA(1,JI,NLM,1)
+               EFE1=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,JI,NLM,1)*SIGMA(4,JI,NLM,1)+
+     1                    SIGMA(5,JI,NLM,1)*SIGMA(5,JI,NLM,1)+
+     1                    SIGMA(6,JI,NLM,1)*SIGMA(6,JI,NLM,1))
+               IF(EFE1.GT.1.D-19) EFE1=DSQRT(EFE1)
+               EFEK=(EFEK+EFE1)/2
+               WRITE(II,5000) NMM,EFEK
+            ENDIF
+C
+            IF(IND.EQ.7050.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(1,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7050.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(1,-IJ,NLM,NNSL)+SIGMA(1,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7051.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(2,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7051.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(2,-IJ,NLM,NNSL)+SIGMA(2,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7052.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(3,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7052.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(3,-IJ,NLM,NNSL)+SIGMA(3,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7053.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(4,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7053.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(4,-IJ,NLM,NNSL)+SIGMA(4,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7054.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(5,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7054.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(5,-IJ,NLM,NNSL)+SIGMA(5,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7055.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(6,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7055.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(6,-IJ,NLM,NNSL)+SIGMA(6,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7061.AND.IJ.GT.0) THEN
+               XMY=SIGMA(1,IJ,NLM,NNSL)-SIGMA(2,IJ,NLM,NNSL)
+               YMZ=SIGMA(2,IJ,NLM,NNSL)-SIGMA(3,IJ,NLM,NNSL)
+               ZMX=SIGMA(3,IJ,NLM,NNSL)-SIGMA(1,IJ,NLM,NNSL)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,IJ,NLM,NNSL)*SIGMA(4,IJ,NLM,NNSL)+
+     1                    SIGMA(5,IJ,NLM,NNSL)*SIGMA(5,IJ,NLM,NNSL)+
+     1                    SIGMA(6,IJ,NLM,NNSL)*SIGMA(6,IJ,NLM,NNSL))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               WRITE(II,5000) NMM,EFEK
+            ELSEIF(IND.EQ.7061.AND.IJ.LT.0) THEN
+               XMY=SIGMA(1,-IJ,NLM,NNSL)-SIGMA(2,-IJ,NLM,NNSL)
+               YMZ=SIGMA(2,-IJ,NLM,NNSL)-SIGMA(3,-IJ,NLM,NNSL)
+               ZMX=SIGMA(3,-IJ,NLM,NNSL)-SIGMA(1,-IJ,NLM,NNSL)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,-IJ,NLM,NNSL)*SIGMA(4,-IJ,NLM,NNSL)+
+     1                    SIGMA(5,-IJ,NLM,NNSL)*SIGMA(5,-IJ,NLM,NNSL)+
+     1                    SIGMA(6,-IJ,NLM,NNSL)*SIGMA(6,-IJ,NLM,NNSL))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               XMY=SIGMA(1,JI,NLM,NNSL)-SIGMA(2,JI,NLM,NNSL)
+               YMZ=SIGMA(2,JI,NLM,NNSL)-SIGMA(3,JI,NLM,NNSL)
+               ZMX=SIGMA(3,JI,NLM,NNSL)-SIGMA(1,JI,NLM,NNSL)
+               EFE1=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,JI,NLM,NNSL)*SIGMA(4,JI,NLM,NNSL)+
+     1                    SIGMA(5,JI,NLM,NNSL)*SIGMA(5,JI,NLM,NNSL)+
+     1                    SIGMA(6,JI,NLM,NNSL)*SIGMA(6,JI,NLM,NNSL))
+               IF(EFE1.GT.1.D-19) EFE1=DSQRT(EFE1)
+               EFEK=(EFEK+EFE1)/2
+               WRITE(II,5000) NMM,EFEK
+            ENDIF
+         ELSE
+         ENDIF
+   20 CONTINUE
+      WRITE(II,5500) MJ,ZERO
+   30 CONTINUE
+C
+   31 CONTINUE
+      IF(IND.EQ.7050) GO TO 83
+      IF(IND.EQ.7051) GO TO 84
+      IF(IND.EQ.7052) GO TO 85
+      IF(IND.EQ.7053) GO TO 86
+      IF(IND.EQ.7054) GO TO 87
+      IF(IND.EQ.7055) GO TO 88
+      IF(IND.EQ.7061) GO TO 92
+      IF(IND.EQ.7450) GO TO 93
+      IF(IND.EQ.7451) GO TO 94
+      IF(IND.EQ.7452) GO TO 95
+      IF(IND.EQ.7453) GO TO 96
+      IF(IND.EQ.7454) GO TO 97
+      IF(IND.EQ.7455) GO TO 98
+      RETURN
+ 1000 FORMAT(10(I7,','))
+ 1001 FORMAT(I6,',',F12.4,',')
+ 7050 FORMAT('PLATE TOP X NORMAL STRAIN')
+17050 FORMAT('NODE',I10,' X NORMAL STRAIN')
+ 7051 FORMAT('PLATE TOP Y NORMAL STRAIN')
+17051 FORMAT('NODE',I10,' Y NORMAL STRAIN')
+ 7052 FORMAT('PLATE TOP Z NORMAL STRAIN')
+17052 FORMAT('NODE',I10,' Z NORMAL STRAIN')
+ 7053 FORMAT('PLATE TOP XY SHEAR STRAIN')
+17053 FORMAT('NODE',I10,' XY SHEAR STRAIN')
+ 7054 FORMAT('PLATE TOP YZ SHEAR STRAIN')
+17054 FORMAT('NODE',I10,' YZ SHEAR STRAIN')
+ 7055 FORMAT('PLATE TOP ZX SHEAR STRAIN')
+17055 FORMAT('NODE',I10,' ZX SHEAR STRAIN')
+ 7061 FORMAT('PLATE TOP VONMISES STRAIN')
+17061 FORMAT('NODE',I10,' VONMISES STRAIN')
+ 7450 FORMAT('PLATE BOT X NORMAL STRAIN')
+17450 FORMAT('NODE',I10,' X NORMAL STRAIN')
+ 7451 FORMAT('PLATE BOT Y NORMAL STRAIN')
+17451 FORMAT('NODE',I10,' Y NORMAL STRAIN')
+ 7452 FORMAT('PLATE BOT Z NORMAL STRAIN')
+17452 FORMAT('NODE',I10,' Z NORMAL STRAIN')
+ 7453 FORMAT('PLATE BOT XY SHEAR STRAIN')
+17453 FORMAT('NODE',I10,' XY SHEAR STRAIN')
+ 7454 FORMAT('PLATE BOT YZ SHEAR STRAIN')
+17454 FORMAT('NODE',I10,' YZ SHEAR STRAIN')
+ 7455 FORMAT('PLATE BOT ZX SHEAR STRAIN')
+17455 FORMAT('NODE',I10,' ZX SHEAR STRAIN')
+ 7461 FORMAT('PLATE BOT VONMISES STRAIN')
+17461 FORMAT('NODE',I10,' VONMISES STRAIN')
+ 1010 FORMAT(3(1PE12.4,','))
+ 5000 FORMAT(I10,',',3(1PE12.4,','))
+ 5500 FORMAT(I2,',',3(1PE12.4,','))
+      END
+C=======================================================================
+      SUBROUTINE STAU85(SIGMA,ISNA,MCVEL,ICVEL,PLAST,AU,IPLA,IMAT,NSLOJ)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+      COMMON /ELEMAU/ MXAU,LAU,LLMEL,LNEL,LNMAT,LTHID,LIPGC,LIPRC,LISNA,
+     1 LMXAU,LAPRS
+      COMMON /IZOL4B/ NGS12,ND,MSLOJ,MXS,MSET,LNSLOJ,LMATSL,LDSLOJ,LBBET
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /BTHDTH/ INDBTH,INDDTH,LTBTH,LTDTH
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /NIDEAS/ IDEAS
+      COMMON /SRPSKI/ ISRPS
+C
+      DIMENSION AU(*)
+      REAL AU
+      DIMENSION ISNA(*),MCVEL(*),PLAST(*),IMAT(*),NSLOJ(*)
+      DIMENSION SIGMA(6,NGS12,NE,*),S(14),N(20)
+C
+      ISTDEE=ISTDE
+      ISTNAA=ISTNA
+C
+      ISTNA=1
+C
+      NNCVE=NCVE
+      IF(NCVE.LT.8) NCVE=4
+      IF(NCVE.EQ.9) NCVE=8
+C
+      JEDAN=1
+      NULA=0
+      ZERO=0.
+      ONE=1.
+      MJ=-1
+      M451=451
+      M2=2
+      M3=3
+      M4=4
+      M5=5
+      M8=8
+      M9=9
+C
+      II=49
+C
+      NPROS=MODPRO(NMODM)
+      NGXYZ=NGS12*NPROS*MXS
+      write(*,*) 'ideas',ideas
+C
+      IND=7020
+      NND=100220
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=1
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   83 IND=7021
+      NND=100221
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=2
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   84 IND=7022
+      NND=100222
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=3
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   85 IND=7023
+      NND=100223
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=4
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   86 IND=7024
+      NND=100224
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=5
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   87 IND=7025
+      NND=100225
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=6
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   88 IND=7033
+      NND=100233
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=7
+      GO TO 10
+C      
+   92 IND=7420
+      NND=100620
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=8
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   93 IND=7421
+      NND=100621
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=9
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   94 IND=7422
+      NND=100622
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=10
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   95 IND=7423
+      NND=100623
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=11
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   96 IND=7424
+      NND=100624
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=12
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   97 IND=7425
+      NND=100625
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=13
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+   98 IND=7433
+      NND=100633
+      CALL NAPUNI(N,NCVE,NND)
+      KK=1
+      INP=14
+      GO TO 10
+C      
+  182 IND=7050
+      NND=100250
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=1
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  183 IND=7051
+      NND=100251
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=2
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  184 IND=7052
+      NND=100252
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=3
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  185 IND=7053
+      NND=100253
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=4
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  186 IND=7054
+      NND=100254
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=5
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  187 IND=7055
+      NND=100255
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=6
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  188 IND=7061
+      NND=100261
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=7
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+C      
+  192 IND=7450
+      NND=100650
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=8
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  193 IND=7451
+      NND=100651
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=9
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  194 IND=7452
+      NND=100652
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=10
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  195 IND=7453
+      NND=100653
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=11
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  196 IND=7454
+      NND=100654
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=12
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  197 IND=7455
+      NND=100655
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7 
+      INP=13
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  198 IND=7461
+      NND=100661
+      CALL NAPUNI(N,NCVE,NND)
+      KK=7
+      INP=14
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+C      
+  282 IND=7066
+      NND=100266
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=1
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  283 IND=7067
+      NND=100267
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=2
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  284 IND=7068
+      NND=100268
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=3
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  285 IND=7069
+      NND=100269
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=4
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  286 IND=7070
+      NND=100270
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=5
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  287 IND=7071
+      NND=100271
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=6
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  288 IND=7072
+      NND=100272
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=7
+C     IF(ISTDE.EQ.-1) GO TO 31
+      GO TO 10
+C      
+  292 IND=7466
+      NND=100666
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=8
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  293 IND=7467
+      NND=100667
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=9
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  294 IND=7468
+      NND=100668
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=10
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  295 IND=7469
+      NND=100669
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=11
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  296 IND=7470
+      NND=100670
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=12
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  297 IND=7471
+      NND=100671
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=13
+      IF(ISTDE.EQ.-1) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+      GO TO 10
+  298 IND=7472
+      NND=100672
+      CALL NAPUNI(N,NCVE,NND)
+      KK=13
+      INP=14
+C     IF(ISTDE.EQ.-1) GO TO 31
+      GO TO 10
+C
+  382 IND=7091
+      NND=100291
+      CALL NAPUN3(N,NCVE,NND)
+      KK=13
+      INP=1
+      IF(NMODM.NE.61) GO TO 31
+      GO TO 10
+  383 IND=7491
+      NND=100691
+      CALL NAPUN3(N,NCVE,NND)
+      KK=13
+      INP=8
+      IF(NMODM.NE.61) GO TO 31
+      GO TO 10
+C      
+   10 WRITE(II,1000) KOR,IND,JEDAN
+      IF(KK.EQ.1.AND.INP.NE.0) THEN
+         IF(IND.EQ.7020) WRITE(II,7020) 
+         IF(IND.EQ.7021) WRITE(II,7021) 
+         IF(IND.EQ.7022) WRITE(II,7022) 
+         IF(IND.EQ.7023) WRITE(II,7023) 
+         IF(IND.EQ.7024) WRITE(II,7024) 
+         IF(IND.EQ.7025) WRITE(II,7025) 
+         IF(IND.EQ.7033) WRITE(II,7033) 
+         IF(IND.EQ.7420) WRITE(II,7420) 
+         IF(IND.EQ.7421) WRITE(II,7421) 
+         IF(IND.EQ.7422) WRITE(II,7422) 
+         IF(IND.EQ.7423) WRITE(II,7423) 
+         IF(IND.EQ.7424) WRITE(II,7424) 
+         IF(IND.EQ.7425) WRITE(II,7425) 
+         IF(IND.EQ.7433) WRITE(II,7433) 
+      ENDIF   
+      IF(KK.EQ.7.AND.INP.NE.0) THEN
+         IF(IND.EQ.7050) WRITE(II,7050) 
+         IF(IND.EQ.7051) WRITE(II,7051) 
+         IF(IND.EQ.7052) WRITE(II,7052) 
+         IF(IND.EQ.7053) WRITE(II,7053) 
+         IF(IND.EQ.7054) WRITE(II,7054) 
+         IF(IND.EQ.7055) WRITE(II,7055) 
+         IF(IND.EQ.7061) WRITE(II,7061) 
+         IF(IND.EQ.7450) WRITE(II,7450) 
+         IF(IND.EQ.7451) WRITE(II,7451) 
+         IF(IND.EQ.7452) WRITE(II,7452) 
+         IF(IND.EQ.7453) WRITE(II,7453) 
+         IF(IND.EQ.7454) WRITE(II,7454) 
+         IF(IND.EQ.7455) WRITE(II,7455) 
+         IF(IND.EQ.7461) WRITE(II,7461) 
+      ENDIF   
+      IF(KK.EQ.13.AND.INP.NE.0) THEN
+         IF(IND.EQ.7066) WRITE(II,7066) 
+         IF(IND.EQ.7067) WRITE(II,7067) 
+         IF(IND.EQ.7068) WRITE(II,7068) 
+         IF(IND.EQ.7069) WRITE(II,7069) 
+         IF(IND.EQ.7070) WRITE(II,7070) 
+         IF(IND.EQ.7071) WRITE(II,7071) 
+         IF(IND.EQ.7072) WRITE(II,7072) 
+         IF(IND.EQ.7466) WRITE(II,7466) 
+         IF(IND.EQ.7467) WRITE(II,7467) 
+         IF(IND.EQ.7468) WRITE(II,7468) 
+         IF(IND.EQ.7469) WRITE(II,7469) 
+         IF(IND.EQ.7470) WRITE(II,7470) 
+         IF(IND.EQ.7471) WRITE(II,7471) 
+         IF(IND.EQ.7472) WRITE(II,7472) 
+      ENDIF   
+      IF(IND.EQ.7091) WRITE(II,7091) 
+      IF(IND.EQ.7491) WRITE(II,7491) 
+      WRITE(II,1010) ZERO,ZERO,ZERO
+      IF(ISTNA.EQ.0) THEN
+       WRITE(II,1000) N(1),N(2),N(3),N(4),N(5),N(6),N(7),N(8),N(9),N(10)
+       WRITE(II,1000) 
+     +       N(11),N(12),N(13),N(14),N(15),N(16),N(17),N(18),N(19),N(20)
+      ELSE
+        WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+        WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      ENDIF
+      INDM=MOD(IND,100)
+      INMM=MOD(IND,1000)
+      IF(INDM.GE.10.AND.INDM.LT.50) WRITE(II,1000) NULA,NULA,M4,M8
+      IF(INDM.GE.50.AND.INDM.LT.99) WRITE(II,1000) NULA,NULA,M5,M8
+      IF(ISTNA.EQ.0) THEN
+         WRITE(II,1000) NULA,NULA,JEDAN
+      ELSE
+         WRITE(II,1000) JEDAN,NULA,JEDAN
+      ENDIF
+      DO 40 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 40
+C
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         MAT=IMAT(NLM)
+         IF(IPLA.EQ.0) THEN
+            CALL SREDK8(SIGMA,S,NLM,NGS12,NE,AU(LNSLOJ),AU(LNMAT),MSET)
+         ELSE
+            LL=KK+(NLM-1)*NGXYZ
+            IF(INP.NE.0) CALL SREDE8(PLAST(LL),S,NLM,NPROS,NGS12,INP,
+     1                               AU(LNSLOJ),AU(LNMAT),MSET)
+         ENDIF
+         IF(KK.EQ.1.AND.INP.NE.0) THEN
+            IF(IND.EQ.7020) WRITE(II,5000) NMM,S(1)
+            IF(IND.EQ.7021) WRITE(II,5000) NMM,S(2)
+            IF(IND.EQ.7022) WRITE(II,5000) NMM,S(3)
+            IF(IND.EQ.7023) WRITE(II,5000) NMM,S(4)
+            IF(IND.EQ.7024) WRITE(II,5000) NMM,S(5)
+            IF(IND.EQ.7025) WRITE(II,5000) NMM,S(6)
+            IF(IND.EQ.7033) WRITE(II,5000) NMM,S(7)
+            IF(IND.EQ.7420) WRITE(II,5000) NMM,S(8)
+            IF(IND.EQ.7421) WRITE(II,5000) NMM,S(9)
+            IF(IND.EQ.7422) WRITE(II,5000) NMM,S(10)
+            IF(IND.EQ.7423) WRITE(II,5000) NMM,S(11)
+            IF(IND.EQ.7424) WRITE(II,5000) NMM,S(12)
+            IF(IND.EQ.7425) WRITE(II,5000) NMM,S(13)
+            IF(IND.EQ.7433) WRITE(II,5000) NMM,S(14)
+         ENDIF
+         IF(KK.EQ.7.AND.INP.NE.0) THEN
+            IF(IND.EQ.7050) WRITE(II,5000) NMM,S(1)
+            IF(IND.EQ.7051) WRITE(II,5000) NMM,S(2)
+            IF(IND.EQ.7052) WRITE(II,5000) NMM,S(3)
+            IF(IND.EQ.7053) WRITE(II,5000) NMM,S(4)
+            IF(IND.EQ.7054) WRITE(II,5000) NMM,S(5)
+            IF(IND.EQ.7055) WRITE(II,5000) NMM,S(6)
+            IF(IND.EQ.7061) WRITE(II,5000) NMM,S(7)
+            IF(IND.EQ.7450) WRITE(II,5000) NMM,S(8)
+            IF(IND.EQ.7451) WRITE(II,5000) NMM,S(9)
+            IF(IND.EQ.7452) WRITE(II,5000) NMM,S(10)
+            IF(IND.EQ.7453) WRITE(II,5000) NMM,S(11)
+            IF(IND.EQ.7454) WRITE(II,5000) NMM,S(12)
+            IF(IND.EQ.7455) WRITE(II,5000) NMM,S(13)
+            IF(IND.EQ.7461) WRITE(II,5000) NMM,S(14)
+         ENDIF
+         IF(KK.EQ.13.AND.INP.NE.0) THEN
+            IF(IND.EQ.7066) WRITE(II,5000) NMM,S(1)
+            IF(IND.EQ.7067) WRITE(II,5000) NMM,S(2)
+            IF(IND.EQ.7068) WRITE(II,5000) NMM,S(3)
+            IF(IND.EQ.7069) WRITE(II,5000) NMM,S(4)
+            IF(IND.EQ.7070) WRITE(II,5000) NMM,S(5)
+            IF(IND.EQ.7071) WRITE(II,5000) NMM,S(6)
+            IF(IND.EQ.7072) WRITE(II,5000) NMM,S(7)
+            IF(IND.EQ.7466) WRITE(II,5000) NMM,S(8)
+            IF(IND.EQ.7467) WRITE(II,5000) NMM,S(9)
+            IF(IND.EQ.7468) WRITE(II,5000) NMM,S(10)
+            IF(IND.EQ.7469) WRITE(II,5000) NMM,S(11)
+            IF(IND.EQ.7470) WRITE(II,5000) NMM,S(12)
+            IF(IND.EQ.7471) WRITE(II,5000) NMM,S(13)
+            IF(IND.EQ.7472) WRITE(II,5000) NMM,S(14)
+         ENDIF
+         IF(IND.EQ.7091) WRITE(II,5000) NMM,S(1)
+         IF(IND.EQ.7491) WRITE(II,5000) NMM,S(8)
+   40 CONTINUE
+      WRITE(II,5500) MJ,ZERO
+      IF(ISTNA.GT.0) GO TO 31
+      IF(IDEAS.EQ.-1) GO TO 31
+C
+      DO 30 NC=1,NCVE
+      WRITE(II,1000) KOR,N(NC),JEDAN
+      IF(KK.EQ.1.AND.INP.NE.0) THEN
+         IF(IND.EQ.7020) WRITE(II,17020) NC 
+         IF(IND.EQ.7021) WRITE(II,17021) NC 
+         IF(IND.EQ.7022) WRITE(II,17022) NC 
+         IF(IND.EQ.7023) WRITE(II,17023) NC 
+         IF(IND.EQ.7024) WRITE(II,17024) NC 
+         IF(IND.EQ.7025) WRITE(II,17025) NC 
+         IF(IND.EQ.7033) WRITE(II,17033) NC 
+         IF(IND.EQ.7420) WRITE(II,17420) NC 
+         IF(IND.EQ.7421) WRITE(II,17421) NC 
+         IF(IND.EQ.7422) WRITE(II,17422) NC 
+         IF(IND.EQ.7423) WRITE(II,17423) NC 
+         IF(IND.EQ.7424) WRITE(II,17424) NC 
+         IF(IND.EQ.7425) WRITE(II,17425) NC 
+         IF(IND.EQ.7433) WRITE(II,17433) NC 
+      ENDIF   
+      IF(KK.EQ.7.AND.INP.NE.0) THEN
+         IF(IND.EQ.7050) WRITE(II,17050) NC 
+         IF(IND.EQ.7051) WRITE(II,17051) NC 
+         IF(IND.EQ.7052) WRITE(II,17052) NC 
+         IF(IND.EQ.7053) WRITE(II,17053) NC 
+         IF(IND.EQ.7054) WRITE(II,17054) NC 
+         IF(IND.EQ.7055) WRITE(II,17055) NC 
+         IF(IND.EQ.7061) WRITE(II,17061) NC 
+         IF(IND.EQ.7450) WRITE(II,17450) NC 
+         IF(IND.EQ.7451) WRITE(II,17451) NC 
+         IF(IND.EQ.7452) WRITE(II,17452) NC 
+         IF(IND.EQ.7453) WRITE(II,17453) NC 
+         IF(IND.EQ.7454) WRITE(II,17454) NC 
+         IF(IND.EQ.7455) WRITE(II,17455) NC 
+         IF(IND.EQ.7461) WRITE(II,17461) NC 
+      ENDIF   
+      IF(KK.EQ.13.AND.INP.NE.0) THEN
+         IF(IND.EQ.7066) WRITE(II,17066) NC 
+         IF(IND.EQ.7067) WRITE(II,17067) NC 
+         IF(IND.EQ.7068) WRITE(II,17068) NC 
+         IF(IND.EQ.7069) WRITE(II,17069) NC 
+         IF(IND.EQ.7070) WRITE(II,17070) NC 
+         IF(IND.EQ.7071) WRITE(II,17071) NC 
+         IF(IND.EQ.7072) WRITE(II,17072) NC 
+         IF(IND.EQ.7466) WRITE(II,17466) NC 
+         IF(IND.EQ.7467) WRITE(II,17467) NC 
+         IF(IND.EQ.7468) WRITE(II,17468) NC 
+         IF(IND.EQ.7469) WRITE(II,17469) NC 
+         IF(IND.EQ.7470) WRITE(II,17470) NC 
+         IF(IND.EQ.7471) WRITE(II,17471) NC 
+         IF(IND.EQ.7472) WRITE(II,17472) NC 
+      ENDIF   
+      IF(IND.EQ.7091) WRITE(II,17091) NC 
+      IF(IND.EQ.7491) WRITE(II,17491) NC 
+      WRITE(II,1010) ZERO,ZERO,ZERO
+      WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      WRITE(II,1000) NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA,NULA
+      IF(INDM.GE.10.AND.INDM.LT.50) WRITE(II,1000) NULA,NULA,M4,M8
+      IF(INDM.GE.50.AND.INDM.LT.99) WRITE(II,1000) NULA,NULA,M5,M8
+      WRITE(II,1000) NULA,NULA,NULA
+      IF(NCVE.EQ.4.AND.NGAUSX.EQ.2) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=3*NGAUSZ+1
+            IF(NC.EQ.2) IJ=NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=2*NGAUSZ+1
+         ELSE
+            IF(NC.EQ.1) IJ=4*NGAUSZ
+            IF(NC.EQ.2) IJ=2*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=3*NGAUSZ
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.4.AND.NGAUSX.EQ.3) THEN
+         IF(INMM.GT.400) THEN
+C           IJ=I*NGAUSZ+1
+            IF(NC.EQ.1) IJ=8*NGAUSZ+1
+            IF(NC.EQ.2) IJ=2*NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=6*NGAUSZ+1
+         ELSE
+C           IJ=(I+1)*NGAUSZ
+            IF(NC.EQ.1) IJ=9*NGAUSZ
+            IF(NC.EQ.2) IJ=3*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=7*NGAUSZ
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.8.AND.NGAUSX.EQ.2) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=3*NGAUSZ+1
+            IF(NC.EQ.2) IJ=NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=2*NGAUSZ+1
+            IF(NC.EQ.5) THEN
+               IJ=-(3*NGAUSZ+1)
+               JI=NGAUSZ+1
+            ENDIF
+            IF(NC.EQ.6) THEN
+               IJ=-(NGAUSZ+1)
+               JI=1
+            ENDIF
+            IF(NC.EQ.7) THEN
+               IJ=-1
+               JI=2*NGAUSZ+1
+            ENDIF
+            IF(NC.EQ.8) THEN
+               IJ=-(2*NGAUSZ+1)
+               JI=3*NGAUSZ+1
+            ENDIF
+         ELSE
+            IF(NC.EQ.1) IJ=4*NGAUSZ
+            IF(NC.EQ.2) IJ=2*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=3*NGAUSZ
+            IF(NC.EQ.5) THEN
+               IJ=-(4*NGAUSZ)
+               JI=2*NGAUSZ
+            ENDIF
+            IF(NC.EQ.6) THEN
+               IJ=-(2*NGAUSZ)
+               JI=NGAUSZ
+            ENDIF
+            IF(NC.EQ.7) THEN
+               IJ=-NGAUSZ
+               JI=3*NGAUSZ
+            ENDIF
+            IF(NC.EQ.8) THEN
+               IJ=-(3*NGAUSZ)
+               JI=4*NGAUSZ
+            ENDIF
+         ENDIF
+      ENDIF
+      IF(NCVE.EQ.8.AND.NGAUSX.EQ.3) THEN
+         IF(INMM.GT.400) THEN
+            IF(NC.EQ.1) IJ=8*NGAUSZ+1
+            IF(NC.EQ.2) IJ=2*NGAUSZ+1
+            IF(NC.EQ.3) IJ=1
+            IF(NC.EQ.4) IJ=6*NGAUSZ+1
+            IF(NC.EQ.5) IJ=5*NGAUSZ+1
+            IF(NC.EQ.6) IJ=NGAUSZ+1
+            IF(NC.EQ.7) IJ=3*NGAUSZ+1
+            IF(NC.EQ.8) IJ=7*NGAUSZ+1
+         ELSE
+            IF(NC.EQ.1) IJ=9*NGAUSZ
+            IF(NC.EQ.2) IJ=3*NGAUSZ
+            IF(NC.EQ.3) IJ=NGAUSZ
+            IF(NC.EQ.4) IJ=7*NGAUSZ
+            IF(NC.EQ.5) IJ=6*NGAUSZ
+            IF(NC.EQ.6) IJ=2*NGAUSZ
+            IF(NC.EQ.7) IJ=4*NGAUSZ
+            IF(NC.EQ.8) IJ=8*NGAUSZ
+         ENDIF
+      ENDIF
+      DO 20 NLM=1,NE
+C
+CS       NASTAJANJE I NESTAJANJE ELEMENATA
+CE       ELEMENT BIRTH AND DEATH OPTION
+C
+         IBD=0
+         CALL DTHBTH(AU(LTBTH),AU(LTDTH),VREME,NLM,IBD)
+         IF(IBD.EQ.1) GO TO 20
+C
+         MAT=IMAT(NLM)
+         MST=MAT
+         NNSL=1
+         IF(MSET.GT.0) NNSL=NSLOJ(MST)
+C
+         NMM=NLM
+         IF(ICVEL.EQ.1) NMM=MCVEL(NLM)
+         IF(IPLA.EQ.0) THEN
+            IF(IND.EQ.7420.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(1,IJ,NLM,1)
+            ELSEIF(IND.EQ.7420.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(1,-IJ,NLM,1)+SIGMA(1,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7421.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(2,IJ,NLM,1)
+            ELSEIF(IND.EQ.7421.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(2,-IJ,NLM,1)+SIGMA(2,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7422.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(3,IJ,NLM,1)
+            ELSEIF(IND.EQ.7422.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(3,-IJ,NLM,1)+SIGMA(3,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7423.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(4,IJ,NLM,1)
+            ELSEIF(IND.EQ.7423.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(4,-IJ,NLM,1)+SIGMA(4,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7424.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(5,IJ,NLM,1)
+            ELSEIF(IND.EQ.7424.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(5,-IJ,NLM,1)+SIGMA(5,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7425.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(6,IJ,NLM,1)
+            ELSEIF(IND.EQ.7425.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(6,-IJ,NLM,1)+SIGMA(6,JI,NLM,1))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7433.AND.IJ.GT.0) THEN
+               XMY=SIGMA(1,IJ,NLM,1)-SIGMA(2,IJ,NLM,1)
+               YMZ=SIGMA(2,IJ,NLM,1)-SIGMA(3,IJ,NLM,1)
+               ZMX=SIGMA(3,IJ,NLM,1)-SIGMA(1,IJ,NLM,1)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,IJ,NLM,1)*SIGMA(4,IJ,NLM,1)+
+     1                    SIGMA(5,IJ,NLM,1)*SIGMA(5,IJ,NLM,1)+
+     1                    SIGMA(6,IJ,NLM,1)*SIGMA(6,IJ,NLM,1))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               WRITE(II,5000) NMM,EFEK
+            ELSEIF(IND.EQ.7433.AND.IJ.LT.0) THEN
+               XMY=SIGMA(1,-IJ,NLM,1)-SIGMA(2,-IJ,NLM,1)
+               YMZ=SIGMA(2,-IJ,NLM,1)-SIGMA(3,-IJ,NLM,1)
+               ZMX=SIGMA(3,-IJ,NLM,1)-SIGMA(1,-IJ,NLM,1)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,-IJ,NLM,1)*SIGMA(4,-IJ,NLM,1)+
+     1                    SIGMA(5,-IJ,NLM,1)*SIGMA(5,-IJ,NLM,1)+
+     1                    SIGMA(6,-IJ,NLM,1)*SIGMA(6,-IJ,NLM,1))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               XMY=SIGMA(1,JI,NLM,1)-SIGMA(2,JI,NLM,1)
+               YMZ=SIGMA(2,JI,NLM,1)-SIGMA(3,JI,NLM,1)
+               ZMX=SIGMA(3,JI,NLM,1)-SIGMA(1,JI,NLM,1)
+               EFE1=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,JI,NLM,1)*SIGMA(4,JI,NLM,1)+
+     1                    SIGMA(5,JI,NLM,1)*SIGMA(5,JI,NLM,1)+
+     1                    SIGMA(6,JI,NLM,1)*SIGMA(6,JI,NLM,1))
+               IF(EFE1.GT.1.D-19) EFE1=DSQRT(EFE1)
+               EFEK=(EFEK+EFE1)/2
+               WRITE(II,5000) NMM,EFEK
+            ENDIF
+C
+            IF(IND.EQ.7020.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(1,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7020.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(1,-IJ,NLM,NNSL)+SIGMA(1,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7021.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(2,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7021.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(2,-IJ,NLM,NNSL)+SIGMA(2,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7022.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(3,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7022.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(3,-IJ,NLM,NNSL)+SIGMA(3,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7023.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(4,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7023.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(4,-IJ,NLM,NNSL)+SIGMA(4,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7024.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(5,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7024.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(5,-IJ,NLM,NNSL)+SIGMA(5,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7025.AND.IJ.GT.0) THEN
+               WRITE(II,5000) NMM,SIGMA(6,IJ,NLM,NNSL)
+            ELSEIF(IND.EQ.7025.AND.IJ.LT.0) THEN
+               POLA=(SIGMA(6,-IJ,NLM,NNSL)+SIGMA(6,JI,NLM,NNSL))/2
+               WRITE(II,5000) NMM,POLA
+            ENDIF
+            IF(IND.EQ.7033.AND.IJ.GT.0) THEN
+               XMY=SIGMA(1,IJ,NLM,NNSL)-SIGMA(2,IJ,NLM,NNSL)
+               YMZ=SIGMA(2,IJ,NLM,NNSL)-SIGMA(3,IJ,NLM,NNSL)
+               ZMX=SIGMA(3,IJ,NLM,NNSL)-SIGMA(1,IJ,NLM,NNSL)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,IJ,NLM,NNSL)*SIGMA(4,IJ,NLM,NNSL)+
+     1                    SIGMA(5,IJ,NLM,NNSL)*SIGMA(5,IJ,NLM,NNSL)+
+     1                    SIGMA(6,IJ,NLM,NNSL)*SIGMA(6,IJ,NLM,NNSL))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               WRITE(II,5000) NMM,EFEK
+            ELSEIF(IND.EQ.7033.AND.IJ.LT.0) THEN
+               XMY=SIGMA(1,-IJ,NLM,NNSL)-SIGMA(2,-IJ,NLM,NNSL)
+               YMZ=SIGMA(2,-IJ,NLM,NNSL)-SIGMA(3,-IJ,NLM,NNSL)
+               ZMX=SIGMA(3,-IJ,NLM,NNSL)-SIGMA(1,-IJ,NLM,NNSL)
+               EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,-IJ,NLM,NNSL)*SIGMA(4,-IJ,NLM,NNSL)+
+     1                    SIGMA(5,-IJ,NLM,NNSL)*SIGMA(5,-IJ,NLM,NNSL)+
+     1                    SIGMA(6,-IJ,NLM,NNSL)*SIGMA(6,-IJ,NLM,NNSL))
+               IF(EFEK.GT.1.D-19) EFEK=DSQRT(EFEK)
+               XMY=SIGMA(1,JI,NLM,NNSL)-SIGMA(2,JI,NLM,NNSL)
+               YMZ=SIGMA(2,JI,NLM,NNSL)-SIGMA(3,JI,NLM,NNSL)
+               ZMX=SIGMA(3,JI,NLM,NNSL)-SIGMA(1,JI,NLM,NNSL)
+               EFE1=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1              3.D0*(SIGMA(4,JI,NLM,NNSL)*SIGMA(4,JI,NLM,NNSL)+
+     1                    SIGMA(5,JI,NLM,NNSL)*SIGMA(5,JI,NLM,NNSL)+
+     1                    SIGMA(6,JI,NLM,NNSL)*SIGMA(6,JI,NLM,NNSL))
+               IF(EFE1.GT.1.D-19) EFE1=DSQRT(EFE1)
+               EFEK=(EFEK+EFE1)/2
+               WRITE(II,5000) NMM,EFEK
+            ENDIF
+         ELSE
+         ENDIF
+   20 CONTINUE
+      WRITE(II,5500) MJ,ZERO
+   30 CONTINUE
+C
+   31 CONTINUE
+      IF(KK.EQ.1.AND.INP.NE.0) THEN
+         IF(IND.EQ.7020) GO TO 83
+         IF(IND.EQ.7021) GO TO 84
+         IF(IND.EQ.7022) GO TO 85
+         IF(IND.EQ.7023) GO TO 86
+         IF(IND.EQ.7024) GO TO 87
+         IF(IND.EQ.7025) GO TO 88
+         IF(IND.EQ.7033) GO TO 92
+         IF(IND.EQ.7420) GO TO 93
+         IF(IND.EQ.7421) GO TO 94
+         IF(IND.EQ.7422) GO TO 95
+         IF(IND.EQ.7423) GO TO 96
+         IF(IND.EQ.7424) GO TO 97
+         IF(IND.EQ.7425) GO TO 98
+         IF(IND.EQ.7433) GO TO 182
+      ENDIF
+      IF(KK.EQ.7.AND.INP.NE.0) THEN
+         IF(IND.EQ.7050) GO TO 183
+         IF(IND.EQ.7051) GO TO 184
+         IF(IND.EQ.7052) GO TO 185
+         IF(IND.EQ.7053) GO TO 186
+         IF(IND.EQ.7054) GO TO 187
+         IF(IND.EQ.7055) GO TO 188
+         IF(IND.EQ.7061) GO TO 192
+         IF(IND.EQ.7450) GO TO 193
+         IF(IND.EQ.7451) GO TO 194
+         IF(IND.EQ.7452) GO TO 195
+         IF(IND.EQ.7453) GO TO 196
+         IF(IND.EQ.7454) GO TO 197
+         IF(IND.EQ.7455) GO TO 198
+         IF(IND.EQ.7461)THEN
+            IF(NMODM.EQ.61)GO TO 382
+            GO TO 282
+         ENDIF
+      ENDIF
+      IF(IND.EQ.7091) GO TO 383
+      IF(IND.EQ.7491) GO TO 999
+      IF(KK.EQ.13.AND.INP.NE.0) THEN
+         IF(IND.EQ.7066) GO TO 283
+         IF(IND.EQ.7067) GO TO 284
+         IF(IND.EQ.7068) GO TO 285
+         IF(IND.EQ.7069) GO TO 286
+         IF(IND.EQ.7070) GO TO 287
+         IF(IND.EQ.7071) GO TO 288
+         IF(IND.EQ.7072) GO TO 292
+         IF(IND.EQ.7466) GO TO 293
+         IF(IND.EQ.7467) GO TO 294
+         IF(IND.EQ.7468) GO TO 295
+         IF(IND.EQ.7469) GO TO 296
+         IF(IND.EQ.7470) GO TO 297
+         IF(IND.EQ.7471) GO TO 298
+C         IF(IND.EQ.7472) GO TO 382
+      ENDIF
+  999 ISTNA=ISTNAA
+      RETURN
+ 1000 FORMAT(10(I7,','))
+ 1001 FORMAT(I6,',',F12.4,',')
+ 7020 FORMAT('PLATE TOP X NORMAL STRESS')
+17020 FORMAT('NODE',I10,' X NORMAL STRESS')
+ 7021 FORMAT('PLATE TOP Y NORMAL STRESS')
+17021 FORMAT('NODE',I10,' Y NORMAL STRESS')
+ 7022 FORMAT('PLATE TOP Z NORMAL STRESS')
+17022 FORMAT('NODE',I10,' Z NORMAL STRESS')
+ 7023 FORMAT('PLATE TOP XY SHEAR STRESS')
+17023 FORMAT('NODE',I10,' XY SHEAR STRESS')
+ 7024 FORMAT('PLATE TOP YZ SHEAR STRESS')
+17024 FORMAT('NODE',I10,' YZ SHEAR STRESS')
+ 7025 FORMAT('PLATE TOP ZX SHEAR STRESS')
+17025 FORMAT('NODE',I10,' ZX SHEAR STRESS')
+ 7033 FORMAT('PLATE TOP VONMISES STRESS')
+17033 FORMAT('NODE',I10,' VONMISES STRESS')
+ 7420 FORMAT('PLATE BOT X NORMAL STRESS')
+17420 FORMAT('NODE',I10,' X NORMAL STRESS')
+ 7421 FORMAT('PLATE BOT Y NORMAL STRESS')
+17421 FORMAT('NODE',I10,' Y NORMAL STRESS')
+ 7422 FORMAT('PLATE BOT Z NORMAL STRESS')
+17422 FORMAT('NODE',I10,' Z NORMAL STRESS')
+ 7423 FORMAT('PLATE BOT XY SHEAR STRESS')
+17423 FORMAT('NODE',I10,' XY SHEAR STRESS')
+ 7424 FORMAT('PLATE BOT YZ SHEAR STRESS')
+17424 FORMAT('NODE',I10,' YZ SHEAR STRESS')
+ 7425 FORMAT('PLATE BOT ZX SHEAR STRESS')
+17425 FORMAT('NODE',I10,' ZX SHEAR STRESS')
+ 7433 FORMAT('PLATE BOT VONMISES STRESS')
+17433 FORMAT('NODE',I10,' VONMISES STRESS')
+C
+ 7050 FORMAT('PLATE TOP X NORMAL STRAIN')
+17050 FORMAT('NODE',I10,' X NORMAL STRAIN')
+ 7051 FORMAT('PLATE TOP Y NORMAL STRAIN')
+17051 FORMAT('NODE',I10,' Y NORMAL STRAIN')
+ 7052 FORMAT('PLATE TOP Z NORMAL STRAIN')
+17052 FORMAT('NODE',I10,' Z NORMAL STRAIN')
+ 7053 FORMAT('PLATE TOP XY SHEAR STRAIN')
+17053 FORMAT('NODE',I10,' XY SHEAR STRAIN')
+ 7054 FORMAT('PLATE TOP YZ SHEAR STRAIN')
+17054 FORMAT('NODE',I10,' YZ SHEAR STRAIN')
+ 7055 FORMAT('PLATE TOP ZX SHEAR STRAIN')
+17055 FORMAT('NODE',I10,' ZX SHEAR STRAIN')
+ 7061 FORMAT('PLATE TOP EFFECTIVE STRAIN')
+17061 FORMAT('NODE',I10,' EFFECTIVE STRAIN')
+ 7450 FORMAT('PLATE BOT X NORMAL STRAIN')
+17450 FORMAT('NODE',I10,' X NORMAL STRAIN')
+ 7451 FORMAT('PLATE BOT Y NORMAL STRAIN')
+17451 FORMAT('NODE',I10,' Y NORMAL STRAIN')
+ 7452 FORMAT('PLATE BOT Z NORMAL STRAIN')
+17452 FORMAT('NODE',I10,' Z NORMAL STRAIN')
+ 7453 FORMAT('PLATE BOT XY SHEAR STRAIN')
+17453 FORMAT('NODE',I10,' XY SHEAR STRAIN')
+ 7454 FORMAT('PLATE BOT YZ SHEAR STRAIN')
+17454 FORMAT('NODE',I10,' YZ SHEAR STRAIN')
+ 7455 FORMAT('PLATE BOT ZX SHEAR STRAIN')
+17455 FORMAT('NODE',I10,' ZX SHEAR STRAIN')
+ 7461 FORMAT('PLATE BOT EFFECTIVE STRAIN')
+17461 FORMAT('NODE',I10,' EFFECTIVE STRAIN')
+C
+ 7066 FORMAT('PLATE TOP X NORMAL PL.STRAIN')
+17066 FORMAT('NODE',I10,' X NORMAL PL.STRAIN')
+ 7067 FORMAT('PLATE TOP Y NORMAL PL.STRAIN')
+17067 FORMAT('NODE',I10,' Y NORMAL PL.STRAIN')
+ 7068 FORMAT('PLATE TOP Z NORMAL PL.STRAIN')
+17068 FORMAT('NODE',I10,' Z NORMAL PL.STRAIN')
+ 7069 FORMAT('PLATE TOP XY SHEAR PL.STRAIN')
+17069 FORMAT('NODE',I10,' XY SHEAR PL.STRAIN')
+ 7070 FORMAT('PLATE TOP YZ SHEAR PL.STRAIN')
+17070 FORMAT('NODE',I10,' YZ SHEAR PL.STRAIN')
+ 7071 FORMAT('PLATE TOP ZX SHEAR PL.STRAIN')
+17071 FORMAT('NODE',I10,' ZX SHEAR PL.STRAIN')
+ 7072 FORMAT('PLATE TOP EFFECTIVE PL.STRAIN')
+17072 FORMAT('NODE',I10,' EFFECTIVE PL.STRAIN')
+ 7466 FORMAT('PLATE BOT X NORMAL PL.STRAIN')
+17466 FORMAT('NODE',I10,' X NORMAL PL.STRAIN')
+ 7467 FORMAT('PLATE BOT Y NORMAL PL.STRAIN')
+17467 FORMAT('NODE',I10,' Y NORMAL PL.STRAIN')
+ 7468 FORMAT('PLATE BOT Z NORMAL PL.STRAIN')
+17468 FORMAT('NODE',I10,' Z NORMAL PL.STRAIN')
+ 7469 FORMAT('PLATE BOT XY SHEAR PL.STRAIN')
+17469 FORMAT('NODE',I10,' XY SHEAR PL.STRAIN')
+ 7470 FORMAT('PLATE BOT YZ SHEAR PL.STRAIN')
+17470 FORMAT('NODE',I10,' YZ SHEAR PL.STRAIN')
+ 7471 FORMAT('PLATE BOT ZX SHEAR PL.STRAIN')
+17471 FORMAT('NODE',I10,' ZX SHEAR PL.STRAIN')
+ 7472 FORMAT('PLATE BOT EFFECTIVE PL.STRAIN')
+17472 FORMAT('NODE',I10,' EFFECTIVE PL.STRAIN')
+C
+ 7091 FORMAT('PLATE TOP - DAMAGE')
+17091 FORMAT('NODE',I10,' TOP-DAMAGE')
+ 7491 FORMAT('PLATE BOT - DAMAGE')
+17491 FORMAT('NODE',I10,' BOT-DAMAGE')
+ 1005 FORMAT('PAK CASE',I5)
+ 1006 FORMAT('CASE',I5,' TIME',1PE12.4)
+ 1010 FORMAT(3(1PE12.4,','))
+ 5000 FORMAT(I10,',',3(1PE12.4,','))
+ 5500 FORMAT(I2,',',3(1PE12.4,','))
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE SREDK8(SIGMA,S,NLM,NGS12,NE,NSLOJ,IMAT,MSET)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C     
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      DIMENSION SIGMA(6,NGS12,NE,*),S(14),NSLOJ(*),IMAT(*)
+C
+      MAT=IMAT(NLM)
+      MST=MAT
+      NNSL=1
+      IF(MSET.GT.0) NNSL=NSLOJ(MST)
+C
+      CALL CLEAR(S,14)
+      I=0
+      NGXY=NGAUSX*NGAUSY
+      DO 10 J=1,NGXY
+         I=I+1
+         S(8)=S(8)+SIGMA(1,I,NLM,1)
+         S(9)=S(9)+SIGMA(2,I,NLM,1)
+         S(10)=S(10)+SIGMA(3,I,NLM,1)
+         S(11)=S(11)+SIGMA(4,I,NLM,1)
+         S(12)=S(12)+SIGMA(5,I,NLM,1)
+         S(13)=S(13)+SIGMA(6,I,NLM,1)
+         I=I+NGAUSZ-1
+         S(1)=S(1)+SIGMA(1,I,NLM,NNSL)
+         S(2)=S(2)+SIGMA(2,I,NLM,NNSL)
+         S(3)=S(3)+SIGMA(3,I,NLM,NNSL)
+         S(4)=S(4)+SIGMA(4,I,NLM,NNSL)
+         S(5)=S(5)+SIGMA(5,I,NLM,NNSL)
+         S(6)=S(6)+SIGMA(6,I,NLM,NNSL)
+   10 CONTINUE
+      S(1)=S(1)/NGXY
+      S(2)=S(2)/NGXY
+      S(3)=S(3)/NGXY
+      S(4)=S(4)/NGXY
+      S(5)=S(5)/NGXY
+      S(6)=S(6)/NGXY
+      S(8)=S(8)/NGXY
+      S(9)=S(9)/NGXY
+      S(10)=S(10)/NGXY
+      S(11)=S(11)/NGXY
+      S(12)=S(12)/NGXY
+      S(13)=S(13)/NGXY
+      XMY=S(1)-S(2)
+      YMZ=S(2)-S(3)
+      ZMX=S(3)-S(1)
+      EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1     3.D0*(S(4)*S(4)+S(5)*S(5)+S(6)*S(6))
+      IF(EFEK.GT.1.D-19) S(7)=DSQRT(EFEK)
+      XMY=S(8)-S(9)
+      YMZ=S(9)-S(10)
+      ZMX=S(10)-S(8)
+      EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1     3.D0*(S(11)*S(11)+S(12)*S(12)+S(13)*S(13))
+      IF(EFEK.GT.1.D-19) S(14)=DSQRT(EFEK)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE SREDE8(PLAST,S,NLM,NPROS,NGS12,INP,NSLOJ,IMAT,MSET)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C     
+      COMMON /ELEIND/ NGAUSX,NGAUSY,NGAUSZ,NCVE,ITERME,MAT,IETYP
+      DIMENSION PLAST(*),S(14),NSLOJ(*),IMAT(*)
+C
+      MAT=IMAT(NLM)
+      MST=MAT
+      NNSL=1
+      IF(MSET.GT.0) NNSL=NSLOJ(MST)
+C
+      IF(INP.GT.7) THEN
+         CALL CLEAR(S(8),7)
+         NZ=1
+         MSL=1
+      ELSE
+         CALL CLEAR(S,7)
+         NZ=NGAUSZ
+         MSL=NNSL
+      ENDIF
+      I=0
+      NGXY=NGAUSX*NGAUSY
+      DO 10 I=1,NGAUSX
+      DO 10 J=1,NGAUSY
+      IJ=((MSL-1)*NGS12+(I-1)*NGAUSZ*NGAUSY+(J-1)*NGAUSZ+(NZ-1))*NPROS+1
+      IF(INP.GT.7) THEN
+         S(8)=S(8)+PLAST(IJ)/NGXY
+         S(9)=S(9)+PLAST(IJ+1)/NGXY
+         S(10)=S(10)+PLAST(IJ+2)/NGXY
+         S(11)=S(11)+PLAST(IJ+3)/NGXY
+         S(12)=S(12)+PLAST(IJ+4)/NGXY
+         S(13)=S(13)+PLAST(IJ+5)/NGXY
+      ELSE
+         S(1)=S(1)+PLAST(IJ)/NGXY
+         S(2)=S(2)+PLAST(IJ+1)/NGXY
+         S(3)=S(3)+PLAST(IJ+2)/NGXY
+         S(4)=S(4)+PLAST(IJ+3)/NGXY
+         S(5)=S(5)+PLAST(IJ+4)/NGXY
+         S(6)=S(6)+PLAST(IJ+5)/NGXY
+      ENDIF
+   10 CONTINUE
+      IF(INP.EQ.7) THEN
+         XMY=S(1)-S(2)
+         YMZ=S(2)-S(3)
+         ZMX=S(3)-S(1)
+         EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1        3.D0*(S(4)*S(4)+S(5)*S(5)+S(6)*S(6))
+         IF(EFEK.GT.1.D-19) S(7)=DSQRT(EFEK)
+      ENDIF
+      IF(INP.EQ.14) THEN
+         XMY=S(8)-S(9)
+         YMZ=S(9)-S(10)
+         ZMX=S(10)-S(8)
+         EFEK=0.5D0*(XMY*XMY+YMZ*YMZ+ZMX*ZMX)+
+     1        3.D0*(S(11)*S(11)+S(12)*S(12)+S(13)*S(13))
+         IF(EFEK.GT.1.D-19) S(14)=DSQRT(EFEK)
+      ENDIF
+      RETURN
+      END

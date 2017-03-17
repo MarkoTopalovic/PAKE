@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{F769B69D-0C81-4B67-B3F9-9F882C239B2B}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\mpich2x86\include,&quot;..\MUMPS\include&quot;" PreprocessorDefinitions="pord" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" AssemblerListingLocation="$(INTDIR)/" Traceback="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/FORCE:MULTIPLE mumps.lib mumps_core_mp.lib blacs_mpi.lib blacs_mpi_CallFromC.lib blacs_mpi_CallFromF.lib mumps.lib scalapack.lib scalapack_core.lib blas_win32.lib fmpich2.lib libmetis.a mpi.lib" OutputFile="$(OUTDIR)/PAKS.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\MPICH2x86\lib;..\MUMPS\lib;..\MUMPS\WinMumps\Debug\Win32" IgnoreDefaultLibraryNames="libc.lib" GenerateDebugInformation="true" ProgramDatabaseFile="$(OUTDIR)/PAKS.pdb" SubSystem="subSystemConsole" StackReserveSize="100000000"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\mpich2x86\include,&quot;..\MUMPS\include&quot;" PreprocessorDefinitions="pord" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/FORCE:MULTIPLE mumps.lib mumps_core_mp.lib blacs_mpi.lib blacs_mpi_CallFromC.lib blacs_mpi_CallFromF.lib mumps.lib scalapack.lib scalapack_core.lib blas_win32.lib fmpich2.lib libmetis.a mpi.lib" OutputFile="$(OUTDIR)/pakpar.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\MPICH2x86\lib;..\MUMPS\lib;..\MUMPS\WinMumps\Release\Win32" IgnoreDefaultLibraryNames="libc.lib" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Debug|x64" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\MPICH2x64\include;&quot;..\MUMPS\include&quot;" PreprocessorDefinitions="pord" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" AssemblerListingLocation="$(INTDIR)/" Traceback="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions=" /FORCE:MULTIPLE mumps.lib mumps_core_mp.lib blacs_mpi.lib blacs_mpi_CallFromC.lib blacs_mpi_CallFromF.lib mumps.lib scalapack.lib scalapack_core.lib blas_win32.lib fmpich2.lib libmetis.a mpi.lib " OutputFile="$(OUTDIR)/PAKS.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\MPICH2x64\lib;..\MUMPS\lib;..\MUMPS\WinMumps\Debug\x64" GenerateDebugInformation="true" ProgramDatabaseFile="$(OUTDIR)/PAKS.pdb" SubSystem="subSystemConsole" StackReserveSize="100000000"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\MPICH2x64\include;&quot;..\MUMPS\include&quot;" PreprocessorDefinitions="pord" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions=" /FORCE:MULTIPLE mumps.lib mumps_core_mp.lib blacs_mpi.lib blacs_mpi_CallFromC.lib blacs_mpi_CallFromF.lib mumps.lib scalapack.lib scalapack_core.lib blas_win32.lib fmpich2.lib libmetis.a mpi.lib " OutputFile="$(OUTDIR)/pakpar.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\MPICH2x64\lib;..\MUMPS\lib;..\MUMPS\WinMumps\Release\x64" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source files" Filter="for">
+		<File RelativePath=".\pak0.for"/>
+		<File RelativePath=".\pak00.for"/>
+		<File RelativePath=".\pak01.for"/>
+		<File RelativePath=".\pak02.for"/>
+		<File RelativePath=".\pak021.for"/>
+		<File RelativePath=".\pak03.for"/>
+		<File RelativePath=".\pak031.for"/>
+		<File RelativePath=".\pak03g.for"/>
+		<File RelativePath=".\pak04.for"/>
+		<File RelativePath=".\pak05.for"/>
+		<File RelativePath=".\pak051.for"/>
+		<File RelativePath=".\pak06.for"/>
+		<File RelativePath=".\pak061.for"/>
+		<File RelativePath=".\pak061a.for"/>
+		<File RelativePath=".\pak062.for"/>
+		<File RelativePath=".\pak062a.for"/>
+		<File RelativePath=".\pak065.for"/>
+		<File RelativePath=".\pak07.for"/>
+		<File RelativePath=".\pak071.for"/>
+		<File RelativePath=".\pak08.for"/>
+		<File RelativePath=".\pak081.for"/>
+		<File RelativePath=".\pak09.for"/>
+		<File RelativePath=".\pak10.for"/>
+		<File RelativePath=".\pak101.for"/>
+		<File RelativePath=".\pak102.for"/>
+		<File RelativePath=".\pak103.for"/>
+		<File RelativePath=".\pak105.for"/>
+		<File RelativePath=".\pak11.for"/>
+		<File RelativePath=".\pak111.for"/>
+		<File RelativePath=".\pak112.for"/>
+		<File RelativePath=".\pak113.for"/>
+		<File RelativePath=".\pak12.for"/>
+		<File RelativePath=".\pak121.for"/>
+		<File RelativePath=".\pak122.for"/>
+		<File RelativePath=".\pak123.for"/>
+		<File RelativePath=".\pak13.for"/>
+		<File RelativePath=".\pak1405.for"/>
+		<File RelativePath=".\pak1411.for"/>
+		<File RelativePath=".\pak1424.for"/>
+		<File RelativePath=".\pak1430.for"/>
+		<File RelativePath=".\pak15.for"/>
+		<File RelativePath=".\pak21.for"/>
+		<File RelativePath=".\pak22.for"/>
+		<File RelativePath=".\pak221.for"/>
+		<File RelativePath=".\pak222.for"/>
+		<File RelativePath=".\pak223.for"/>
+		<File RelativePath=".\pak22b1.for"/>
+		<File RelativePath=".\pak23.for"/>
+		<File RelativePath=".\pak231.for"/>
+		<File RelativePath=".\pak2405.for"/>
+		<File RelativePath=".\pak2406.for"/>
+		<File RelativePath=".\pak2407.for"/>
+		<File RelativePath=".\pak2408.for"/>
+		<File RelativePath=".\pak2409.for"/>
+		<File RelativePath=".\pak2410.for"/>
+		<File RelativePath=".\pak2416.for"/>
+		<File RelativePath=".\pak2419.for"/>
+		<File RelativePath=".\pak2420.for"/>
+		<File RelativePath=".\pak2421.for"/>
+		<File RelativePath=".\pak2422.for"/>
+		<File RelativePath=".\pak2425.for"/>
+		<File RelativePath=".\pak2426.for"/>
+		<File RelativePath=".\PAK2428.for"/>
+		<File RelativePath=".\pak2430.for"/>
+		<File RelativePath=".\pak2431.for"/>
+		<File RelativePath=".\pak2440.for"/>
+		<File RelativePath=".\pak2451.for"/>
+		<File RelativePath=".\pak2461.for"/>
+		<File RelativePath=".\pak25.for"/>
+		<File RelativePath=".\pak26.for"/>
+		<File RelativePath=".\pak31.for"/>
+		<File RelativePath=".\pak32.for"/>
+		<File RelativePath=".\pak32b1.for"/>
+		<File RelativePath=".\pak33.for"/>
+		<File RelativePath=".\pak3405.for"/>
+		<File RelativePath=".\pak3406.for"/>
+		<File RelativePath=".\pak3406k.for"/>
+		<File RelativePath=".\pak3407.for"/>
+		<File RelativePath=".\pak3409.for"/>
+		<File RelativePath=".\pak3410.for"/>
+		<File RelativePath=".\pak3413.for"/>
+		<File RelativePath=".\pak3416.for"/>
+		<File RelativePath=".\pak3419.for"/>
+		<File RelativePath=".\pak3420.for"/>
+		<File RelativePath=".\pak3421.for"/>
+		<File RelativePath=".\pak3422.for"/>
+		<File RelativePath=".\pak3423.for"/>
+		<File RelativePath=".\pak3424.for"/>
+		<File RelativePath=".\PAK3425.FOR"/>
+		<File RelativePath=".\pak3426.for"/>
+		<File RelativePath=".\pak3427.for"/>
+		<File RelativePath=".\pak3428.for"/>
+		<File RelativePath=".\pak3429.for"/>
+		<File RelativePath=".\pak3430.for"/>
+		<File RelativePath=".\pak3431.for"/>
+		<File RelativePath=".\pak3441.for"/>
+		<File RelativePath=".\pak3442.for"/>
+		<File RelativePath=".\pak3443.for"/>
+		<File RelativePath=".\pak3444.for"/>
+		<File RelativePath=".\pak3445.for"/>
+		<File RelativePath=".\pak3452.for"/>
+		<File RelativePath=".\pak3453.for"/>
+		<File RelativePath=".\pak3454.for"/>
+		<File RelativePath=".\pak3461.for"/>
+		<File RelativePath=".\pak35.for"/>
+		<File RelativePath=".\pak36.for"/>
+		<File RelativePath=".\pak41.for"/>
+		<File RelativePath=".\pak42.for"/>
+		<File RelativePath=".\pak422.for"/>
+		<File RelativePath=".\pak43.for"/>
+		<File RelativePath=".\pak44.for"/>
+		<File RelativePath=".\pak45.for"/>
+		<File RelativePath=".\pak51.for"/>
+		<File RelativePath=".\pak52.for"/>
+		<File RelativePath=".\pak53.for"/>
+		<File RelativePath=".\pak61.for"/>
+		<File RelativePath=".\pak62.for"/>
+		<File RelativePath=".\pak621.for"/>
+		<File RelativePath=".\pak622.for"/>
+		<File RelativePath=".\pak63.for"/>
+		<File RelativePath=".\pak65.for"/>
+		<File RelativePath=".\pak66.for"/>
+		<File RelativePath=".\pak71.for"/>
+		<File RelativePath=".\pak72.for"/>
+		<File RelativePath=".\pak73.for"/>
+		<File RelativePath=".\pak81.for"/>
+		<File RelativePath=".\pak82.for"/>
+		<File RelativePath=".\pak82b.for"/>
+		<File RelativePath=".\pak82f.for"/>
+		<File RelativePath=".\pak82i.for"/>
+		<File RelativePath=".\pak82p.for"/>
+		<File RelativePath=".\pak82t.for"/>
+		<File RelativePath=".\pak83.for"/>
+		<File RelativePath=".\pak8405.for"/>
+		<File RelativePath=".\pak8406.for"/>
+		<File RelativePath=".\pak8410.for"/>
+		<File RelativePath=".\pak8416.for"/>
+		<File RelativePath=".\pak8419.for"/>
+		<File RelativePath=".\pak8420.for"/>
+		<File RelativePath=".\pak8421.for"/>
+		<File RelativePath=".\pak8432.for"/>
+		<File RelativePath=".\pak8433.for"/>
+		<File RelativePath=".\pak8434.for"/>
+		<File RelativePath=".\pak8461.for"/>
+		<File RelativePath=".\pak85.for"/>
+		<File RelativePath=".\pak86.for"/>
+		<File RelativePath=".\pak91.for"/>
+		<File RelativePath=".\pak92.for"/>
+		<File RelativePath=".\pak920.for"/>
+		<File RelativePath=".\pak921.for"/>
+		<File RelativePath=".\pak922.for"/>
+		<File RelativePath=".\pak923a.for"/>
+		<File RelativePath=".\pak93.for"/>
+		<File RelativePath=".\PAK931.for"/>
+		<File RelativePath=".\pak932.for"/>
+		<File RelativePath=".\PAK932p.for"/>
+		<File RelativePath=".\pak933.for"/>
+		<File RelativePath=".\pak935.for"/>
+		<File RelativePath=".\PAK935p.for"/>
+		<File RelativePath=".\pak9406.for"/>
+		<File RelativePath=".\pak9414.for"/>
+		<File RelativePath=".\pakbocac.for"/>
+		<File RelativePath=".\pakExplicit.for"/>
+		<File RelativePath=".\pakf10.for"/>
+		<File RelativePath=".\pakf11.for"/>
+		<File RelativePath=".\pakf12.for"/>
+		<File RelativePath=".\pakf2.for"/>
+		<File RelativePath=".\pakf3.for"/>
+		<File RelativePath=".\pakf4.for"/>
+		<File RelativePath=".\pakf5.for"/>
+		<File RelativePath=".\pakf6.for"/>
+		<File RelativePath=".\pakf7.for"/>
+		<File RelativePath=".\pakf8.for"/>
+		<File RelativePath=".\pakf9.for"/>
+		<File RelativePath=".\pakfn.for"/>
+		<File RelativePath=".\pakfvtk.for"/>
+		<File RelativePath=".\pakj.for"/>
+		<File RelativePath=".\pakj2d.for"/>
+		<File RelativePath=".\pakj2dx.for"/>
+		<File RelativePath=".\pakj3d.for"/>
+		<File RelativePath=".\pakjcir2d.for"/>
+		<File RelativePath=".\pakjcir2dx.for"/>
+		<File RelativePath=".\pakjcir3d.for"/>
+		<File RelativePath=".\pakjcor.for"/>
+		<File RelativePath=".\pakjfc.for"/>
+		<File RelativePath=".\pakjfront.for"/>
+		<File RelativePath=".\pakjsec.for"/>
+		<File RelativePath=".\pakkt.for"/>
+		<File RelativePath=".\pakn.for"/>
+		<File RelativePath=".\pakn8.for"/>
+		<File RelativePath=".\paku.for"/>
+		<File RelativePath=".\pakx.for"/>
+		<File RelativePath=".\pakzmod.f90"/></Filter></Files>
+	<Globals/></VisualStudioProject>

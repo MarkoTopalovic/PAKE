@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="init">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="comm">
+      <UniqueIdentifier>{f3cc9af6-fcaf-477f-a911-9874fb85e11b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="long">
+      <UniqueIdentifier>{afef4419-4977-45aa-a908-23db51645d8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="supp">
+      <UniqueIdentifier>{b67ac2fe-6125-477f-a1f0-320e47c948a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{7c72790a-e5fc-4d8a-bdef-c2238c531721}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_pinfo_MainInF77_CallFromC.c">
+      <Filter>init</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\cgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ctrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dtrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\igsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\itrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\strsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgamn2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgamx2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgebr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgebs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgerv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgesd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\zgsum2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrbr2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrbs2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrrv2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ztrsd2d_.c">
+      <Filter>comm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs2sys_handle_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_barrier_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_freebuff_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridexit_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridinfo_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridinit_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_gridmap_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\free_blacs_system_handle_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\sys2blacs_handle_.c">
+      <Filter>long</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_abort_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_exit_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_get_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_pcoord_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_pnum_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_set_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\blacs_setup_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dcputime00_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\dwalltime00_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\kbrid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\kbsid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\krecvid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\blacs\SRC\MPI\ksendid_.c">
+      <Filter>supp</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\blacs\SRC\MPI\Bconfig.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\blacs\SRC\MPI\Bdef.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

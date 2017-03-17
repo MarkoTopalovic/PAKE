@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <VisualStudioProject ProjectType="typeStaticLibrary" ProjectCreator="Intel Fortran" Keyword="Static Library" Version="9.1" ProjectIdGuid="{1557CD89-9E68-4AD7-9763-A1E865AA408B}">
+ 	<Platforms>
+		<Platform Name="Win32"/>
+	</Platforms>
+ 	<Configurations>
+		<Configuration Name="Debug|Win32" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+ 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+ 				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" OptimizeForProcessor="procOptimizePentiumProThruIII" Preprocess="preprocessYes" AdditionalIncludeDirectories="&quot;C:\Program Files\MPICH\SDK\Include&quot;" PreprocessorDefinitions=";SYSINC;DefBSTop=1;DefCombTop=1;BlacsDebugLvl=0" SuppressUsageMessages="true" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDebugDLL" CompileOnly="true"/>
+ 				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFCustomBuildTool"/>
+ 				<Tool Name="VFResourceCompilerTool" ResourceOutputFileName="$(IntDir)/$(InputName).res"/>
+ 				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFLibrarianTool" OutputFile="$(OutDir)/$(ProjectName).lib" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+ 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+ 				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Optimization="optimizeFull" InlineFunctionExpansion="expandAnySuitable" OptimizeForProcessor="procOptimizePentiumProThruIII" Preprocess="preprocessYes" AdditionalIncludeDirectories="&quot;C:\Program Files\MPICH\SDK\Include&quot;" PreprocessorDefinitions="UseMpich" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL" CompileOnly="true"/>
+ 				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFCustomBuildTool"/>
+ 				<Tool Name="VFResourceCompilerTool" ResourceOutputFileName="$(IntDir)/$(InputName).res"/>
+ 				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFLibrarianTool" OutputFile="$(OutDir)/$(ProjectName).lib" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Profile|Win32" OutputDirectory="../$(ConfigurationName)/$(PlatformName)" IntermediateDirectory="../tmp/$(ProjectName)/$(ConfigurationName)/$(PlatformName)" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary" MustRebuild="true">
+ 				<Tool Name="VFMidlTool" SwitchesHaveChanged="true" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
+ 				<Tool Name="VFPreBuildEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFPostBuildEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFFortranCompilerTool" SwitchesHaveChanged="true" SuppressStartupBanner="true" Optimization="optimizeFull" InlineFunctionExpansion="expandAnySuitable" OptimizeForProcessor="procOptimizePentiumProThruIII" Preprocess="preprocessYes" AdditionalIncludeDirectories="&quot;C:\Program Files\MPICH\SDK\Include&quot;" PreprocessorDefinitions=";SYSINC;DefBSTop=1;DefCombTop=1;BlacsDebugLvl=0" ExternalNameInterpretation="extNameUpperCase" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" RuntimeLibrary="rtMultiThreadedDLL" CompileOnly="true"/>
+ 				<Tool Name="VFCustomBuildTool"/>
+ 				<Tool Name="VFLibrarianTool" SwitchesHaveChanged="true" MustRebuild="true" OutputFile="$(OutDir)/$(ProjectName).lib" SuppressStartupBanner="true"/>
+ 				<Tool Name="VFPreLinkEventTool" CommandLine="time /t"/>
+ 				<Tool Name="VFResourceCompilerTool" SwitchesHaveChanged="true" ResourceOutputFileName="$(IntDir)/$(InputName).res"/></Configuration>
+	</Configurations>
+ 	<Files>
+ 		<Filter Name="internal" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+ 		<File RelativePath="..\..\..\blacs\SRC\MPI\INTERNAL\bi_f77_get_constants.f"/>
+ 		<File RelativePath="..\..\..\blacs\SRC\MPI\INTERNAL\bi_f77_mpi_attr_get.f"/>
+ 		<File RelativePath="..\..\..\blacs\SRC\MPI\INTERNAL\bi_f77_mpi_initialized.f"/>
+ 		<File RelativePath="..\..\..\blacs\SRC\MPI\INTERNAL\bi_f77_mpi_op_create.f"/>
+ 		<File RelativePath="..\..\..\blacs\SRC\MPI\INTERNAL\bi_f77_mpi_test.f"/>
+ 		<File RelativePath="..\..\..\blacs\SRC\MPI\INTERNAL\bi_f77_mpi_testall.f"/></Filter></Files>
+ 	<Globals/></VisualStudioProject>

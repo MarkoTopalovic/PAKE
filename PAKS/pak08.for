@@ -1,0 +1,1831 @@
+C=======================================================================
+C
+C        NELINEARNA ANALIZA
+C
+C   SUBROUTINE LNSRCH
+C              NEWD
+C              MEMIT
+C              IMETOD
+C              MODNWI
+C              MODNAC
+C              FULNWI
+C              FULLS 
+C              BFGS
+C              BACKSB
+C              FRESID
+C              UKUP1
+C              KONVER
+C              KONVEE
+C              ENERG
+C              KONVES
+C              NORMAS
+C              KONVEM
+C              NORMAM
+C              INTMNJ
+C              INTFNJ
+C              ULCOR
+C
+C=======================================================================
+      SUBROUTINE LNSRCH(G0,G,RESID,D,STOL,JEDN,STEP)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      include 'paka.inc'
+      
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ITERBR/ ITER
+      COMMON /LINSBR/ LIN,KORBR
+      COMMON /SRPSKI/ ISRPS
+      DIMENSION RESID(*),D(*)
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      IF (myid.ne.0) goto 10
+C
+      IF(IDEBUG.GT.0) PRINT *, ' LNSRCH'
+C
+C     OVA RUTINA LINIJSKI PRETRAZUJE U PRAVCU D I VRACA STEP
+C
+      LINMAX=10
+       SMAX=16.D0
+C      SMAX=10.D0
+C      SMAX=5.D0
+C
+C     INICIJALIZACIJA
+C
+      SB=0.D0
+      SA=1.D0
+      GB=G0
+      GA=G
+      LIN=0
+C
+C     NALAZENJE INTERVALA U KOME JE NULA
+C
+   10 CONTINUE
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(SA,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(SMAX,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      IF(SA.GT.SMAX)THEN
+        IF (myid.eq.0) STEP=1.D0
+        GO TO 100
+      ENDIF
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GA,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GB,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      IF(GB*GA.LE.0.D0) GO TO 30
+      IF (myid.ne.0) goto 50
+      SB=SA
+      SA=2.0D0*SA
+      GB=GA
+      CALL UKUP1(SA)
+50    CALL FRESID(A(LIPODS))
+      IF (myid.ne.0) goto 25
+      GA=0.D0
+      DO 20 I=1,JEDN
+   20 GA=GA+D(I)*RESID(I)
+   25 GO TO 10
+   30 IF (myid.ne.0) goto 40
+      STEP=SA
+      G=GA
+C
+C     ILLINOIS ALGORITAM ZA NALAZENJE NULE
+C
+   40 CONTINUE
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(LIN,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(LINMAX,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(LIN.EQ.LINMAX) THEN
+                        IF (myid.eq.0) STEP=1.D0
+                        GO TO 100
+                        ENDIF
+      IF (myid.eq.0) LIN=LIN+1
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GA,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GB,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(G0,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(SA,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(SB,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(STOL,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      IF(GB*GA.GE.0.D0.OR.(DABS(G).LE.(STOL*DABS(G0)).AND.
+     1 DABS(SB-SA).LE.(STOL*0.5D0*(SB+SA)))) GO TO 100
+      IF (myid.ne.0) goto 51
+      STEP=SA-GA*(SA-SB)/(GA-GB)
+      CALL UKUP1(STEP)
+ 51   CALL FRESID(A(LIPODS))
+      IF (myid.ne.0) goto 52
+      G=0.D0
+      DO 60 I=1,JEDN
+   60 G=G+D(I)*RESID(I)
+      GB=0.5D0*GB
+      IF(G*GA.GT.0.D0) GO TO 70
+      GB=GA
+      SB=SA
+   70 SA=STEP
+      GA=G
+52    GO TO 40
+  100 CONTINUE
+      IF (myid.ne.0) return
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) ITER,LIN
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) ITER,LIN
+      LIN=0
+      RETURN
+C
+C-----------------------------------------------------------------------
+ 2000 FORMAT(/11X,'ITERACIJA = ',I4/
+     1        11X,'BROJ LINIJSKIH PRETRAZIVANJA =',I4)
+C-----------------------------------------------------------------------
+ 6000 FORMAT(/11X,'ITERATION = ',I3/
+     1        11X,'NUMBER OF LINE SEARCH =',I3)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE NEWD(D,RESID,OLDRES,V,W,NSTAZ,
+     1                NUMUPD,G0,G,S,DNORM,JEDN,LMAX77)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C     OVA RUTINA NALAZI NOV PRAVAC UPOTREBOM BFGS UPDATING METODE
+C     RESID KORISTI ISTU MEMORIJU KAO I V
+C
+      COMMON /DIM   / N9,N10,N11,N12,MAXUP
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /BFGSUN/ IFILE
+      DIMENSION D(*),RESID(*),OLDRES(*),V(*),W(*),NSTAZ(*)
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+c
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      if (myid.ne.0) goto 15
+C
+      IF(IDEBUG.GT.0) PRINT *, ' NEWD'
+      CONDMX=1.0D5
+      DELGAM=S*(G0-G)
+      DKD=S*S*G0
+      LOGUP=0
+      IF(DELGAM*DKD.GT.0.D0) LOGUP=1
+      IF(LOGUP.EQ.0) GO TO 100
+      FACT1=-1.D0+S*DSQRT(DELGAM/DKD)
+      W(JEDN+1)=S/DELGAM
+C
+C     RACUNANJE UPDATING VEKTORA I STAVLJANJE RESID U D
+C
+      DO 10 I=1,JEDN
+      AUX=RESID(I)
+      V(I)=FACT1*OLDRES(I)+AUX
+      W(I)=D(I)
+      OLDRES(I)=AUX
+      D(I)=AUX
+   10 CONTINUE
+C
+C     PROVERA
+C
+      DO 20 I=1,JEDN
+   20 VV=V(I)*V(I)
+      WW=(DNORM/DELGAM)**2
+      VW4=4.0D0*W(JEDN+1)*(FACT1*G0-G)+4.0D0
+      LOGUP=0
+      IF(DABS(VW4).GT.1.D-10)LOGUP=1
+      ESTCON=0.D0
+      IF(LOGUP.EQ.1)
+     1 ESTCON=((DSQRT(VV*WW)+DSQRT(DABS(VV*WW+VW4)))**2)/DABS(VW4)
+      IF(LOGUP.EQ.1.AND.ESTCON.LT.CONDMX)LOGUP=1
+      IF(LOGUP.EQ.0) GO TO 100
+C
+        IST=2*NUMUPD+1
+        NSTAZ(IST)=LMAX77+1
+        CALL WRITDD(V,JEDN,IFILE,LMAX77,LDUZI)
+        NSTAZ(IST+1)=LMAX77+1
+        CALL WRITDD(W,JEDN+1,IFILE,LMAX77,LDUZI)
+C     WRITE(IFILE,REC=NUMUPD+1)(V(K),K=1,JEDN),(W(K),K=1,JEDN),FACT2
+C
+C     FAKTOR NA DESNOM KRAJU
+C
+      F2G=W(JEDN+1)*G
+      DO 30 I=1,JEDN
+   30 D(I)=D(I)+F2G*V(I)
+      GO TO 115
+C
+  100 DO 110 I=1,JEDN
+      OLDRES(I)=RESID(I)
+  110 D(I)=OLDRES(I)
+C
+C     DESNI UPDATING
+C
+  115 IF(NUMUPD.GT.0)THEN
+        DO 230 I=NUMUPD,1,-1
+C
+          IST=2*I-1
+          LMAX77=NSTAZ(IST)-1
+          CALL READDD(V,JEDN,IFILE,LMAX77,LDUZI)
+          LMAX77=NSTAZ(IST+1)-1
+          CALL READDD(W,JEDN+1,IFILE,LMAX77,LDUZI)
+C       READ(IFILE,REC=I)(V(K),K=1,JEDN),(W(K),K=1,JEDN),FACT2
+        WD=0.D0
+        DO 210 J=1,JEDN
+  210   WD=WD+W(J)*D(J)
+        F2WD=W(JEDN+1)*WD
+        DO 220 J=1,JEDN
+  220   D(J)=D(J)+F2WD*V(J)
+  230   CONTINUE
+      ENDIF
+C
+C     ZAMENA UNAZAD
+C
+ 15   CALL BACKSB(D)
+      if (myid.ne.0) return
+      IF(LOGUP.EQ.0) GO TO 250
+      NUMUPD=NUMUPD+1
+  250 IF(NUMUPD.EQ.0) GO TO 310
+C
+C     LEVA STRANA UPDATINGA
+C
+      DO 300 I=1,NUMUPD
+C     IF(I.GT.1)READ (IFILE,REC=I)(V(K),K=1,JEDN),(W(K),K=1,JEDN),FACT2
+C
+      IF(I.GT.1)THEN
+          IST=2*I-1
+          LMAX77=NSTAZ(IST)-1
+          CALL READDD(V,JEDN,IFILE,LMAX77,LDUZI)
+          LMAX77=NSTAZ(IST+1)-1
+          CALL READDD(W,JEDN+1,IFILE,LMAX77,LDUZI)
+      ENDIF
+      VD=0.D0
+      DO 280  J=1,JEDN
+  280 VD=VD+V(J)*D(J)
+      F2VD=W(JEDN+1)*VD
+      DO 290 J=1,JEDN
+  290 D(J)=D(J)+F2VD*W(J)
+  300 CONTINUE
+  310 NUMUPD=MOD(NUMUPD,MAXUP)
+C
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE IMETOD
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO CALL ROUTINE FOR CHOOSEN ITERATION METHOD, (METOD) SEE /9/
+C .
+C ......................................................................
+C
+      include 'paka.inc'
+      
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ITERBR/ ITER
+      COMMON /DIM   / N9,N10,N11,N12,MAXUP
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+c
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+C
+      IF(IDEBUG.GT.0.and.myid.eq.0) PRINT *, ' IMETOD'
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(METOD,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(METOD.LT.0)GO TO 10
+      GO TO (10,20,30,40,50,61,63,71,73) METOD
+
+CE    MODIFIED NEWTON, (METOD.EQ.1)
+CS    MODIFIKOVAN NJUTN-RAPSSON (METOD.EQ.1)  -----------------
+   10 CALL MODNWI(INDC)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   MODIFIED NEWTON  -  NO CONVERGENCE'
+CE    MODIFIED NEWTON + AITKEN ACCELERATION, (METOD.EQ.2)
+CS    MODIFIKOVANI NJUTN SA AITKENOVIM UBRZANJEM (METOD.EQ.2) -
+   20 CALL MODNAC(INDC)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   MODIFIED NEWTON + AITKEN -  NO CONVERGENCE'
+CE    FULL NEWTON, (METOD.EQ.3)
+CS    PUNI NJUTN  (METOD.EQ.3)  --------------------------------
+   30 CALL FULNWI(INDC)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   FULL NEWTON -  NO CONVERGENCE'
+CE    FULL NEWTON + LINE SEARCH, (METOD.EQ.4)
+CS    PUNI NJUTN  +  LINE SEARCH  (METOD.EQ.4)  ----------------
+   40 CALL FULLS(A(LRTDT),A(N9),A(N10),JEDN,INDC)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   FULL NEWTON + LINE SEARCH -  NO CONVERGENCE'
+CE    BFGS  METHOD  ---------------------------------------------------
+CS    BFGS  METODA  ---------------------------------------------------
+   50 CALL BFGS(A(LRTDT),A(N9),A(N10),A(N11),A(N12),JEDN,INDC)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   BFGS  -  NO CONVERGENCE'
+CE    AUTOMATIC LOADING (CONSTANT ARC LENGTH) + (1) -----------------
+CS    AUTOMATSKO OPTERECIVANJE (KONSTANTAN LUK) + (1) -----------------
+   61 CALL AUTMNW (A(LRTDT),A(N9),A(N10),INDC,1)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   AUTOMATIC LOADING METHOD=61 - NO CONVERGENCE'
+CE    AUTOMATIC LOADING (CONSTANT ARC LENGTH) + (3) -----------------
+CS    AUTOMATSKO OPTERECIVANJE (KONSTANTAN LUK) + (3) -----------------
+   63 CALL AUTMNW (A(LRTDT),A(N9),A(N10),INDC,3)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   AUTOMATIC LOADING METHOD=63 - NO CONVERGENCE'
+CE    AUTOMATIC LOADING (DISPLACEMENT CONTROL) + (1) -----------------
+CS    AUTOMATSKO OPTERECIVANJE (KONTROLISANO POMERANJE) + (1) ---------
+   71 CALL AUTPRD (A(LRTDT),A(N9),A(N10),INDC,1)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   AUTOMATIC LOADING METHOD=71 - NO CONVERGENCE'
+CE    AUTOMATIC LOADING (DISPLACEMENT CONTROL) + (3) -----------------
+CS    AUTOMATSKO OPTERECIVANJE (KONTROLISANO POMERANJE) + (3) ---------
+   73 CALL AUTPRD (A(LRTDT),A(N9),A(N10),INDC,3)
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.GT.0)RETURN
+      STOP'***   AUTOMATIC LOADING METHOD=73 - NO CONVERGENCE'
+C
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE MODNWI(INDC)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....   MODIFIKOVANI NJUTN
+      include 'paka.inc'
+      
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ITERBR/ ITER
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      if (myid.ne.0) goto 10
+      IF(IDEBUG.GT.0) PRINT *, ' MODNWI'
+C....   INICIJALIZACIJA
+      INDC=0
+C....   PETLJA ZA ITERACIJE
+10    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(ITER,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+   30 ITER=ITER+1
+C     IF(ITER.GT.1)THEN
+      CALL FRESID(A(LIPODS))
+C     ELSE
+C       CALL FRESIF(A(LIPODS))
+C     ENDIF
+      CALL BACKSB(A(LRTDT))
+      if (myid.eq.0) CALL KONVER(INDC)
+C     INKREMENT POMERANJA
+      CALL UKUPNP(A(LIPODS),INDC)
+C---------------------------------------
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(MAXIT,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.EQ.1.OR.ITER.EQ.MAXIT) RETURN
+      GO TO 30
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE MODNAC(INDC)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....   MODIFIKOVANI NJUTN + AITKENOVO UBRZANJE
+      include 'paka.inc'
+      
+      COMMON /DIM   / N9,N10,N11,N12,MAXUP
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ITERBR/ ITER
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      if (myid.ne.0) goto 10
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MODNAC'
+C....   INICIJALIZACIJA
+      INDC=0
+C....   PETLJA ZA ITERACIJE
+10    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(ITER,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+   30 ITER=ITER+1
+      CALL FRESID(A(LIPODS))
+      CALL BACKSB(A(LRTDT))
+      if (myid.eq.0) CALL KONVER(INDC)
+      if (myid.eq.0) CALL INKREM(A(LRTDT),A(N9))
+      if (myid.eq.0) CALL MEMITW(A(LIPODS))
+C     INKREMENT POMERANJA
+      CALL UKUPNP(A(LIPODS),INDC)
+C---------------------------------------
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(MAXIT,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.EQ.1.OR.ITER.EQ.MAXIT) RETURN
+      GO TO 30
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE FULNWI(INDC)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....   PUNI NJUTN
+      include 'paka.inc'
+      
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ITERBR/ ITER
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      if (myid.ne.0) goto 10
+C
+      IF(IDEBUG.GT.0) PRINT *, ' FULNWI'
+C....   INICIJALIZACIJA
+      INDC=0
+C....   PETLJA ZA ITERACIJE
+10    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(ITER,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+   30 ITER=ITER+1
+      CALL FRESIF(A(LIPODS))
+      CALL BACKSB(A(LRTDT))
+      if (myid.eq.0) CALL KONVER(INDC)
+C     INKREMENT POMERANJA
+      CALL UKUPNP(A(LIPODS),INDC)
+C---------------------------------------
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(MAXIT,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.EQ.1.OR.ITER.EQ.MAXIT) RETURN
+      GO TO 30
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE FULLS(RESID,OLDRES,D,JEDN,INDC)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....   PUNI NJUTN + LINE SEARCH
+      include 'paka.inc'
+      
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ITERBR/ ITER
+      COMMON /GRUPER/ LIGRUP
+      DIMENSION RESID(*),OLDRES(*),D(*)
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      if (myid.ne.0) goto 5
+C
+      IF(IDEBUG.GT.0) PRINT *, ' FULLS'
+C....   INICIJALIZACIJA
+      GMIN=1.D-15
+      STOL=0.5D0
+      INDC=0
+C....   PETLJA ZA ITERACIJE
+5     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(ITER,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+   30 ITER=ITER+1
+      CALL INTFNJ(A(LIGRUP),A(LIPODS))
+      if (myid.ne.0) goto 6
+      CALL DESSTR(A(LIPODS))
+      DO 10 I=1,JEDN
+      D(I)=RESID(I)
+   10 OLDRES(I)=RESID(I)
+C....  ZAMENA UNAZAD
+ 6    CALL BACKSB(D)
+      if (myid.ne.0) goto 7
+      DO 15 I=1,JEDN
+   15 RESID(I)=D(I)
+C....   LINE SEARCH  -------------------
+      S=1.D0
+      CALL UKUP1(S)
+7     CALL FRESID(A(LIPODS))
+      if (myid.ne.0) goto 8
+      G0=0.D0
+      G=0.D0
+      DO 50 I=1,JEDN
+      G0=G0+D(I)*OLDRES(I)
+   50 G=G+D(I)*RESID(I)
+8     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(G0,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GMIN,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(STOL,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      IF(DABS(G).LE.STOL*DABS(G0).OR.DABS(G).LT.GMIN) GO TO 55
+      CALL LNSRCH (G0,G,RESID,D,STOL,JEDN,S)
+C....   INKREMENT VEKTORA POMERANJA ( SMESTA SE U A(LRTDT) )
+   55 if (myid.ne.0) goto 9
+      DO 60 I=1,JEDN
+   60 RESID(I)=S*D(I)
+      CALL KONVER(INDC)
+ 9    CALL UKUPNP(A(LIPODS),INDC)
+C---------------------------------------
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(MAXIT,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.EQ.1.OR.ITER.EQ.MAXIT) RETURN
+      GO TO 30
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE BFGS (RESID,OLDRES,D,W,NSTAZ,JEDN,INDC)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....   BFGS  METODA ZA ITERACIJE
+      include 'paka.inc'
+      
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ITERBR/ ITER
+      DIMENSION RESID(*),OLDRES(*),D(*),W(*)
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      if (myid.ne.0) goto 5
+C
+      IF(IDEBUG.GT.0) PRINT *, ' BFGS'
+C....   INICIJALIZACIJA
+      NUMUPD=0
+      LMAX77=0
+      GMIN=1.D-15
+      S=1.D0
+      G0=0.D0
+      G=0.D0
+      STOL=0.5D0
+      INDC=0
+C....   PETLJA ZA ITERACIJE
+5     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(ITER,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+   30 ITER=ITER+1
+      CALL FRESID(A(LIPODS))
+C....   NALAZI NOVO  D
+      CALL NEWD(D,RESID,OLDRES,RESID,W,NSTAZ,NUMUPD,G0,G,S,DNORM,JEDN,
+     1 LMAX77)
+      if (myid.ne.0) goto 6
+C....   LINE SEARCH  -------------------
+      S=1.D0
+      CALL UKUP1(S)
+ 6    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL FRESID(A(LIPODS))
+      if (myid.ne.0) goto 7
+      G0=0.D0
+      G=0.D0
+      DO 50 I=1,JEDN
+      G0=G0+D(I)*OLDRES(I)
+   50 G=G+D(I)*RESID(I)
+7     CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(G0,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(GMIN,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(STOL,1,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,ierr)
+      IF(DABS(G).LE.STOL*DABS(G0).OR.DABS(G).LT.GMIN) GO TO 55
+      CALL LNSRCH (G0,G,RESID,D,STOL,JEDN,S)
+C....   INKREMENT VEKTORA POMERANJA ( SMESTA SE U A(LRTDT) )
+   55 if (myid.ne.0) goto 8
+      DO 60 I=1,JEDN
+   60 RESID(I)=S*D(I)
+         DNORM=RNORM(RESID,JEDN)
+      CALL KONVER(INDC)
+ 8    CALL UKUPNP(A(LIPODS),INDC)
+C---------------------------------------
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(INDC,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(MAXIT,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      IF(INDC.EQ.1.OR.ITER.EQ.MAXIT) RETURN
+      GO TO 30
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE BACKSB(D)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....   ZAMENA UNAZAD  (BACKSUBSTITUTION)
+      include 'paka.inc'
+      
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      DIMENSION D(*)
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+c
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+C
+      IF(IDEBUG.GT.0.and.myid.eq.0) PRINT *, ' BACKSB'
+C
+C         CALL WRR(A(LSK),NWK,'S8-1')
+C         CALL WRR(D,JEDN,'RTD8')
+      CALL RESEN(A(LSK),D,A(LMAXA),JEDN,2)
+C         CALL WRR(D,JEDN,'RES8')
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE FRESID(NPODS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      include 'paka.inc'
+      
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /OPTERE/ NCF,NPP2,NPP3,NPGR,NPGRI,NPLJ,NTEMP
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /GRUPER/ LIGRUP
+      COMMON /NELINE/ NGENN
+      COMMON /DUPLAP/ IDVA
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+      DIMENSION NPODS(JPS1,*)
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      IF(IDEBUG.GT.0.and.myid.eq.0) PRINT *, ' FRESID'
+         CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+         CALL MPI_BCAST(JPS,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+         DO 200 JPBB=1,JPS
+C
+            IF (myid.ne.0) goto 10
+            IF(JPS.GT.1) THEN
+               JPBR=JPBB 
+               CALL PODDAT(NPODS,1)
+               CALL PODDAT(NPODS,3)
+               CALL PODDAT(NPODS,2)
+            ELSE
+               JPBR=JPS1
+            ENDIF
+C
+C           UCITAVANJE FAKTORIZOVANE MATRICE KRUTOSTI L*D*LT
+C           FORMIRANJE UNUTRASNJIH SILA: FTDT
+C
+            CALL INTMNJ(A(LIGRUP),NPODS)
+C
+C           FORMIRANJE KONACNOG VEKTORA DESNE STRANE:
+C           NA UCITANE KONSTANTNE SILE DODAJU SE GEOMETRIJSKI
+C           NELINEARNE I ODUZMU SE UNUTRASNJE SILE, RTDT=RTDT-FTDT
+C
+            CALL DESSTR(NPODS)
+C
+ 10         IF(JPS.GT.1) THEN
+               CALL RESEN(A(LSK),A(LRTDT),A(LMAXA),JEDN,2)
+               IF (myid.eq.0) then
+                  LMAX13=NPODS(JPBR,39)-1
+                  CALL WRITDD(A(LRTDT),JEDN,IPODS,LMAX13,LDUZI)
+                  LRAD=LID
+               ENDIF
+            ENDIF
+C
+  200    CONTINUE
+         IF (myid.ne.0) RETURN
+C
+         IF(JPS.GT.1) THEN
+            JPBR=JPS1
+            CALL PODDAT(NPODS,1)
+            CALL PODDAT(NPODS,3)
+            CALL PODDAT(NPODS,2)
+C
+CE          READING OF RIGHT SIDE VECTOR CONTOUR MECHANICAL LOADS, RTDT
+CS          UCITAVANJE VEKTORA DESNE STRANE KONTURNE MEHANICKE SILE,RTDT
+C
+            CALL RSTAZ(NPODS,LRTDT,38)
+C
+            DO 400 JPBR=1,JPS
+               JEDN=NPODS(JPBR,6)
+               JEDNP=NPODS(JPBR,23)
+               JED=JEDN-JEDNP
+               LRTG=LRAD
+               LLMG=LRTG+JEDN*IDVA
+               LMAX=LLMG+JED
+               IF(LMAX.GT.MTOT) CALL ERROR(1)
+               LMAX13=NPODS(JPBR,39)-1
+               CALL READDD(A(LRTG),JEDN,IPODS,LMAX13,LDUZI)
+               LMAX13=NPODS(JPBR,27)-1
+               CALL IREADD(A(LLMG),JED,IPODS,LMAX13,LDUZI)
+               LRTG=LRTG+JEDNP*IDVA
+               CALL SPAKUD(A(LRTDT),A(LRTG),A(LLMG),JED)
+  400       CONTINUE
+            JPBR=JPS1
+            JEDN=JEDNG
+            IF(NGENN.GT.0) CALL JEDNA1(A(LFTDT),A(LRTDT),JEDN)
+            CALL RSTAZK(NPODS,LSK,60)
+            LMAXA=JMAXA
+         ENDIF
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE UKUP1(S)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      include 'paka.inc'
+      
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /DIM   / N9,N10,N11,N12,MAXUP
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /GRUPER/ LIGRUP
+      COMMON /KONTKT/ ICONT,NEQC,NEQ,NWKC,LMAXAC,LRCTDT
+      COMMON /PROBAS/ IILS
+      COMMON /UPRIRI/ LUPRI
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' UKUP1'
+      IILS=-1
+C....   DU = S*D
+      CALL JEDNAK(A(LUPRI),A(N10),S,JEDN)
+CE    AZURIRANJE KONTAKTNIH SILA
+CS    ARANGE CONTACT FORCES
+      IF(ICONT.NE.0) CALL CONCOR(A(LIGRUP),9)
+C....   ROTIRANJE JEDINICNIH VEKTORA CVOROVA
+      CALL ROTDRV(2)
+C....   RTDT = U + S*D
+      CALL RSTAZ(A(LIPODS),LRTDT,52)
+      CALL ZBIRM(A(LRTDT),A(N10),S,JEDN)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE KONVER(INDC)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ITERBR/ ITER
+      COMMON /INDKON/ IKONV
+      COMMON /CDEBUG/ IDEBUG
+      COMMON /IZADJI/ NASILU
+C
+      IF(IDEBUG.GT.0) PRINT *, ' KONVER'
+      INDC=1
+      IF(KONVE.GT.0) CALL KONVEE(IKONVE)
+      IF(KONVE.GT.0) INDC=INDC*IKONVE
+C
+      IF(KONVS.GT.0) CALL KONVES(IKONVS)
+      IF(KONVS.GT.0) INDC=INDC*IKONVS
+C
+      IF(KONVM.GT.0) CALL KONVEM(IKONVM)
+      IF(KONVM.GT.0) INDC=INDC*IKONVM
+C
+      IF(NASILU.EQ.1) INDC=1
+      IKONV=INDC
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE KONVEE(IKONVE)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      include 'paka.inc'
+      
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ABSTOL/ TOLA
+      COMMON /ITERBR/ ITER
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ZADATA/ LNZADJ,LNZADF,LZADFM,NZADP
+      COMMON /ENERGI/ ENE1,ENE2,ENE
+      COMMON /KONTKT/ ICONT,NEQC,NEQ,NWKC,LMAXAC,LRCTDT
+      COMMON /DUPLAP/ IDVA
+      COMMON /SRPSKI/ ISRPS
+      COMMON /RADIZA/ INDBG
+      COMMON /GRUPEE/ NGEL,NGENL,LGEOM,NGEOM,ITERM
+C PRIVREMENO
+      COMMON /ENERGP/ ENE91,ENE92,ENEP,IKONVP
+      COMMON /STARAE/ ENESTA,ENENOV
+      COMMON /ITERA1/ ENERG1
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /POSTPR/ LNDTPR,LNDTGR,NBLPR,NBLGR,INDPR,INDGR
+      COMMON /JCERNI/ LKOLKO,ICERNI
+      COMMON /STOSZP/ STOSZ
+C
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' KONVEE'
+      LLL=NEQ*IDVA
+      LR =LRTDT+LLL
+      LF =LFTDT+LLL
+C  RACUNANJE ENERGIJE U ITERACIJI
+C
+      IKONVE=0
+      ENE=1.D0
+C OPASNO !!! PRIVREMENO ZA CAM-CLAY
+      EMIN=TOLA
+C      EMIN=1.D-15
+C      WRITE(3,*) 'KOR,ITER,JEDN,NZADP,ICONT',KOR,ITER,JEDN,NZADP,ICONT
+C      CALL WRR(A(LRTDT),JEDN,'RTDT')
+C      CALL WRR(A(LFTDT),JEDN,'FTDT')
+      IF(NZADP.EQ.0) THEN
+         IF(ITER.GT.0) GO TO 10
+      ELSE
+         IF(ITER.GT.1) GO TO 10
+         IF(ITER.EQ.1) CALL ZADATD(A(LIPODS),2)
+      ENDIF
+C      CALL WRR(A(LRTDT),JEDN,'RTDT')
+C      CALL WRR(A(LFTDT),JEDN,'FTDT')
+      CALL ENERG(A(LRTDT),A(LFTDT),JEDN,ENE1)
+      IF(ICONT.NE.0)THEN
+         CALL ENERG(A(LR),A(LF),NEQC,ENEK2)
+      ENDIF
+C CERNI
+      IF(ICERNI.EQ.1) THEN
+C        ZAPISIVANJE ENERGIJE PO CVOROVIMA U ITERACIJAMA
+         CALL ENEDOF(A(LRTDT),A(LFTDT),JEDN)
+         III=KOR
+         KOR=ITER+1
+         VRE=VREME
+         VREME=KOR
+         STOSZ=VREME
+         IDUM=27
+C        CALL STAGP1(A(LFTDT),A(LID),A(LCVEL),ICVEL,NP,IDUM,1,
+C     +              A(LNCVP),NCVPR)
+         CALL STAU09(A(LFTDT),A(LID),A(LCVEL),ICVEL,NP,IDUM,11,
+     +               A(LNCVP),NCVPR)
+         KOR=III
+         VREME=VRE
+      ENDIF   
+C CERNI
+C      IF(NBLPR.GE.0) THEN
+      IF(ISRPS.EQ.0) THEN
+         IF(ICONT.EQ.0) WRITE(IZLAZ,2000) ITER,ENE1,ITER,ENE
+         IF(ICONT.NE.0) WRITE(IZLAZ,2010) ITER,ENE1,ENEK2,ITER,ENE
+      ENDIF
+      IF(ISRPS.EQ.1) THEN
+         IF(ICONT.EQ.0) WRITE(IZLAZ,6000) ITER,ENE1,ITER,ENE
+         IF(ICONT.NE.0) WRITE(IZLAZ,6010) ITER,ENE1,ENEK2,ITER,ENE
+      ENDIF
+C      ENDIF
+      IF(INDBG.EQ.0) THEN
+      IF(ISRPS.EQ.0) THEN
+         IF(ICONT.EQ.0) WRITE(*,2000) ITER,ENE1,ITER,ENE
+         IF(ICONT.NE.0) WRITE(*,2010) ITER,ENE1,ENEK2,ITER,ENE
+      ENDIF
+      IF(ISRPS.EQ.1) THEN
+         IF(ICONT.EQ.0) WRITE(*,6000) ITER,ENE1,ITER,ENE
+         IF(ICONT.NE.0) WRITE(*,6010) ITER,ENE1,ENEK2,ITER,ENE
+      ENDIF
+      ENDIF
+      IF(ITER.EQ.1.AND.NZADP.GT.0) CALL ZADATD(A(LIPODS),0)
+      ENERG1=ENE1
+      ENESTA=DABS(ENE1)
+      ENENOV=ENESTA
+      RETURN
+C
+   10 CALL ENERG(A(LRTDT),A(LFTDT),JEDN,ENE2)
+      IF(ICONT.NE.0) CALL ENERG(A(LR),A(LF),NEQC,ENEK2)
+C
+C  PROVERA KONVERGENCIJE
+C
+C CERNI
+      IF(ICERNI.EQ.1) THEN
+C        ZAPISIVANJE ENERGIJE PO CVOROVIMA U ITERACIJAMA
+         CALL ENEDOF(A(LRTDT),A(LFTDT),JEDN)
+         III=KOR
+         KOR=ITER+1
+         VRE=VREME
+         VREME=KOR
+         STOSZ=VREME
+         IDUM=27
+C        CALL STAGP1(A(LFTDT),A(LID),A(LCVEL),ICVEL,NP,IDUM,1,
+C     +              A(LNCVP),NCVPR)
+         CALL STAU09(A(LFTDT),A(LID),A(LCVEL),ICVEL,NP,IDUM,11,
+     +               A(LNCVP),NCVPR)
+         KOR=III
+         VREME=VRE
+      ENDIF   
+C CERNI
+CZ     IF(ITER.EQ.1.AND.DABS(ENE2).GT.DABS(ENERG1)) ENERG1=ENE2
+      ENENOV=DABS(ENE2)
+      ENE1=ENERG1
+      IF(DABS(ENE1).LT.EMIN) ENE1=ENE
+      ENE=ENE2/ENE1
+C      IF(NBLPR.GE.0) THEN
+      IF(ISRPS.EQ.0)THEN
+         IF(ICONT.EQ.0) WRITE(IZLAZ,2000) ITER,ENE2,ITER,ENE
+         IF(ICONT.NE.0) WRITE(IZLAZ,2010) ITER,ENE2,ENEK2,ITER,ENE
+      ENDIF
+      IF(ISRPS.EQ.1)THEN
+         IF(ICONT.EQ.0) WRITE(IZLAZ,6000) ITER,ENE2,ITER,ENE
+         IF(ICONT.NE.0) WRITE(IZLAZ,6010) ITER,ENE2,ENEK2,ITER,ENE
+      ENDIF
+C      ENDIF
+      IF(INDBG.EQ.0) THEN
+      IF(ISRPS.EQ.0) THEN
+         IF(ICONT.EQ.0) WRITE(*,2000) ITER,ENE2,ITER,ENE
+         IF(ICONT.NE.0) WRITE(*,2010) ITER,ENE2,ENEK2,ITER,ENE
+      ENDIF
+      IF(ISRPS.EQ.1) THEN
+         IF(ICONT.EQ.0) WRITE(*,6000) ITER,ENE2,ITER,ENE
+         IF(ICONT.NE.0) WRITE(*,6010) ITER,ENE2,ENEK2,ITER,ENE
+      ENDIF
+      ENDIF
+      IF(DABS(ENE).LT.TOLE) IKONVE=1
+      IF(DABS(ENE2).LT.EMIN) IKONVE=1
+C PRIVREMENO
+      IKONVE=IKONVE*IKONVP
+      RETURN
+C
+C-----------------------------------------------------------------------
+ 2000 FORMAT(/11X,'ITERACIJA = ',I4,5X,'  ENERGIJA =',1PD12.4/
+     1        11X,'ENERGIJA (',I3,') / ENERGIJA ( 0 ) =',1PD12.4)
+ 2010 FORMAT(/11X,'ITERACIJA = ',I4,5X,'  ENERGIJA =',1PD12.4
+     2       /11X,'KONTAKT ENERGIJA =',1PD12.4
+     1       /11X,'ENERGIJA (',I3,') / ENERGIJA ( 0 ) =',1PD12.4)
+C-----------------------------------------------------------------------
+ 6000 FORMAT(/11X,'ITERATION = ',I3,6X,'  ENERGY  =',1PD12.4/
+     1        11X,'ENERGY (',I3,')  /  ENERGY ( 0 )  =',1PD12.4)
+ 6010 FORMAT(/11X,'ITERATION = ',I3,6X,'  ENERGY  =',1PD12.4
+     2       /11X,'CONTACT ENERGY =',1PD12.4
+     1       /11X,'ENERGY (',I3,')  /  ENERGY ( 0 )  =',1PD12.4)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE KONVES(IKONVS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      include 'paka.inc'
+      
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ITERBR/ ITER
+      COMMON /SRPSKI/ ISRPS
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' KONVES'
+      IKONVS=0
+      IF(ITER.EQ.0) RETURN
+C
+C     RACUNANJE NORME NEURAVNOTEZENE SILE
+C
+      CALL NORMAS(A(LFTDT),A(LID),SIL)
+C
+C     PROVERA KONVERGENCIJE ZA SILU
+C
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) ITER,SIL
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) ITER,SIL
+      IF(SIL.LE.TOLS) IKONVS=1
+      RETURN
+C
+C-----------------------------------------------------------------------
+ 2000 FORMAT(/11X,'ITERACIJA = ',I4/
+     1        11X,'NORMA SILA =',1PD12.4)
+C-----------------------------------------------------------------------
+ 6000 FORMAT(/11X,'ITERATION = ',I3/
+     1        11X,'NORM FORCES =',1PD12.4)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE NORMAS(FTDT,ID,SIL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      DIMENSION FTDT(*),ID(NP,*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' NORMAS'
+      SIL=0.0D0
+      DO 10 I=1,3
+      IF(IOPGL(I).EQ.1) GO TO 10
+      DO 20 J=1,NP
+      NJ=ID(J,I)
+      IF(NJ.LE.0) GO TO 20
+      SIL=SIL+FTDT(NJ)*FTDT(NJ)
+   20 CONTINUE
+   10 CONTINUE
+      SIL=DSQRT(SIL)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE KONVEM(IKONVM)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      include 'paka.inc'
+      
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ITERBR/ ITER
+      COMMON /SRPSKI/ ISRPS
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' KONVEM'
+      IKONVM=0
+      IF(ITER.EQ.0) RETURN
+C
+C     RACUNANJE NORME NEURAVNOTEZENE SILE
+C
+      CALL NORMAM(A(LFTDT),A(LID),SIL)
+C
+C     PROVERA KONVERGENCIJE ZA SILU
+C
+      IF(ISRPS.EQ.0)
+     1WRITE(IZLAZ,2000) ITER,SIL
+      IF(ISRPS.EQ.1)
+     1WRITE(IZLAZ,6000) ITER,SIL
+      IF(SIL.LE.TOLM) IKONVM=1
+      RETURN
+C
+C-----------------------------------------------------------------------
+ 2000 FORMAT(/11X,'ITERACIJA = ',I4/
+     1        11X,'NORMA MOMENATA =',1PD12.4)
+C-----------------------------------------------------------------------
+ 6000 FORMAT(/11X,'ITERATION = ',I3/
+     1        11X,'NORM MOMENTS =',1PD12.4)
+C-----------------------------------------------------------------------
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE NORMAM(FTDT,ID,SIL)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      DIMENSION FTDT(*),ID(NP,*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' NORMAM'
+      SIL=0.0D0
+      DO 10 I=4,6
+      IF(IOPGL(I).EQ.1) GO TO 10
+      DO 20 J=1,NP
+      NJ=ID(J,I)
+      IF(NJ.LE.0) GO TO 20
+      SIL=SIL+FTDT(NJ)*FTDT(NJ)
+   20 CONTINUE
+   10 CONTINUE
+      SIL=DSQRT(SIL)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE INTMNJ(IGRUP,NPODS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C     PETLJA PO GRUPAMA ELEMENATA RADI RACUNANJA NAPONA I UNUTRASNJIH
+C     SILA
+C
+      include 'paka.inc'
+      
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /GRUPEE/ NGEL,NGENL,LGEOM,NGEOM,ITERM
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /MATERM/ LMODEL,LGUSM
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /UPDLAG/ LUL,LCORUL
+      COMMON /BLOCKS/ NBMAX,IBLK,NBLOCK,LMNQ,LICPL,LLREC,KC,LR
+      COMMON /SCRATC/ ISCRC
+      DIMENSION IGRUP(NGELEM,*),NPODS(JPS1,*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' INTMNJ'
+C
+C     RACUNANJE UNUTRASNJIH SILA
+C
+      ISKNP=2
+C
+C     UCITAVANJE FAKTORIZOVANE MATRICE SA DISKA
+C
+      CALL RSTAZK(NPODS,LSK,60)
+      CALL CLEAR(A(LFTDT),JEDN)
+      IF(METOD.LT.4) CALL RSTAZ(NPODS,LRTDT,52)
+C....  KOREKCIJA KOORDINATA ZA U.L.
+      IF(LUL.EQ.1)
+     1 CALL ULCOR(A(LCORUL),A(LCORD),A(LRTDT),A(LID),NP)
+      IF(NBLOCK.GT.1) THEN
+         OPEN (ISCRC,FILE='ZSCRCH',FORM='UNFORMATTED',STATUS='UNKNOWN')
+         REWIND ISCRC
+      ENDIF
+C
+      DO 100 NGE = 1,NGELEM
+      NETIP = IGRUP(NGE,1)
+      NE = IGRUP(NGE,2)
+      IATYP = IGRUP(NGE,3)
+      NMODM = IGRUP(NGE,4)
+      LMAX8 = IGRUP(NGE,5)
+      CALL UCITAM(A(LMODEL),NMODM)
+      LMAX=LRAD
+C
+      CALL ELEME(NETIP,3)
+C
+  100 CONTINUE
+      IF(NBLOCK.GT.1) CLOSE (ISCRC,STATUS='KEEP')
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE INTFNJ(IGRUP,NPODS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C  PETLJA PO GRUPAMA ELEMENATA RADI INTEGRACIJE NELINEARNE MATRICE KNL
+C
+      include 'paka.inc'
+      
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /GRUPEE/ NGEL,NGENL,LGEOM,NGEOM,ITERM
+      COMMON /ELEALL/ NETIP,NE,IATYP,NMODM,NGE,ISKNP,LMAX8
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /MATERM/ LMODEL,LGUSM
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /ITERBR/ ITER
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /ZADATA/ LNZADJ,LNZADF,LZADFM,NZADP
+      COMMON /BLOCKS/ NBMAX,IBLK,NBLOCK,LMNQ,LICPL,LLREC,KC,LR
+      COMMON /MPOINC/ MMP,NMPC,NEZAV,LCMPC,LMPC,NEZA1
+      COMMON /SCRATC/ ISCRC
+      COMMON /UPDLAG/ LUL,LCORUL
+      COMMON /DUPLAP/ IDVA
+      COMMON /EDPCON/ A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10
+      COMMON /DINAMI/ IMASS,IDAMP,PIP,DIP,MDVI
+      COMMON /DRAKCE/ IDRAKCE,NELUK,NZERO,NEED1,NEED2,NEED3,NNZERO
+     1                ,IROWS,LAILU,LUCG,LVCG,LWCG,LPCG,LRCG
+      COMMON /GEORGE/ TOLG,ALFAG,ICCGG
+      DIMENSION IGRUP(NGELEM,*),NPODS(JPS1,*)
+      COMMON /CDEBUG/ IDEBUG
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      IF (myid.ne.0) goto 10
+C
+      IF(IDEBUG.GT.0) PRINT *, ' INTFNJ'
+C
+C  UCITAVANJE EFEKTIVNE LINEARNE MATRICE SA DISKA: KEL = K+A0*M+A1*C
+C  UKUPNA EFEKTIVNA MATRICA LEVE STRANE : KEF = KEL + KNL
+C
+CSKDISK      LMA=58
+CSKDISK      IF(NDIN.EQ.0) LMA=35
+CSKDISK      CALL RSTAZK(NPODS,LSK,LMA)
+CSKDISK      GO TO 20
+      NUL=NWK
+      IF(NBLOCK.GT.1) NUL=KC
+      CALL CLEARB(A(LSK),A(LMAXA),A(LMNQ),A(LLREC),NBLOCK,LR,IBLK,NUL)
+C
+      IF(NGEL.NE.0)THEN
+	write(*,*) 'uriplje,ngel',ngel
+	write(3,*) 'uriplje,ngel',ngel
+        OPEN (ISCRC,FILE='ZSKLIN',FORM='UNFORMATTED',STATUS='UNKNOWN')
+        REWIND ISCRC
+        LLM =LRAD
+        LSKE=LLM+100
+        if (IABS(ICCGG).EQ.1) then
+          if (iccgg.eq.1) then
+             CALL ISPAK(A(LSK),A(IROWS),A(LMAXA),A(LSKE),A(LLM),ND,1,
+     &               A(LMNQ),A(LLREC),NBLOCK,LR,IBLK,A(LCMPC),A(LMPC))
+          else
+             CALL ISPAKG(A(LSK),A(IROWS),A(LMAXA),A(LSKE),A(LLM),ND,1,
+     &               A(LMNQ),A(LLREC),NBLOCK,LR,IBLK,A(LCMPC),A(LMPC))
+          endif
+        else
+            CALL SPAKUA(A(LSK),A(LMAXA),A(LSKE),A(LLM),ND,1,
+     &              A(LMNQ),A(LLREC),NBLOCK,LR,IBLK,A(LCMPC),A(LMPC))
+        endif
+        CLOSE (ISCRC,STATUS='KEEP')
+      ENDIF
+      IF(NDIN.NE.0) THEN
+         NWM=NWK
+         IF(IMASS.EQ.2) NWM=JEDN
+         LSKP=LSK+NWK*IDVA
+C
+CE       READ LINEAR MATRIX M FROM DISK
+CS       UCITAVANJE LINEARNE MATRICE M SA DISKA
+C     
+         IF(IMASS.NE.2) CALL RSTAZK(NPODS,LSKP,54)
+         IF(IMASS.EQ.2) CALL RSTAZ(NPODS,LSKP,54)
+C         CALL WRR6(A(LSK),NWK,'SKFN')
+C         CALL WRR6(A(LSKP),NWM,'MAFN')
+         IF(IMASS.NE.2) CALL ZBIRM(A(LSK),A(LSKP),A0,NWK)
+         IF(IMASS.EQ.2) CALL ZBIRKM(A(LSK),A(LSKP),A0,NWM,A(LMAXA))
+C         CALL WRR6(A(LSK),NWK,'ZBFN')
+C
+CE       READ LINEAR MATRIX C FROM DISK
+CS       UCITAVANJE LINEARNE MATRICE C SA DISKA
+C
+         IF(IDAMP.NE.0) THEN
+            IF(IDAMP.NE.2) CALL RSTAZK(NPODS,LSKP,56)
+            IF(IDAMP.EQ.2) CALL RSTAZ(NPODS,LSKP,56)
+            IF(IDAMP.NE.2) CALL ZBIRM(A(LSK),A(LSKP),A1,NWK)
+            IF(IDAMP.EQ.2) CALL ZBIRKM(A(LSK),A(LSKP),A1,NWM,A(LMAXA))
+         ENDIF
+      ENDIF
+CSKDISK
+      CALL CLEAR(A(LFTDT),JEDN)
+      IF((METOD.EQ.7.OR.METOD.EQ.9).AND.ITER.GT.0)GO TO 30
+      CALL RSTAZ(NPODS,LRTDT,52)
+C....  KOREKCIJA KOORDINATA ZA U.L.
+   30 IF(LUL.EQ.1)
+     1 CALL ULCOR(A(LCORUL),A(LCORD),A(LRTDT),A(LID),NP)
+C	call wrr3(a(lcorul),np*3,'coru')
+C	call wrr6(a(lftdt),jedn,'ftnj')
+C	call wrr6(a(lrtdt),jedn,'rtnj')
+      IF(NBLOCK.GT.1) THEN
+         OPEN (ISCRC,FILE='ZSKNEL',FORM='UNFORMATTED',STATUS='UNKNOWN')
+         REWIND ISCRC
+      ENDIF
+      DO 100 NGE = 1,NGELEM
+      NETIP = IGRUP(NGE,1)
+      NE    = IGRUP(NGE,2)
+      IATYP = IGRUP(NGE,3)
+      NMODM = IGRUP(NGE,4)
+      LMAX8 = IGRUP(NGE,5)
+C
+C     RACUNANJE UNUTRASNJIH SILA I NOVE MATRICE KRUTOSTI
+C
+      ISKNP=0
+      IF(IATYP.EQ.0) ISKNP=2
+      CALL UCITAM(A(LMODEL),NMODM)
+      LMAX=LRAD
+C
+      CALL ELEME(NETIP,2)
+C
+  100 CONTINUE
+      IF(NBLOCK.GT.1)THEN
+        LLM =LRAD
+        LSKE=LLM+100
+        CALL SPAKUA(A(LSK),A(LMAXA),A(LSKE),A(LLM),ND,0,
+     &              A(LMNQ),A(LLREC),NBLOCK,LR,IBLK,A(LCMPC),A(LMPC))
+        CLOSE (ISCRC,STATUS='KEEP')
+      ENDIF
+      IF(NZADP.GT.0) THEN
+         LMAX13=NPODS(JPBR,36)-1
+         CALL ZADATL
+      ENDIF
+C
+C     FAKTORIZACIJA UKUPNE EFEKTIVNE MATRICE SISTEMA: KEF = L*D*LT
+C
+C      CALL WRR6(A(LSK),NWK,'REFN')
+ 10   CALL RESEN(A(LSK),A(LRTDT),A(LMAXA),JEDN,1)
+      IF (myid.eq.0) CALL WSTAZK(NPODS,LSK,60)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE ULCOR(CORUL,CORD,U,ID,NP)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C      KORIGOVANJE KOORDINATA ZA U.L. FORMULACIJU
+C
+      include 'paka.inc'
+      
+      COMMON /MPOINC/ MMP,NMPC,NEZAV,LCMPC,LMPC,NEZA1
+      COMMON /PROBAS/ IILS
+      DIMENSION CORUL(NP,*),CORD(NP,*),U(*),ID(NP,*)
+      COMMON /CDEBUG/ IDEBUG
+C
+      IF(IDEBUG.GT.0) PRINT *, ' ULCOR '
+      DO 50 N=1,NP
+        DO 40 K=1,3
+          NK=ID(N,K)
+          IF(NK)1,2,3
+    1     UU=CONDOF(U,A(LCMPC),A(LMPC),NK)
+          GO TO 5
+    2     CORUL(N,K)=CORD(N,K)
+          GO TO 40
+    3     UU=U(NK)
+    5     CORUL(N,K)=CORD(N,K)+UU
+   40   CONTINUE
+   50 CONTINUE
+c ovo je ubaceno zbog geometrijski nelinearne analize sfere za srbu?????   
+C      IF(MMP.GT.0.AND.IILS.NE.-1) 
+C     1CALL KORIGC(CORUL,A(LCMPC),MMP,NP,NEZAV)
+cz      IF(MMP.GT.0) CALL KORIGC(CORUL,A(LCMPC),MMP,NP,NEZAV)
+      RETURN
+      END
+C=======================================================================
+      SUBROUTINE KORIGC(CORUL,CMPC,MMP,NP,NEZAV)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /SRBAMP/ IPO(15,342)
+      DIMENSION CMPC(MMP,*),CORUL(NP,*)
+      DO I=1,MMP
+         N1=IPO(2,I)
+         IP=IPO(3,I)
+         DO J=1,NEZAV
+            N2=IPO(2+2*J,I)
+            IR=IPO(3+2*J,I)
+            IF(IR.GT.3) THEN
+               IF(IR.EQ.4) THEN
+                  IF(IP.EQ.2) DUM=CORUL(N2,3)-CORUL(N1,3)
+                  IF(IP.EQ.3) DUM=CORUL(N1,2)-CORUL(N2,2)
+               ENDIF
+               IF(IR.EQ.5) THEN
+                  IF(IP.EQ.1) DUM=CORUL(N1,3)-CORUL(N2,3)
+                  IF(IP.EQ.3) DUM=CORUL(N2,1)-CORUL(N1,1)
+               ENDIF
+               IF(IR.EQ.6) THEN
+                  IF(IP.EQ.1) DUM=CORUL(N2,2)-CORUL(N1,2)
+                  IF(IP.EQ.2) DUM=CORUL(N1,1)-CORUL(N2,1)
+               ENDIF
+C               WRITE(3,1005) I,IP,N1,N2,(CMPC(I,J),J=1,NEZAV),DUM
+               CMPC(I,J)=DUM
+            ENDIF
+         ENDDO
+      ENDDO
+      RETURN
+ 1005 FORMAT(4I5,6(1PD12.5))
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE FRESIF(NPODS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      include 'paka.inc'
+      
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /OPTERE/ NCF,NPP2,NPP3,NPGR,NPGRI,NPLJ,NTEMP
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /GRUPER/ LIGRUP
+      COMMON /NELINE/ NGENN
+      COMMON /DUPLAP/ IDVA
+      COMMON /CDEBUG/ IDEBUG
+      DIMENSION NPODS(JPS1,*)
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+C
+      IF(IDEBUG.GT.0.and.myid.eq.0) PRINT *, ' FRESIF'
+      CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(JPS,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+         DO 200 JPBB=1,JPS
+            IF (myid.ne.0) goto 10
+C
+            IF(JPS.GT.1) THEN
+               JPBR=JPBB 
+               CALL PODDAT(NPODS,1)
+               CALL PODDAT(NPODS,3)
+               CALL PODDAT(NPODS,2)
+            ELSE
+               JPBR=JPS1
+            ENDIF
+C
+C           UCITAVANJE FAKTORIZOVANE MATRICE KRUTOSTI L*D*LT
+C           FORMIRANJE UNUTRASNJIH SILA: FTDT
+C
+  10        CALL INTFNJ(A(LIGRUP),NPODS)
+            IF (myid.ne.0) goto 20
+C
+C           FORMIRANJE KONACNOG VEKTORA DESNE STRANE:
+C           NA UCITANE KONSTANTNE SILE DODAJU SE GEOMETRIJSKI
+C           NELINEARNE I ODUZMU SE UNUTRASNJE SILE, RTDT=RTDT-FTDT
+C
+            CALL DESSTR(NPODS)
+C
+20          IF(JPS.GT.1) THEN
+               CALL RESEN(A(LSK),A(LRTDT),A(LMAXA),JEDN,2)
+               IF (myid.ne.0) goto 30
+               LMAX13=NPODS(JPBR,39)-1
+               CALL WRITDD(A(LRTDT),JEDN,IPODS,LMAX13,LDUZI)
+               LRAD=LID
+30          ENDIF
+C
+  200    CONTINUE
+C
+         IF(JPS.GT.1) THEN
+            IF (myid.ne.0) goto 40
+            DO 300 JPBR=1,JPS
+               CALL PODDAT(NPODS,1)
+               LSK=LRAD
+               LSKG=LSK+(NWK-NWP)*IDVA
+               JED=JEDN-JEDNP
+               NWKP=JED*(JED+1)/2
+               LIGRUP=LSKG+NWKP*IDVA
+               LMAXA=LIGRUP+NGELEM*5
+               LMAX=LMAXA+JEDN+1
+               IF(LMAX.GT.MTOT) CALL ERROR(1)
+               NP6=NGELEM*5+JEDN+1 
+               LMAX13=NPODS(JPBR,12)-1
+               CALL IREADD(A(LIGRUP),NP6,IPODS,LMAX13,LDUZI)
+               LMAX13=NPODS(JPBR,61)-1
+               CALL READDD(A(LSK),NWK-NWP,IPODS,LMAX13,LDUZI)
+               CALL TROUGO(A(LSK),A(LSKG),A(LMAXA+JEDNP),JED,NWP)
+               LMAX13=NPODS(JPBR,37)-1
+               CALL WRITDD(A(LSKG),NWKP,IPODS,LMAX13,LDUZI)
+  300       CONTINUE
+C
+            JPBR=JPS1
+            CALL PODDAT(NPODS,1)
+            CALL PODDAT(NPODS,3)
+            CALL PODDAT(NPODS,2)
+C
+CE          READING OF RIGHT SIDE VECTOR CONTOUR MECHANICAL LOADS, RTDT
+CS          UCITAVANJE VEKTORA DESNE STRANE KONTURNE MEHANICKE SILE,RTDT
+C
+            CALL RSTAZ(NPODS,LRTDT,38)
+            CALL CLEAR(A(LSK),NWG)
+C
+            DO 400 JPBR=1,JPS
+               JEDN=NPODS(JPBR,6)
+               JEDNP=NPODS(JPBR,23)
+               JED=JEDN-JEDNP
+               NWKP=JED*(JED+1)/2
+               LSKG=LRAD
+               LRTG=LSKG+NWKP*IDVA
+               LLMG=LRTG+JEDN*IDVA
+               LMAX=LLMG+JED
+               IF(LMAX.GT.MTOT) CALL ERROR(1)
+               LMAX13=NPODS(JPBR,37)-1
+               CALL READDD(A(LSKG),NWKP,IPODS,LMAX13,LDUZI)
+               LMAX13=NPODS(JPBR,39)-1
+               CALL READDD(A(LRTG),JEDN,IPODS,LMAX13,LDUZI)
+               LMAX13=NPODS(JPBR,27)-1
+               CALL IREADD(A(LLMG),JED,IPODS,LMAX13,LDUZI)
+               CALL SPAKUJ(A(LSK),A(JMAXA),A(LSKG),A(LLMG),JED)
+               LRTG=LRTG+JEDNP*IDVA
+               CALL SPAKUD(A(LRTDT),A(LRTG),A(LLMG),JED)
+  400       CONTINUE
+            JPBR=JPS1
+            JEDN=JEDNG
+            IF(NGENN.GT.0) CALL JEDNA1(A(LFTDT),A(LRTDT),JEDN)
+            CALL WSTAZK(NPODS,LSK,35)
+ 40         CALL RESEN(A(LSK),A(LRTDT),A(JMAXA),JEDN,1)
+            IF (myid.ne.0) return
+            CALL WSTAZK(NPODS,LSK,60)
+            LMAXA=JMAXA
+         ENDIF
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE UKUPNP(NPODS,INDC)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C
+C ......................................................................
+C .
+CE.   P R O G R A M
+CE.      TO FORM TOTAL DISPLACEMENTS FOR SUBSTRUCTURE
+CS.   P R O G R A M
+CS.      ZA FORMIRANJE UKUPNIH POMERANJA ZA PODSTRUKTURE
+C .
+C ......................................................................
+C
+      include 'paka.inc'
+      
+      COMMON /GLAVNI/ NP,NGELEM,NMATM,NPER,
+     1                IOPGL(6),KOSI,NDIN,ITEST
+      COMMON /REPERI/ LCORD,LID,LMAXA,LMHT
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /PERKOR/ LNKDT,LDTDT,LVDT,NDT,DT,VREME,KOR
+      COMMON /ITERBR/ ITER
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /CVOREL/ ICVEL,LCVEL,LELCV,NPA,NPI,LCEL,LELC,NMA,NMI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /UPRIRI/ LUPRI
+      COMMON /DUPLAP/ IDVA
+      COMMON /GRUPER/ LIGRUP
+      COMMON /CDEBUG/ IDEBUG
+      COMMON /INDNAP/ NAPON
+      COMMON /STAMKO/ ISTKO,NCVPR,LNCVP,LNCVZ,
+     +                ISTEM,ISTVN,ISTSI,ISTDE,ISTNA
+      COMMON /JCERNI/ LKOLKO,ICERNI
+      COMMON /STOSZP/ STOSZ
+      INCLUDE 'mpif.h'
+      integer myid, ierr
+      DIMENSION NPODS(JPS1,*)
+C
+      CALL MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr )
+      IF (myid.ne.0) goto 10
+c
+      IF(IDEBUG.GT.0) PRINT *, ' UKUPNP'
+C     INKREMENT KONTURNIH POMERANJA
+      CALL UKUPNA
+C
+      IF(JPS.GT.1) THEN
+         IF(INDC.EQ.1) THEN
+            LID=LRAD
+            LCVEL=LID+NP*6
+            NPM=NPA-NPI+1
+            LELCV=LCVEL+NP
+            LMAX=LELCV+NPM
+            NP6=NP*7+NPM
+            LMAX13=NPODS(JPBR,2)-1
+            CALL IREADD(A(LID),NP6,IPODS,LMAX13,LDUZI)
+C
+CE          PRINT CONTOUR DISPLACEMENTS 
+CS          STAMPANJE KONTURNIH POMERANJA
+C
+            CALL STAMPA(A(LIPODS))
+         ENDIF
+         DO 650 JPBR=1,JPS
+            JEDN=NPODS(JPBR,6)
+            JEDNP=NPODS(JPBR,23)
+            JED=JEDN-JEDNP
+            LRTG=LRAD
+            LLMG=LRTG+JEDN*IDVA
+            LMAX=LLMG+JED
+            IF(LMAX.GT.MTOT) CALL ERROR(1)
+            LMAX13=NPODS(JPBR,27)-1
+            CALL IREADD(A(LLMG),JED,IPODS,LMAX13,LDUZI)
+            CALL RSTAZ(NPODS,LRTG,47)
+            LRTGG=LRTG+JEDNP*IDVA
+            CALL SPAKUU(A(LUPRI),A(LRTGG),A(LLMG),JED)
+            CALL WSTAZ(NPODS,LRTG,47)
+  650    CONTINUE
+         LRAD=JMAXA
+      ENDIF
+C
+10    CALL MPI_BARRIER(MPI_COMM_WORLD,ierr)
+      CALL MPI_BCAST(JPS,1,MPI_INTEGER,0,MPI_COMM_WORLD,ierr)
+      DO 850 JPBB=1,JPS
+         IF(JPS.GT.1) THEN
+            IF (myid.ne.0) goto 20
+            JPBR=JPBB
+            CALL PODDAT(NPODS,1)
+            CALL PODDAT(NPODS,3)
+            CALL PODDAT(NPODS,4)
+20          CALL RESEN(A(LSK),A(LRTDT),A(LMAXA),JEDN,3)
+            IF (myid.eq.0) CALL UKUPNA
+         ELSE
+            IF (myid.eq.0) JPBR=JPS1
+         ENDIF
+         IF (myid.ne.0) goto 850
+         IF(INDC.EQ.1) THEN
+C
+CE          CALCULATE STRESSES
+CS          RACUNANJE NAPONA 
+C
+            NAPON=1
+            CALL INTNAP(A(LIGRUP))
+C
+CE          R E S U L T S
+CS          R E Z U L T A T I
+C
+CE          PRINT DISPLACEMENTS AND STRESSES
+CS          STAMPANJE POMERANJA I NAPONA
+C
+            CALL STAMPA(A(LIPODS))
+         ENDIF
+C
+         IF(JPS.GT.1) LRAD=LID
+  850 CONTINUE
+      IF (myid.ne.0) return
+C CERNI
+      IF(ICERNI.EQ.1) THEN
+C        ZAPISIVANJE POMERANJA U ITERACIJAMA
+         III=KOR
+         KOR=ITER+1
+         VRE=VREME
+         VREME=KOR
+         STOSZ=VREME
+         IDUM=27
+C         CALL STAGP1(A(LRTDT),A(LID),A(LCVEL),ICVEL,NP,IDUM,0,
+C     +               A(LNCVP),NCVPR)
+         CALL STAU09(A(LRTDT),A(LID),A(LCVEL),ICVEL,NP,IDUM,1,
+     +               A(LNCVP),NCVPR)
+         KOR=III
+         VREME=VRE
+      ENDIF
+C CERNI
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE INKREM(D,DOLD)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ITERBR/ ITER
+      DIMENSION D(*),DOLD(*)
+      IF(ITER.GT.1) THEN
+                    DO 21 I=1,JEDN
+   21               D(I)=D(I)*DOLD(I)/(DOLD(I)-D(I))
+                    ENDIF
+      DO 22 I=1,JEDN
+   22 DOLD(I)=D(I)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE MEMITR(NPODS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....  REZERVISANJE PROSTORA ZA ITERACIJE
+      include 'paka.inc'
+      
+      COMMON /DIM   / N9,N10,N11,N12,MAXUP
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /DUPLAP/ IDVA
+      COMMON /BFGSUN/ IFILE
+      COMMON /CDEBUG/ IDEBUG
+      DIMENSION NPODS(JPS1,*)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEMITR'
+      IF(JPS.EQ.1) RETURN
+      IF(METOD.LT.0) RETURN
+      NEIT=JEDN*IDVA
+      GO TO (10,20,30,40,50,60,60,60,60,60,60) METOD
+C....  MODIFIKOVAN NJUTN-RAPSSON (METOD.EQ.1)  -----------------
+   10 RETURN
+C....  MODIFIKOVANI NJUTN SA AITKENOVIM UBRZANJEM (METOD.EQ.2) -
+   20 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL READDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      RETURN
+C....  PUNI NJUTN  (METOD.EQ.3)  --------------------------------
+   30 RETURN
+C....  PUNI NJUTN  +  LINE SEARCH  (METOD.EQ.3)  ----------------
+   40 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL READDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      N10=NPODS(JPBR,8)
+      LMAX13=NPODS(JPBR,18)-1
+      CALL READDD(A(N10),JEDN,IPODS,LMAX13,LDUZI)
+      RETURN
+C....  BFGS  METOD  ---------------------------------------------
+   50 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL READDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      N10=NPODS(JPBR,8)
+      LMAX13=NPODS(JPBR,18)-1
+      CALL READDD(A(N10),JEDN,IPODS,LMAX13,LDUZI)
+      N11=NPODS(JPBR,9)
+      LMAX13=NPODS(JPBR,19)-1
+      CALL READDD(A(N11),JEDN+1,IPODS,LMAX13,LDUZI)
+      N12=NPODS(JPBR,10)
+      LMAX13=NPODS(JPBR,20)-1
+      CALL IREADD(A(N12),MAXUP*2,IPODS,LMAX13,LDUZI)
+      RETURN
+C....  AUTOMATSKO OPTERECENJE (METOD=6X; METOD=7X) ------------
+   60 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL READDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      N10=NPODS(JPBR,8)
+      LMAX13=NPODS(JPBR,18)-1
+      CALL READDD(A(N10),JEDN,IPODS,LMAX13,LDUZI)
+      RETURN
+      END
+C=======================================================================
+C
+C=======================================================================
+      SUBROUTINE MEMITW(NPODS)
+      IMPLICIT DOUBLE PRECISION(A-H,O-Z)
+C....  REZERVISANJE PROSTORA ZA ITERACIJE
+      include 'paka.inc'
+      
+      COMMON /DIM   / N9,N10,N11,N12,MAXUP
+      COMMON /DUZINA/ LMAX,MTOT,LMAXM,LRAD,NRAD
+      COMMON /SISTEM/ LSK,LRTDT,NWK,JEDN,LFTDT
+      COMMON /ITERAC/ METOD,MAXIT,TOLE,TOLS,TOLM,KONVE,KONVS,KONVM
+      COMMON /TRAKEJ/ IULAZ,IZLAZ,IELEM,ISILE,IRTDT,IFTDT,ILISK,ILISE,
+     1                ILIMC,ILDLT,IGRAF,IDINA,IPOME,IPRIT,LDUZI
+      COMMON /OPSTIP/ JPS,JPBR,NPG,JIDG,JCORG,JCVEL,JELCV,NGA,NGI,NPK,
+     1                NPUP,LIPODS,IPODS,LMAX13,MAX13,JEDNG,JMAXA,JEDNP,
+     1                NWP,NWG,IDF,JPS1
+      COMMON /DUPLAP/ IDVA
+      COMMON /BFGSUN/ IFILE
+      COMMON /CDEBUG/ IDEBUG
+      DIMENSION NPODS(JPS1,*)
+C
+      IF(IDEBUG.GT.0) PRINT *, ' MEMITW'
+      IF(JPS.EQ.1) RETURN
+      IF(METOD.LT.0) RETURN
+      NEIT=JEDN*IDVA
+      GO TO (10,20,30,40,50,60,60,60,60,60,60) METOD
+C....  MODIFIKOVAN NJUTN-RAPSSON (METOD.EQ.1)  -----------------
+   10 RETURN
+C....  MODIFIKOVANI NJUTN SA AITKENOVIM UBRZANJEM (METOD.EQ.2) -
+   20 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL WRITDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      RETURN
+C....  PUNI NJUTN  (METOD.EQ.3)  --------------------------------
+   30 RETURN
+C....  PUNI NJUTN  +  LINE SEARCH  (METOD.EQ.3)  ----------------
+   40 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL WRITDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      N10=NPODS(JPBR,8)
+      LMAX13=NPODS(JPBR,18)-1
+      CALL WRITDD(A(N10),JEDN,IPODS,LMAX13,LDUZI)
+      RETURN
+C....  BFGS  METOD  ---------------------------------------------
+   50 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL WRITDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      N10=NPODS(JPBR,8)
+      LMAX13=NPODS(JPBR,18)-1
+      CALL WRITDD(A(N10),JEDN,IPODS,LMAX13,LDUZI)
+      N11=NPODS(JPBR,9)
+      LMAX13=NPODS(JPBR,19)-1
+      CALL WRITDD(A(N11),JEDN+1,IPODS,LMAX13,LDUZI)
+      N12=NPODS(JPBR,10)
+      LMAX13=NPODS(JPBR,20)-1
+      CALL IWRITD(A(N12),MAXUP*2,IPODS,LMAX13,LDUZI)
+      RETURN
+C....  AUTOMATSKO OPTERECENJE (METOD=6X; METOD=7X) ------------
+   60 N9=NPODS(JPBR,7)
+      LMAX13=NPODS(JPBR,17)-1
+      CALL WRITDD(A(N9),JEDN,IPODS,LMAX13,LDUZI)
+      N10=NPODS(JPBR,8)
+      LMAX13=NPODS(JPBR,18)-1
+      CALL WRITDD(A(N10),JEDN,IPODS,LMAX13,LDUZI)
+      RETURN
+      END
